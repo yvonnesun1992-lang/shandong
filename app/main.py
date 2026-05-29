@@ -57,17 +57,23 @@ with rank_tab:
 with chart_tab:
     st.subheader("收盘价、均线和 RSI")
     selected_symbol = st.selectbox("选择股票", symbols)
-    data = load_data(market, selected_symbol)
-    scored = add_trend_scores(data)
-    st.line_chart(scored.set_index("date")[["close", "ma20", "ma60", "ma120"]])
-    st.line_chart(scored.set_index("date")[["rsi14"]])
-    st.dataframe(scored.tail(20), use_container_width=True, hide_index=True)
+    try:
+        data = load_data(market, selected_symbol)
+        scored = add_trend_scores(data)
+        st.line_chart(scored.set_index("date")[["close", "ma20", "ma60", "ma120"]])
+        st.line_chart(scored.set_index("date")[["rsi14"]])
+        st.dataframe(scored.tail(20), use_container_width=True, hide_index=True)
+    except Exception as error:
+        st.error(f"无法加载 {selected_symbol} 的数据：{error}")
 
 with backtest_tab:
     st.subheader("V1 简单回测")
     backtest_symbol = st.selectbox("回测股票", symbols, key="backtest_symbol")
     initial_cash = st.number_input("初始资金", min_value=10_000, value=100_000, step=10_000)
     if st.button("运行回测"):
-        data = load_data(market, backtest_symbol)
-        result = run_simple_backtest(data, initial_cash=float(initial_cash))
-        st.json(result)
+        try:
+            data = load_data(market, backtest_symbol)
+            result = run_simple_backtest(data, initial_cash=float(initial_cash))
+            st.json(result)
+        except Exception as error:
+            st.error(f"无法完成 {backtest_symbol} 的回测：{error}")

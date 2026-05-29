@@ -19,6 +19,7 @@ def run_simple_backtest(data: pd.DataFrame, initial_cash: float = 100_000) -> di
         raise ValueError("Not enough data for backtest. Need at least 120 rows.")
 
     cash = initial_cash
+    max_position_cash = initial_cash * 0.15
     shares = 0
     entry_price = 0.0
     trades: list[dict] = []
@@ -31,7 +32,9 @@ def run_simple_backtest(data: pd.DataFrame, initial_cash: float = 100_000) -> di
         should_sell = shares > 0 and (score < 60 or close < float(row["ma60"]))
 
         if should_buy:
-            shares = int(cash // close)
+            # V1 only uses up to 15% of initial cash for one stock.
+            buy_cash = min(cash, max_position_cash)
+            shares = int(buy_cash // close)
             if shares > 0:
                 entry_price = close
                 cash -= shares * close
