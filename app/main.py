@@ -46,6 +46,10 @@ default_watchlist = US_WATCHLIST if market == "美股" else CN_WATCHLIST
 symbols_text = st.sidebar.text_area("股票池", value="\n".join(default_watchlist), height=220)
 symbols = [line.strip().upper() for line in symbols_text.splitlines() if line.strip()]
 
+if not symbols:
+    st.warning("股票池为空，请在左侧输入至少一个股票代码。")
+    st.stop()
+
 rank_tab, chart_tab, backtest_tab = st.tabs(["趋势评分", "单只股票", "简单回测"])
 
 with rank_tab:
