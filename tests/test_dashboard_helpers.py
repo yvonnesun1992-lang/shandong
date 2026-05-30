@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pandas as pd
 
 from app.main import data_source_label, trend_scores_to_csv
