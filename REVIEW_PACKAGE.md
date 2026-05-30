@@ -875,3 +875,38 @@ bad=False
 HEAD=934c5661b2675af0f9e6b1ad6610b9d103e708ca
 origin/codex/v1-quant-system=934c5661b2675af0f9e6b1ad6610b9d103e708ca
 ```
+
+## PR #6 文档 Unicode 安全复查
+
+本次只复查和更新文档，不修改模拟交易业务逻辑。
+
+复查文件：
+
+- README.md
+- REVIEW_PACKAGE.md
+
+清理与验证结果：
+
+- 已使用 Python 扫描 RLO、LRO、RLE、LRE、PDF、LRI、RLI、FSI、PDI。
+- 已扫描 zero-width space、zero-width joiner、zero-width non-joiner、BOM。
+- 已扫描 Unicode category Cf 和异常 control characters。
+- 未发现需要删除的隐藏 Unicode、双向文本控制字符或异常控制字符。
+- 已确认两个文档按 UTF-8 和 LF 换行保存。
+- 未修改 `src/paper_trading/portfolio.py` 业务逻辑。
+- 未连接真实券商。
+- 未自动下单。
+- 未加入 API key、secret、password、token。
+
+验证命令：
+
+```bash
+python -m py_compile app/main.py src/data/us_data.py src/data/cn_data.py src/data/sample_data.py src/data/watchlist_manager.py src/paper_trading/portfolio.py src/indicators/technical.py src/strategies/trend_score.py src/backtest/simple_backtest.py src/risk/position.py src/reports/daily_report.py
+python -m pytest
+```
+
+结果：
+
+```text
+py_compile: passed
+pytest: 49 passed
+```
