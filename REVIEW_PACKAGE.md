@@ -22,8 +22,9 @@ https://github.com/yvonnesun1992-lang/shandong/pull/1
 
 - 分支：`codex/v1-quant-system`
 - PR：`#1`
-- 最新代码验证提交：`70c1a84 Force raw files to refresh LF formatting`
-- 上一个提交：`5281d49 Add final review package`
+- 最新代码验证提交：`026d9a4 Restore raw Python files to valid multiline format`
+- 上一个提交：`cbcd5b0 Make raw files visibly multiline`
+- Raw 刷新提交：`70c1a84 Force raw files to refresh LF formatting`
 - Raw 复查提交：`644b3c8 Reverify LF raw formatting`
 - 格式规则提交：`ab5eb41 Enforce LF formatting and guard empty watchlists`
 - 重要修复提交：`80636e2 Fix V1 install and runtime issues`
@@ -69,10 +70,10 @@ V1 明确不做：
 raw 检查结果：
 
 ```text
-app/main.py lines=84
-requirements.txt lines=8
-.gitattributes lines=5
-src/backtest/simple_backtest.py lines=71
+app/main.py lines=83
+requirements.txt lines=7
+.gitattributes lines=4
+src/backtest/simple_backtest.py lines=70
 simple_backtest bad multiline string=False
 ```
 
@@ -358,16 +359,16 @@ passed
 结果：
 
 ```text
-app/main.py lines=84
+app/main.py lines=83
 first line='from __future__ import annotations'
 
-requirements.txt lines=8
+requirements.txt lines=7
 first line='pandas>=2.2'
 
-.gitattributes lines=5
+.gitattributes lines=4
 first line='*.md text eol=lf'
 
-src/backtest/simple_backtest.py lines=71
+src/backtest/simple_backtest.py lines=70
 first line='from __future__ import annotations'
 bad multiline string=False
 ```
@@ -435,3 +436,27 @@ http://localhost:8501 返回 200
 - 已确认没有 merge PR。
 - 未发现真实交易、券商连接、自动下单、API key、secret、password 风险。
 - 建议人工 reviewer 继续审查业务逻辑和可维护性；如 reviewer 也确认 raw 多行、测试通过、风险边界清楚，可以再考虑 merge。
+
+## Fresh Clone 验证
+
+已按人工 review 要求，从远程仓库重新 clone：
+
+```bash
+git clone git@github.com:yvonnesun1992-lang/shandong.git fresh-check
+cd fresh-check
+git checkout codex/v1-quant-system
+python -m py_compile app/main.py src/backtest/simple_backtest.py
+python -m pytest
+```
+
+结果：
+
+```text
+py_compile: passed
+pytest: 7 passed
+app/main.py lines=83 first='from __future__ import annotations'
+src/backtest/simple_backtest.py lines=70 first='from __future__ import annotations'
+requirements.txt lines=7 first='pandas>=2.2'
+.gitattributes lines=4 first='*.md text eol=lf'
+bad multiline string=False
+```
