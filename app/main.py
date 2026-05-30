@@ -6,6 +6,7 @@ import streamlit as st
 from src.backtest.simple_backtest import run_simple_backtest
 from src.data.cn_data import get_cn_ohlcv
 from src.data.us_data import get_us_ohlcv
+from src.data.watchlist_manager import load_watchlists, normalize_symbols, save_watchlist, validate_watchlist_name
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
 
 
@@ -53,6 +54,23 @@ def trend_scores_to_csv(rank_table: pd.DataFrame) -> bytes:
         }
     )
     return export.to_csv(index=False).encode("utf-8-sig")
+
+
+def parse_symbols_text(symbols_text: str) -> list[str]:
+    raw_symbols = symbols_text.replace("，", ",").replace("\n", ",").split(",")
+    return normalize_symbols(raw_symbols)
+
+
+def default_watchlist_name(market: str) -> str:
+    if market == "美股":
+        return "us_default"
+    return "cn_default"
+
+
+def default_market_symbols(market: str) -> list[str]:
+    if market == "美股":
+        return US_WATCHLIST.copy()
+    return CN_WATCHLIST.copy()
 
 
 def build_rank_table(market: str, symbols: list[str]) -> pd.DataFrame:
@@ -112,10 +130,43 @@ def main() -> None:
     st.warning(DISCLAIMER)
 
     market = st.sidebar.radio("市场", ["美股", "A股"])
-    default_watchlist = US_WATCHLIST if market == "美股" else CN_WATCHLIST
-    symbols_text = st.sidebar.text_area("股票池", value="\n".join(default_watchlist), height=220)
+    fallback_symbols = default_market_symbols(market)
+    fallback_watchlist_name = default_watchlist_name(market)
+
+    st.sidebar.subheader("自选股管理")
+    try:
+        watchlists = load_watchlists()
+    except Exception as error:
+        st.sidebar.error(f"无法读取自选股配置：{error}")
+        watchlists = {fallback_watchlist_name: fallback_symbols}
+
+    watchlist_names = sorted(watchlists)
+    if fallback_watchlist_name in watchlist_names:
+        default_index = watchlist_names.index(fallback_watchlist_name)
+    else:
+        default_index = 0
+
+    selected_watchlist = st.sidebar.selectbox("选择 watchlist", watchlist_names, index=default_index)
+    new_watchlist_name = st.sidebar.text_input("新 watchlist 名称（可选）", value="")
+    current_symbols = watchlists.get(selected_watchlist, fallback_symbols)
+    symbols_text = st.sidebar.text_area(
+        "股票池（每行一个，或用逗号分隔）",
+        value="\n".join(current_symbols),
+        height=220,
+        key=f"symbols_text_{market}_{selected_watchlist}",
+    )
+
+    symbols = parse_symbols_text(symbols_text)
+    if st.sidebar.button("保存自选股"):
+        target_name = new_watchlist_name.strip() or selected_watchlist
+        try:
+            validate_watchlist_name(target_name)
+            save_watchlist(target_name, symbols)
+            st.sidebar.success(f"已保存自选股：{target_name}")
+        except Exception as error:
+            st.sidebar.error(f"保存失败：{error}")
+
     st.sidebar.caption(CACHE_NOTE)
-    symbols = [line.strip().upper() for line in symbols_text.splitlines() if line.strip()]
 
     if not symbols:
         st.warning("股票池为空，请在左侧输入至少一个股票代码。")
@@ -175,13 +226,14 @@ def main() -> None:
 
 {CACHE_NOTE}
 
-V1.2 仍然只做研究、历史回测、趋势观察和模拟交易演示：
+V1.3 仍然只做研究、历史回测、趋势观察和模拟交易演示：
 
 - 不连接真实券商
 - 不自动下单
 - 不做实盘交易
 - 不保存 API key、secret、password、token 或券商凭证
 - 不使用 AI 预测股价
+- 自选股配置只保存股票代码列表，不保存账户信息
 """
         )
 

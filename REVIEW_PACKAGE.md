@@ -601,6 +601,76 @@ http://localhost:8503 返回 200
 是否建议创建 PR：是
 ```
 
+## V1.3: local watchlist management
+
+V1.3 目标：
+
+- 让用户可以在 dashboard 中保存、加载、编辑自己的本地自选股列表。
+- 避免每次运行 dashboard 都要手动输入股票池。
+- 保持研究工具边界，不连接券商、不自动下单、不保存密钥。
+
+新增文件：
+
+```text
+config/watchlists.json
+src/data/watchlist_manager.py
+tests/test_watchlist_manager.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+tests/test_dashboard_helpers.py
+```
+
+watchlist 功能说明：
+
+- 默认配置文件：`config/watchlists.json`。
+- 默认列表：
+  - `us_default`
+  - `cn_default`
+- dashboard sidebar 支持：
+  - 选择 watchlist
+  - 编辑股票代码
+  - 输入新 watchlist 名称
+  - 保存自选股
+- 股票代码会去空格、过滤空字符串、去重。
+- 美股代码会转大写。
+- A股数字代码会保留为 6 位字符串。
+- watchlist 名称只允许字母、数字、下划线和短横线。
+- 非法名称会被拒绝，不会被当作文件路径使用。
+- 配置文件只保存股票代码列表，不保存账户、密码、API key 或券商凭证。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 32 passed
+dashboard: passed
+```
+
+dashboard 本地验证：
+
+```text
+http://localhost:8504 返回 200
+sidebar：已显示自选股管理、watchlist 选择、新 watchlist 名称、股票池编辑框、保存自选股按钮
+趋势评分页：可继续显示趋势评分和 CSV 下载按钮
+数据源 fallback warning：可正常显示
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## Fresh Clone 验证
 
 已按人工 review 要求，从远程仓库重新 clone：
