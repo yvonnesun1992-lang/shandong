@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from app.main import data_source_label, trend_scores_to_csv
+from app.main import data_source_label, default_watchlist_name, parse_symbols_text, trend_scores_to_csv
 from src.data.sample_data import load_sample_ohlcv
 from src.strategies.trend_score import latest_trend_score
 
@@ -41,3 +41,14 @@ def test_sample_data_can_generate_latest_trend_score():
     assert score.symbol == "300308"
     assert 0 <= score.score <= 100
     assert score.status in {"Strong trend", "Watchlist", "Neutral", "Weak"}
+
+
+def test_parse_symbols_text_accepts_lines_and_commas():
+    symbols = parse_symbols_text("nvda, amd\n300308，000977\n")
+
+    assert symbols == ["NVDA", "AMD", "300308", "000977"]
+
+
+def test_default_watchlist_name_matches_market():
+    assert default_watchlist_name("美股") == "us_default"
+    assert default_watchlist_name("A股") == "cn_default"
