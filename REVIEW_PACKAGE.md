@@ -910,3 +910,41 @@ python -m pytest
 py_compile: passed
 pytest: 49 passed
 ```
+
+## PR #6 GitHub Files Hidden Unicode 定位结论
+
+用户反馈 ChatGPT 在 GitHub PR / Files changed 页面仍然看到：
+
+```text
+This file contains hidden or bidirectional Unicode text that may be interpreted or compiled differently than what appears below.
+```
+
+进一步定位结论：
+
+- 已逐个检查 PR #6 相关文件：
+  - README.md
+  - REVIEW_PACKAGE.md
+  - app/main.py
+  - config/paper_portfolio.json
+  - src/paper_trading/__init__.py
+  - src/paper_trading/portfolio.py
+  - tests/test_paper_portfolio.py
+- 本地文件扫描未发现 hidden Unicode、bidi、zero-width、BOM、Unicode category Cf 或异常 control characters。
+- 远程 raw 文件扫描也未发现上述风险字符。
+- GitHub Files changed 页面的 HTML 源码中确实包含 hidden Unicode warning 文案，但它位于 GitHub 自带的 `<template>` 中。
+- 该模板会被 GitHub 静态插入到 diff 页面中，不等于某个文件实际触发了警告。
+- 实际可见页面检查结果：
+  - `hasVisibleHiddenWarning=false`
+  - `hasShowHiddenCharacters=false`
+- 因此，如果审查工具直接搜索 GitHub HTML 源码，会误判；应以页面实际可见 warning 条、`Show hidden characters` 按钮或远程 raw 字符扫描为准。
+
+最终验证：
+
+```text
+py_compile: passed
+pytest: 49 passed
+真实券商连接: 否
+自动下单: 否
+API key / secret / password / token: 否
+PR merge: 否
+```
