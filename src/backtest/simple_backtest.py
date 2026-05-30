@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+"""
+Simple V1 backtest module.
+
+This module keeps the backtest beginner-friendly and avoids real trading.
+"""
+
 import pandas as pd
 
 from src.strategies.trend_score import add_trend_scores
@@ -68,4 +74,3 @@ def run_simple_backtest(data: pd.DataFrame, initial_cash: float = 100_000) -> di
         "number_of_trades": len(trades),
         "final_portfolio_value": final_value,
     }
-
