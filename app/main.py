@@ -12,11 +12,18 @@ from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_sco
 st.set_page_config(page_title="山洞趋势量化系统", layout="wide")
 
 
-@st.cache_data(show_spinner=False)
+SAMPLE_WARNING = "当前真实数据源获取失败，正在使用本地示例数据。示例数据仅用于功能演示，不代表真实行情，不构成投资建议。"
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
 def load_data(market: str, symbol: str) -> pd.DataFrame:
     if market == "美股":
         return get_us_ohlcv(symbol)
     return get_cn_ohlcv(symbol)
+
+
+def is_sample_data(data: pd.DataFrame) -> bool:
+    return bool(data.attrs.get("is_sample_data", False))
 
 
 def build_rank_table(market: str, symbols: list[str]) -> pd.DataFrame:
@@ -32,10 +39,20 @@ def build_rank_table(market: str, symbols: list[str]) -> pd.DataFrame:
                     "状态": score.status,
                     "收盘价": round(score.close, 2),
                     "RSI14": round(score.rsi14, 2),
+                    "数据来源": "示例数据" if is_sample_data(data) else "真实数据",
                 }
             )
         except Exception as error:
-            rows.append({"股票代码": symbol, "趋势分数": None, "状态": f"数据错误: {error}", "收盘价": None, "RSI14": None})
+            rows.append(
+                {
+                    "股票代码": symbol,
+                    "趋势分数": None,
+                    "状态": f"数据错误: {error}",
+                    "收盘价": None,
+                    "RSI14": None,
+                    "数据来源": "不可用",
+                }
+            )
     return pd.DataFrame(rows).sort_values("趋势分数", ascending=False, na_position="last")
 
 
@@ -56,13 +73,18 @@ with rank_tab:
     st.subheader("趋势评分排名")
     if st.button("刷新评分", type="primary"):
         st.cache_data.clear()
-    st.dataframe(build_rank_table(market, symbols), use_container_width=True, hide_index=True)
+    rank_table = build_rank_table(market, symbols)
+    if (rank_table["数据来源"] == "示例数据").any():
+        st.warning(SAMPLE_WARNING)
+    st.dataframe(rank_table, use_container_width=True, hide_index=True)
 
 with chart_tab:
     st.subheader("收盘价、均线和 RSI")
     selected_symbol = st.selectbox("选择股票", symbols)
     try:
         data = load_data(market, selected_symbol)
+        if is_sample_data(data):
+            st.warning(SAMPLE_WARNING)
         scored = add_trend_scores(data)
         st.line_chart(scored.set_index("date")[["close", "ma20", "ma60", "ma120"]])
         st.line_chart(scored.set_index("date")[["rsi14"]])
@@ -77,6 +99,8 @@ with backtest_tab:
     if st.button("运行回测"):
         try:
             data = load_data(market, backtest_symbol)
+            if is_sample_data(data):
+                st.warning(SAMPLE_WARNING)
             result = run_simple_backtest(data, initial_cash=float(initial_cash))
             st.json(result)
         except Exception as error:

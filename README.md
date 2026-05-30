@@ -41,6 +41,26 @@ streamlit run app/main.py
 
 打开后可以选择 A股或美股，查看默认股票池的趋势评分排名，也可以查看单只股票的收盘价、均线和 RSI。
 
+## V1.1 数据 fallback
+
+系统优先使用真实行情数据：
+
+- 美股：`yfinance`
+- A股：`akshare`
+
+如果真实数据源失败、返回空数据或缺少关键 OHLCV 字段，dashboard 会自动使用本地示例数据，让趋势评分、图表和简单回测仍然可以演示。
+
+本地示例数据位于：
+
+```text
+data/sample/us_NVDA.csv
+data/sample/cn_300308.csv
+```
+
+示例数据只用于演示和测试，不代表真实市场行情，也不是投资建议。dashboard 使用示例数据时会显示提示。
+
+Streamlit 会缓存行情获取结果 1 小时，减少反复刷新时对 `yfinance` 和 `akshare` 的重复请求。
+
 ## 运行测试
 
 ```bash
