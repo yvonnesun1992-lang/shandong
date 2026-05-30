@@ -671,6 +671,85 @@ sidebar：已显示自选股管理、watchlist 选择、新 watchlist 名称、�
 是否建议创建 PR：是
 ```
 
+## V1.4: local paper trading portfolio
+
+V1.4 目标：
+
+- 增加一个本地模拟交易 / 纸上交易基础版。
+- 用户可以用虚拟资金模拟买入、卖出、查看持仓、查看现金、查看盈亏和交易记录。
+- 继续禁止真实券商连接、自动下单、实盘交易和密钥保存。
+
+新增文件：
+
+```text
+config/paper_portfolio.json
+src/paper_trading/__init__.py
+src/paper_trading/portfolio.py
+tests/test_paper_portfolio.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+模拟交易功能说明：
+
+- 默认虚拟资金：`100000.0`。
+- 本地文件：`config/paper_portfolio.json`。
+- 支持虚拟买入：
+  - 检查价格大于 0。
+  - 检查数量大于 0。
+  - 检查现金足够。
+  - 更新平均成本。
+  - 写入交易记录。
+- 支持虚拟卖出：
+  - 检查持仓数量足够。
+  - 卖完后删除持仓。
+  - 写入交易记录。
+- dashboard 新增“模拟交易”tab：
+  - 显示当前现金、持仓市值、总资产、浮动盈亏、持仓数量。
+  - 显示持仓表。
+  - 支持手动输入价格和数量进行模拟买卖。
+  - 显示最近 20 条交易记录。
+  - 支持下载交易记录 CSV。
+  - 支持确认后重置模拟账户。
+- 交易价格由用户手动输入，不会产生真实订单。
+- 文件只保存虚拟资金、持仓和交易记录，不保存真实账户或券商凭证。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 49 passed
+dashboard: passed
+```
+
+dashboard 本地验证：
+
+```text
+http://localhost:8505 返回 200
+模拟交易 tab：已显示免责声明
+账户概览：已显示当前现金、持仓市值、总资产、浮动盈亏、持仓数量
+持仓表：无持仓时显示提示
+模拟买入/卖出：表单已显示
+交易记录：无记录时显示提示
+重置模拟账户：已显示确认 checkbox 和重置按钮
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## Fresh Clone 验证
 
 已按人工 review 要求，从远程仓库重新 clone：
