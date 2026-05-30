@@ -437,6 +437,96 @@ http://localhost:8501 返回 200
 - 未发现真实交易、券商连接、自动下单、API key、secret、password 风险。
 - 建议人工 reviewer 继续审查业务逻辑和可维护性；如 reviewer 也确认 raw 多行、测试通过、风险边界清楚，可以再考虑 merge。
 
+## V1.1: sample data fallback and caching
+
+V1.1 目标：
+
+- 提高数据源稳定性。
+- 当 `yfinance` 或 `akshare` 失败时，自动使用本地示例数据。
+- 保证无网络或数据源失败时，dashboard 仍可以演示趋势评分、图表和回测。
+
+新增文件：
+
+```text
+data/sample/us_NVDA.csv
+data/sample/cn_300308.csv
+src/data/sample_data.py
+tests/test_sample_data.py
+```
+
+修改文件：
+
+```text
+app/main.py
+src/data/us_data.py
+src/data/cn_data.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+实现内容：
+
+- 示例 CSV 使用标准 OHLCV 字段：`date,open,high,low,close,volume`。
+- 每个示例 CSV 有 180 行，日期递增，成交量为正数。
+- `load_sample_ohlcv(market, symbol)` 支持：
+  - `us + NVDA`
+  - `cn + 300308`
+- 美股数据优先走 `yfinance`，失败后 fallback 到 `data/sample/us_NVDA.csv`。
+- A股数据优先走 `akshare`，失败后 fallback 到 `data/sample/cn_300308.csv`。
+- fallback 数据通过 `DataFrame.attrs["is_sample_data"] = True` 标记。
+- dashboard 使用 `st.cache_data(ttl=3600)` 缓存数据请求。
+- dashboard 使用示例数据时显示 warning：
+
+```text
+当前真实数据源获取失败，正在使用本地示例数据。示例数据仅用于功能演示，不代表真实行情，不构成投资建议。
+```
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 13 passed
+dashboard: passed
+```
+
+py_compile 命令：
+
+```bash
+python -m py_compile app/main.py src/data/us_data.py src/data/cn_data.py src/data/sample_data.py src/indicators/technical.py src/strategies/trend_score.py src/backtest/simple_backtest.py src/risk/position.py src/reports/daily_report.py
+```
+
+pytest 结果：
+
+```text
+collected 13 items
+
+tests/test_backtest.py .
+tests/test_indicators.py ...
+tests/test_sample_data.py ......
+tests/test_trend_score.py ...
+
+13 passed
+```
+
+dashboard 本地验证：
+
+```text
+http://localhost:8502 返回 200
+趋势评分页：可显示示例数据评分和示例数据 warning
+单只股票页：可显示 close、MA20、MA60、MA120、RSI14 图表
+简单回测页：可使用示例数据跑通并显示回测结果
+```
+
+安全边界：
+
+```text
+是否使用真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## Fresh Clone 验证
 
 已按人工 review 要求，从远程仓库重新 clone：
