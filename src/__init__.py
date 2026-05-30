@@ -1,0 +1,1 @@
+"""Shandong quantitative research system."""
