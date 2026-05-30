@@ -22,8 +22,9 @@ https://github.com/yvonnesun1992-lang/shandong/pull/1
 
 - 分支：`codex/v1-quant-system`
 - PR：`#1`
-- 最新代码验证提交：`644b3c8 Reverify LF raw formatting`
-- 上一个提交：`244006f Verify LF raw formatting`
+- 最新代码验证提交：`70c1a84 Force raw files to refresh LF formatting`
+- 上一个提交：`5281d49 Add final review package`
+- Raw 复查提交：`644b3c8 Reverify LF raw formatting`
 - 格式规则提交：`ab5eb41 Enforce LF formatting and guard empty watchlists`
 - 重要修复提交：`80636e2 Fix V1 install and runtime issues`
 
@@ -68,10 +69,10 @@ V1 明确不做：
 raw 检查结果：
 
 ```text
-app/main.py lines=83
-requirements.txt lines=7
-.gitattributes lines=4
-src/backtest/simple_backtest.py lines=70
+app/main.py lines=84
+requirements.txt lines=8
+.gitattributes lines=5
+src/backtest/simple_backtest.py lines=71
 simple_backtest bad multiline string=False
 ```
 
@@ -357,16 +358,16 @@ passed
 结果：
 
 ```text
-app/main.py lines=83
+app/main.py lines=84
 first line='from __future__ import annotations'
 
-requirements.txt lines=7
+requirements.txt lines=8
 first line='pandas>=2.2'
 
-.gitattributes lines=4
+.gitattributes lines=5
 first line='*.md text eol=lf'
 
-src/backtest/simple_backtest.py lines=70
+src/backtest/simple_backtest.py lines=71
 first line='from __future__ import annotations'
 bad multiline string=False
 ```
