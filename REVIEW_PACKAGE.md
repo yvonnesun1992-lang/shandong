@@ -460,3 +460,63 @@ requirements.txt lines=7 first='pandas>=2.2'
 .gitattributes lines=4 first='*.md text eol=lf'
 bad multiline string=False
 ```
+
+## Remote / Branch 排查
+
+按人工 reviewer 要求，未改代码前执行 Git 排查命令。
+
+### git remote -v
+
+```text
+origin  git@github.com:yvonnesun1992-lang/shandong.git (fetch)
+origin  git@github.com:yvonnesun1992-lang/shandong.git (push)
+```
+
+### git branch --show-current
+
+```text
+codex/v1-quant-system
+```
+
+### git status
+
+```text
+On branch codex/v1-quant-system
+Your branch is up to date with 'origin/codex/v1-quant-system'.
+
+nothing to commit, working tree clean
+```
+
+### git log -5 --oneline
+
+```text
+ba7321d Record fresh clone verification
+026d9a4 Restore raw Python files to valid multiline format
+cbcd5b0 Make raw files visibly multiline
+3d13932 Update review package with latest raw check
+70c1a84 Force raw files to refresh LF formatting
+```
+
+### git rev-parse HEAD
+
+```text
+ba7321d193841dd8a9d5beb9580db236ce006af4
+```
+
+### git ls-remote origin refs/heads/codex/v1-quant-system
+
+```text
+ba7321d193841dd8a9d5beb9580db236ce006af4 refs/heads/codex/v1-quant-system
+```
+
+### git diff origin/codex/v1-quant-system..HEAD --stat
+
+```text
+No diff.
+```
+
+结论：
+
+- 当前分支是 `codex/v1-quant-system`。
+- `HEAD` 等于 `origin/codex/v1-quant-system`。
+- 最新提交已经 push 到 `yvonnesun1992-lang/shandong` 的 `codex/v1-quant-system` 分支。
