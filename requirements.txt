@@ -5,3 +5,4 @@ yfinance>=0.2
 akshare>=1.14
 streamlit>=1.36
 pytest>=8.0
+

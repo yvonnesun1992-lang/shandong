@@ -68,3 +68,4 @@ def run_simple_backtest(data: pd.DataFrame, initial_cash: float = 100_000) -> di
         "number_of_trades": len(trades),
         "final_portfolio_value": final_value,
     }
+

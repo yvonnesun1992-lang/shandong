@@ -81,3 +81,4 @@ with backtest_tab:
             st.json(result)
         except Exception as error:
             st.error(f"无法完成 {backtest_symbol} 的回测：{error}")
+
