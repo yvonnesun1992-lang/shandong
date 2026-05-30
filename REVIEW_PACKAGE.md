@@ -520,3 +520,45 @@ No diff.
 - 当前分支是 `codex/v1-quant-system`。
 - `HEAD` 等于 `origin/codex/v1-quant-system`。
 - 最新提交已经 push 到 `yvonnesun1992-lang/shandong` 的 `codex/v1-quant-system` 分支。
+
+## Explicit Push 后的 Raw 检查
+
+执行：
+
+```bash
+git push origin HEAD:codex/v1-quant-system
+```
+
+push 结果：
+
+```text
+ba7321d..934c566 HEAD -> codex/v1-quant-system
+```
+
+随后按要求用远程 raw 链接检查：
+
+```text
+app/main.py:
+83
+'from __future__ import annotations\n\nimport pandas as pd\nimport streamlit as st\n\nfrom src.backtest.simple_backtest import run_simple_backtest\nfrom src.data.cn_data import get_cn_ohlcv\nfrom src.data.us_'
+
+requirements.txt:
+7
+'pandas>=2.2\nnumpy>=1.26\nmatplotlib>=3.8\nyfinance>=0.2\nakshare>=1.14\nstreamlit>=1.36\npytest>=8.0\n'
+
+.gitattributes:
+4
+'*.md text eol=lf\n*.py text eol=lf\n*.txt text eol=lf\n.gitignore text eol=lf\n'
+
+src/backtest/simple_backtest.py:
+70
+'from __future__ import annotations\n\nimport pandas as pd\n\nfrom src.strategies.trend_score import add_trend_scores\n\n\ndef calculate_max_drawdown(equity: pd.Series) -> float:\n    """Maximum fall from a previous high point."""\n    running_high = equity.cummax()\n    drawdown = equity / running_high - 1\n  '
+bad=False
+```
+
+确认：
+
+```text
+HEAD=934c5661b2675af0f9e6b1ad6610b9d103e708ca
+origin/codex/v1-quant-system=934c5661b2675af0f9e6b1ad6610b9d103e708ca
+```
