@@ -1,12 +1,5 @@
 from __future__ import annotations
 
-"""
-Dashboard entry point.
-
-This string is intentionally simple and has no runtime behavior.
-It also makes raw-source viewers preserve visible line breaks.
-"""
-
 import pandas as pd
 import streamlit as st
 
