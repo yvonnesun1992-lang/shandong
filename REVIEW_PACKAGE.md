@@ -527,6 +527,80 @@ http://localhost:8502 返回 200
 是否建议创建 PR：是
 ```
 
+## V1.2: dashboard polish and CSV export
+
+V1.2 目标：
+
+- 把 Streamlit dashboard 优化成更适合演示的产品化界面。
+- 保持核心策略不变。
+- 继续禁止真实券商连接、自动下单、实盘交易和密钥保存。
+
+新增文件：
+
+```text
+tests/test_dashboard_helpers.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+实现内容：
+
+- 页面顶部增加全局免责声明。
+- 趋势评分页、单只股票分析页、简单回测页显示数据源状态。
+- 使用示例数据时显示 warning：
+
+```text
+当前真实数据源获取失败，正在使用本地示例数据。示例数据仅用于功能演示，不代表真实行情，不构成投资建议。
+```
+
+- 增加“趋势评分规则说明”可展开区域。
+- 趋势评分排名支持导出 `trend_scores.csv`。
+- sidebar 增加缓存说明：行情数据默认缓存 1 小时。
+- 页面 tabs 调整为：
+  - 趋势评分
+  - 单只股票分析
+  - 简单回测
+  - 说明与风险提示
+- 新增测试覆盖：
+  - 趋势评分表可以转换为 CSV。
+  - sample attrs 可以识别为示例数据。
+  - 示例数据可以生成趋势评分结果。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 16 passed
+dashboard: passed
+```
+
+dashboard 本地验证：
+
+```text
+http://localhost:8503 返回 200
+页面顶部免责声明：已显示
+趋势评分页：已显示评分规则、数据源状态和 CSV 下载按钮
+单只股票分析页：已显示数据源状态、收盘价/均线/RSI 图表
+简单回测页：已显示数据源状态并可跑出回测结果
+说明与风险提示页：已显示缓存说明和安全边界
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## Fresh Clone 验证
 
 已按人工 review 要求，从远程仓库重新 clone：
