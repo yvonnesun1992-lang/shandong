@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from src.backtest.portfolio_backtest import run_portfolio_backtest
 from src.backtest.simple_backtest import run_simple_backtest
 from src.data.cn_data import get_cn_ohlcv
 from src.data.us_data import get_us_ohlcv
@@ -25,6 +26,7 @@ SAMPLE_WARNING = "当前真实数据源获取失败，正在使用本地示例�
 DISCLAIMER = "本系统仅用于学习、研究、历史回测和模拟交易演示，不构成投资建议。历史回测不代表未来收益。当前版本不连接真实券商，不自动下单。"
 CACHE_NOTE = "行情数据使用缓存，默认缓存 1 小时。如需强制刷新，请重启应用或清理 Streamlit cache。"
 PAPER_TRADING_WARNING = "模拟交易仅用于学习和功能演示，不代表真实交易，不构成投资建议，不会连接真实券商，也不会产生真实订单。"
+PORTFOLIO_BACKTEST_WARNING = "组合回测仅用于历史研究和功能演示，不代表未来收益，不构成投资建议。"
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
@@ -67,6 +69,10 @@ def trend_scores_to_csv(rank_table: pd.DataFrame) -> bytes:
 
 def trades_to_csv(trades: list[dict]) -> bytes:
     return pd.DataFrame(trades).to_csv(index=False).encode("utf-8-sig")
+
+
+def dataframe_to_csv(data: pd.DataFrame) -> bytes:
+    return data.to_csv(index=False).encode("utf-8-sig")
 
 
 def parse_symbols_text(symbols_text: str) -> list[str]:
@@ -114,6 +120,17 @@ def build_rank_table(market: str, symbols: list[str]) -> pd.DataFrame:
                 }
             )
     return pd.DataFrame(rows).sort_values("趋势分数", ascending=False, na_position="last")
+
+
+def load_price_data_for_symbols(market: str, symbols: list[str]) -> tuple[dict[str, pd.DataFrame], list[str]]:
+    price_data = {}
+    failed_symbols = []
+    for symbol in symbols:
+        try:
+            price_data[symbol] = load_data(market, symbol)
+        except Exception:
+            failed_symbols.append(symbol)
+    return price_data, failed_symbols
 
 
 def market_label_from_code(market: str) -> str:
@@ -203,8 +220,8 @@ def main() -> None:
         st.warning("股票池为空，请在左侧输入至少一个股票代码。")
         st.stop()
 
-    rank_tab, chart_tab, backtest_tab, paper_tab, info_tab = st.tabs(
-        ["趋势评分", "单只股票分析", "简单回测", "模拟交易", "说明与风险提示"]
+    rank_tab, chart_tab, backtest_tab, portfolio_tab, paper_tab, info_tab = st.tabs(
+        ["趋势评分", "单只股票分析", "简单回测", "组合回测", "模拟交易", "说明与风险提示"]
     )
 
     with rank_tab:
@@ -248,6 +265,94 @@ def main() -> None:
                 st.json(result)
             except Exception as error:
                 st.error(f"无法完成 {backtest_symbol} 的回测：{error}")
+
+    with portfolio_tab:
+        st.subheader("V1.5 组合回测")
+        st.warning(PORTFOLIO_BACKTEST_WARNING)
+        portfolio_initial_cash = st.number_input(
+            "组合回测初始资金",
+            min_value=10_000,
+            value=100_000,
+            step=10_000,
+            key="portfolio_initial_cash",
+        )
+        portfolio_max_position_pct = st.number_input(
+            "单只股票最大仓位（%）",
+            min_value=1,
+            max_value=100,
+            value=15,
+            step=1,
+            key="portfolio_max_position_pct",
+        )
+        portfolio_min_buy_score = st.number_input(
+            "买入分数阈值",
+            min_value=0,
+            max_value=100,
+            value=80,
+            step=5,
+            key="portfolio_min_buy_score",
+        )
+        portfolio_min_hold_score = st.number_input(
+            "持有分数阈值",
+            min_value=0,
+            max_value=100,
+            value=60,
+            step=5,
+            key="portfolio_min_hold_score",
+        )
+
+        if st.button("运行组合回测"):
+            try:
+                price_data, failed_symbols = load_price_data_for_symbols(market, symbols)
+                if not price_data:
+                    st.error("没有可用于组合回测的数据。")
+                else:
+                    if any(is_sample_data(data) for data in price_data.values()):
+                        st.warning(SAMPLE_WARNING)
+                    else:
+                        st.info("数据源：实时/历史行情数据")
+
+                    result = run_portfolio_backtest(
+                        price_data,
+                        initial_cash=float(portfolio_initial_cash),
+                        max_position_pct=float(portfolio_max_position_pct) / 100,
+                        min_score_to_buy=int(portfolio_min_buy_score),
+                        min_score_to_hold=int(portfolio_min_hold_score),
+                    )
+                    summary = result["summary"]
+                    skipped_symbols = sorted(set(failed_symbols + result["skipped_symbols"]))
+
+                    total_col, annual_col, drawdown_col, final_col, trades_col = st.columns(5)
+                    total_col.metric("总收益", f"{summary['total_return']:.2%}")
+                    annual_col.metric("年化收益", f"{summary['annualized_return']:.2%}")
+                    drawdown_col.metric("最大回撤", f"{summary['max_drawdown']:.2%}")
+                    final_col.metric("最终资产", f"{summary['final_portfolio_value']:,.2f}")
+                    trades_col.metric("交易次数", summary["number_of_trades"])
+
+                    if skipped_symbols:
+                        st.warning(f"跳过的股票：{', '.join(skipped_symbols)}")
+                    else:
+                        st.success("没有因数据不足或加载失败被跳过的股票。")
+
+                    equity_curve = result["equity_curve"]
+                    trades_table = result["trades"]
+                    st.line_chart(equity_curve.set_index("date")[["total_value"]])
+                    st.dataframe(trades_table, use_container_width=True, hide_index=True)
+
+                    st.download_button(
+                        label="下载组合净值 CSV",
+                        data=dataframe_to_csv(equity_curve),
+                        file_name="equity_curve.csv",
+                        mime="text/csv",
+                    )
+                    st.download_button(
+                        label="下载组合交易记录 CSV",
+                        data=dataframe_to_csv(trades_table),
+                        file_name="portfolio_trades.csv",
+                        mime="text/csv",
+                    )
+            except Exception as error:
+                st.error(f"组合回测失败：{error}")
 
     with paper_tab:
         st.subheader("本地模拟交易")
@@ -346,7 +451,7 @@ def main() -> None:
 
 {CACHE_NOTE}
 
-V1.3 仍然只做研究、历史回测、趋势观察和模拟交易演示：
+当前版本仍然只做研究、历史回测、趋势观察、组合回测和模拟交易演示：
 
 - 不连接真实券商
 - 不自动下单
@@ -355,6 +460,7 @@ V1.3 仍然只做研究、历史回测、趋势观察和模拟交易演示：
 - 不使用 AI 预测股价
 - 自选股配置只保存股票代码列表，不保存账户信息
 - 模拟交易只保存虚拟资金、持仓和交易记录，不连接真实券商
+- 组合回测不包含手续费、滑点、停牌、涨跌停、分红或真实成交限制
 """
         )
 

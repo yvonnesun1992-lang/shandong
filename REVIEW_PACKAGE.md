@@ -948,3 +948,85 @@ pytest: 49 passed
 API key / secret / password / token: 否
 PR merge: 否
 ```
+
+## V1.5: portfolio backtesting and risk metrics
+
+V1.5 目标：
+
+- 增加组合回测功能。
+- 基于当前 watchlist 对多个股票组成的组合做历史研究。
+- 增加组合级风险指标。
+- 继续禁止真实券商连接、自动下单、实盘交易和密钥保存。
+
+新增文件：
+
+```text
+src/backtest/portfolio_backtest.py
+src/risk/metrics.py
+tests/test_portfolio_backtest.py
+tests/test_risk_metrics.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+组合回测功能说明：
+
+- 输入为多个股票的标准 OHLCV 数据。
+- 使用现有趋势评分逻辑。
+- 趋势分数大于等于买入阈值时进入候选池。
+- 趋势分数低于持有阈值，或收盘价跌破 MA60 时卖出。
+- 单只股票最大仓位默认 15%。
+- 数据不足 120 行的股票会被跳过，并写入 `skipped_symbols`。
+- 输出 `equity_curve`、`trades` 和 `summary`。
+- `summary` 包含总收益、年化收益、最大回撤、交易次数、最终资产、现金和持仓市值。
+
+dashboard 更新：
+
+- 新增“组合回测”tab。
+- 使用当前 watchlist 作为组合股票池。
+- 支持设置初始资金、单只股票最大仓位、买入分数阈值和持有分数阈值。
+- 展示总收益、年化收益、最大回撤、最终资产、交易次数和跳过股票。
+- 展示组合净值曲线和交易记录表。
+- 支持导出 `equity_curve.csv` 和 `portfolio_trades.csv`。
+- 显示组合回测免责声明。
+
+风险指标：
+
+- `calculate_max_drawdown`
+- `calculate_total_return`
+- `calculate_annualized_return`
+
+已知限制：
+
+- 不包含手续费。
+- 不包含滑点。
+- 不处理停牌。
+- 不处理涨跌停。
+- 不处理分红。
+- 不处理真实成交限制。
+- 不做杠杆。
+- 不做做空。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 59 passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
