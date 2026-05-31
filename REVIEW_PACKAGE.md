@@ -1030,3 +1030,96 @@ dashboard: passed
 是否使用 AI 预测股价：否
 是否建议创建 PR：是
 ```
+
+## V1.6: backtest report center
+
+V1.6 目标：
+
+- 增加本地回测结果保存功能。
+- 增加 dashboard 报告中心。
+- 用户运行单票回测或组合回测后，可以保存报告并回看历史记录。
+- 继续禁止真实券商连接、自动下单、实盘交易和密钥保存。
+
+新增文件：
+
+```text
+reports/backtests/.gitkeep
+src/reports/backtest_report.py
+tests/test_backtest_report.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+回测报告保存功能说明：
+
+- 默认报告目录：`reports/backtests/`。
+- 每个报告保存为独立 JSON 文件。
+- report_id 自动生成，包含时间戳和随机后缀。
+- report_id 只允许字母、数字、下划线和短横线。
+- 读取、删除报告时会校验 report_id，防止路径穿越。
+- JSON 使用 UTF-8、`indent=2`、`ensure_ascii=False`。
+- DataFrame 会转换为 records。
+- 日期和 timestamp 会转换为字符串，避免 JSON 序列化失败。
+- 如果 JSON 损坏，读取时会抛出清晰 `ValueError`。
+- 如果报告不存在，读取或删除时会抛出清晰 `FileNotFoundError`。
+
+报告内容结构：
+
+```text
+report_id
+created_at
+report_type
+parameters
+summary
+equity_curve
+trades
+```
+
+报告中心功能说明：
+
+- dashboard 新增“报告中心”tab。
+- 显示历史报告列表。
+- 支持选择一个 report_id 查看详情。
+- 展示报告 metadata。
+- 展示 summary。
+- 如果有 equity_curve，展示净值曲线和表格。
+- 如果有 trades，展示交易记录表。
+- 支持下载当前报告 JSON。
+- 支持下载当前报告 trades CSV。
+- 支持下载全部报告 summary CSV。
+- 支持勾选确认后删除报告。
+- 删除失败会显示 error，不会让 dashboard 崩溃。
+
+单票回测保存：
+
+- 保存 `symbol`、`market`、`initial_cash` 和回测 summary。
+- 当前单票 V1 回测函数只返回 summary，因此报告保存为 summary-only。
+
+组合回测保存：
+
+- 保存 `watchlist`、`market`、`initial_cash`、`max_position_pct`、`min_score_to_buy`、`min_score_to_hold`。
+- 保存 summary、equity_curve 和 trades。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 72 passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```

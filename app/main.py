@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import pandas as pd
 import streamlit as st
 
@@ -16,6 +18,13 @@ from src.paper_trading.portfolio import (
     reset_paper_portfolio,
     sell_paper_position,
 )
+from src.reports.backtest_report import (
+    delete_backtest_report,
+    export_report_summary_csv,
+    list_backtest_reports,
+    load_backtest_report,
+    save_backtest_report,
+)
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
 
 
@@ -27,6 +36,7 @@ DISCLAIMER = "本系统仅用于学习、研究、历史回测和模拟交易演
 CACHE_NOTE = "行情数据使用缓存，默认缓存 1 小时。如需强制刷新，请重启应用或清理 Streamlit cache。"
 PAPER_TRADING_WARNING = "模拟交易仅用于学习和功能演示，不代表真实交易，不构成投资建议，不会连接真实券商，也不会产生真实订单。"
 PORTFOLIO_BACKTEST_WARNING = "组合回测仅用于历史研究和功能演示，不代表未来收益，不构成投资建议。"
+REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
@@ -73,6 +83,14 @@ def trades_to_csv(trades: list[dict]) -> bytes:
 
 def dataframe_to_csv(data: pd.DataFrame) -> bytes:
     return data.to_csv(index=False).encode("utf-8-sig")
+
+
+def report_to_json_bytes(report: dict) -> bytes:
+    return json.dumps(report, ensure_ascii=False, indent=2).encode("utf-8")
+
+
+def report_records_to_csv(records: list[dict]) -> bytes:
+    return pd.DataFrame(records).to_csv(index=False).encode("utf-8-sig")
 
 
 def parse_symbols_text(symbols_text: str) -> list[str]:
@@ -220,8 +238,8 @@ def main() -> None:
         st.warning("股票池为空，请在左侧输入至少一个股票代码。")
         st.stop()
 
-    rank_tab, chart_tab, backtest_tab, portfolio_tab, paper_tab, info_tab = st.tabs(
-        ["趋势评分", "单只股票分析", "简单回测", "组合回测", "模拟交易", "说明与风险提示"]
+    rank_tab, chart_tab, backtest_tab, portfolio_tab, report_tab, paper_tab, info_tab = st.tabs(
+        ["趋势评分", "单只股票分析", "简单回测", "组合回测", "报告中心", "模拟交易", "说明与风险提示"]
     )
 
     with rank_tab:
@@ -263,8 +281,28 @@ def main() -> None:
                 show_data_source_status(data)
                 result = run_simple_backtest(data, initial_cash=float(initial_cash))
                 st.json(result)
+                st.session_state["latest_single_backtest_report"] = {
+                    "parameters": {
+                        "symbol": backtest_symbol,
+                        "market": market,
+                        "initial_cash": float(initial_cash),
+                    },
+                    "summary": result,
+                }
             except Exception as error:
                 st.error(f"无法完成 {backtest_symbol} 的回测：{error}")
+        if "latest_single_backtest_report" in st.session_state:
+            if st.button("保存单票回测报告"):
+                try:
+                    latest_report = st.session_state["latest_single_backtest_report"]
+                    saved_report = save_backtest_report(
+                        "single_stock_backtest",
+                        latest_report["parameters"],
+                        latest_report["summary"],
+                    )
+                    st.success(f"单票回测报告已保存：{saved_report['report_id']}")
+                except Exception as error:
+                    st.error(f"保存单票回测报告失败：{error}")
 
     with portfolio_tab:
         st.subheader("V1.5 组合回测")
@@ -338,6 +376,19 @@ def main() -> None:
                     trades_table = result["trades"]
                     st.line_chart(equity_curve.set_index("date")[["total_value"]])
                     st.dataframe(trades_table, use_container_width=True, hide_index=True)
+                    st.session_state["latest_portfolio_backtest_report"] = {
+                        "parameters": {
+                            "watchlist": symbols,
+                            "market": market,
+                            "initial_cash": float(portfolio_initial_cash),
+                            "max_position_pct": float(portfolio_max_position_pct) / 100,
+                            "min_score_to_buy": int(portfolio_min_buy_score),
+                            "min_score_to_hold": int(portfolio_min_hold_score),
+                        },
+                        "summary": summary,
+                        "equity_curve": equity_curve,
+                        "trades": trades_table,
+                    }
 
                     st.download_button(
                         label="下载组合净值 CSV",
@@ -353,6 +404,95 @@ def main() -> None:
                     )
             except Exception as error:
                 st.error(f"组合回测失败：{error}")
+        if "latest_portfolio_backtest_report" in st.session_state:
+            if st.button("保存组合回测报告"):
+                try:
+                    latest_report = st.session_state["latest_portfolio_backtest_report"]
+                    saved_report = save_backtest_report(
+                        "portfolio_backtest",
+                        latest_report["parameters"],
+                        latest_report["summary"],
+                        equity_curve=latest_report["equity_curve"],
+                        trades=latest_report["trades"],
+                    )
+                    st.success(f"组合回测报告已保存：{saved_report['report_id']}")
+                except Exception as error:
+                    st.error(f"保存组合回测报告失败：{error}")
+
+    with report_tab:
+        st.subheader("报告中心")
+        st.warning(REPORT_CENTER_WARNING)
+        try:
+            reports_table = list_backtest_reports()
+            if reports_table.empty:
+                st.info("暂无历史回测报告。运行并保存回测后，这里会显示记录。")
+            else:
+                st.dataframe(reports_table, use_container_width=True, hide_index=True)
+                st.download_button(
+                    label="下载报告列表 summary CSV",
+                    data=export_report_summary_csv().encode("utf-8-sig"),
+                    file_name="backtest_report_summary.csv",
+                    mime="text/csv",
+                )
+                selected_report_id = st.selectbox("选择报告", reports_table["report_id"].tolist())
+                try:
+                    report = load_backtest_report(selected_report_id)
+                    metadata = {
+                        "report_id": report.get("report_id"),
+                        "created_at": report.get("created_at"),
+                        "report_type": report.get("report_type"),
+                        "parameters": report.get("parameters", {}),
+                    }
+                    st.markdown("### 报告 metadata")
+                    st.json(metadata)
+                    st.markdown("### 回测摘要")
+                    st.json(report.get("summary", {}))
+
+                    equity_records = report.get("equity_curve", [])
+                    trades_records = report.get("trades", [])
+                    if equity_records:
+                        equity_table = pd.DataFrame(equity_records)
+                        if "date" in equity_table.columns:
+                            equity_table["date"] = pd.to_datetime(equity_table["date"], errors="coerce")
+                            equity_table = equity_table.dropna(subset=["date"])
+                        if {"date", "total_value"}.issubset(equity_table.columns):
+                            st.markdown("### 净值曲线")
+                            st.line_chart(equity_table.set_index("date")[["total_value"]])
+                        st.dataframe(equity_table, use_container_width=True, hide_index=True)
+
+                    if trades_records:
+                        trades_table = pd.DataFrame(trades_records)
+                        st.markdown("### 交易记录")
+                        st.dataframe(trades_table, use_container_width=True, hide_index=True)
+                        st.download_button(
+                            label="下载当前报告 trades CSV",
+                            data=report_records_to_csv(trades_records),
+                            file_name=f"{selected_report_id}_trades.csv",
+                            mime="text/csv",
+                        )
+
+                    st.download_button(
+                        label="下载当前报告 JSON",
+                        data=report_to_json_bytes(report),
+                        file_name=f"{selected_report_id}.json",
+                        mime="application/json",
+                    )
+
+                    confirm_delete_report = st.checkbox(
+                        f"确认删除报告 {selected_report_id}",
+                        key=f"delete_report_{selected_report_id}",
+                    )
+                    if st.button("删除当前报告"):
+                        if not confirm_delete_report:
+                            st.error("请先勾选确认框，再删除报告。")
+                        else:
+                            delete_backtest_report(selected_report_id)
+                            st.success(f"已删除报告：{selected_report_id}")
+                            st.rerun()
+                except Exception as error:
+                    st.error(f"无法读取报告详情：{error}")
+        except Exception as error:
+            st.error(f"报告中心加载失败：{error}")
 
     with paper_tab:
         st.subheader("本地模拟交易")
@@ -461,6 +601,7 @@ def main() -> None:
 - 自选股配置只保存股票代码列表，不保存账户信息
 - 模拟交易只保存虚拟资金、持仓和交易记录，不连接真实券商
 - 组合回测不包含手续费、滑点、停牌、涨跌停、分红或真实成交限制
+- 回测报告只保存本地研究数据，不保存真实账户或券商凭证
 """
         )
 
