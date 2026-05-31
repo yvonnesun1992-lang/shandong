@@ -671,6 +671,85 @@ sidebar：已显示自选股管理、watchlist 选择、新 watchlist 名称、�
 是否建议创建 PR：是
 ```
 
+## V1.4: local paper trading portfolio
+
+V1.4 目标：
+
+- 增加一个本地模拟交易 / 纸上交易基础版。
+- 用户可以用虚拟资金模拟买入、卖出、查看持仓、查看现金、查看盈亏和交易记录。
+- 继续禁止真实券商连接、自动下单、实盘交易和密钥保存。
+
+新增文件：
+
+```text
+config/paper_portfolio.json
+src/paper_trading/__init__.py
+src/paper_trading/portfolio.py
+tests/test_paper_portfolio.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+模拟交易功能说明：
+
+- 默认虚拟资金：`100000.0`。
+- 本地文件：`config/paper_portfolio.json`。
+- 支持虚拟买入：
+  - 检查价格大于 0。
+  - 检查数量大于 0。
+  - 检查现金足够。
+  - 更新平均成本。
+  - 写入交易记录。
+- 支持虚拟卖出：
+  - 检查持仓数量足够。
+  - 卖完后删除持仓。
+  - 写入交易记录。
+- dashboard 新增“模拟交易”tab：
+  - 显示当前现金、持仓市值、总资产、浮动盈亏、持仓数量。
+  - 显示持仓表。
+  - 支持手动输入价格和数量进行模拟买卖。
+  - 显示最近 20 条交易记录。
+  - 支持下载交易记录 CSV。
+  - 支持确认后重置模拟账户。
+- 交易价格由用户手动输入，不会产生真实订单。
+- 文件只保存虚拟资金、持仓和交易记录，不保存真实账户或券商凭证。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 49 passed
+dashboard: passed
+```
+
+dashboard 本地验证：
+
+```text
+http://localhost:8505 返回 200
+模拟交易 tab：已显示免责声明
+账户概览：已显示当前现金、持仓市值、总资产、浮动盈亏、持仓数量
+持仓表：无持仓时显示提示
+模拟买入/卖出：表单已显示
+交易记录：无记录时显示提示
+重置模拟账户：已显示确认 checkbox 和重置按钮
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## Fresh Clone 验证
 
 已按人工 review 要求，从远程仓库重新 clone：
@@ -795,4 +874,77 @@ bad=False
 ```text
 HEAD=934c5661b2675af0f9e6b1ad6610b9d103e708ca
 origin/codex/v1-quant-system=934c5661b2675af0f9e6b1ad6610b9d103e708ca
+```
+
+## PR #6 文档 Unicode 安全复查
+
+本次只复查和更新文档，不修改模拟交易业务逻辑。
+
+复查文件：
+
+- README.md
+- REVIEW_PACKAGE.md
+
+清理与验证结果：
+
+- 已使用 Python 扫描 RLO、LRO、RLE、LRE、PDF、LRI、RLI、FSI、PDI。
+- 已扫描 zero-width space、zero-width joiner、zero-width non-joiner、BOM。
+- 已扫描 Unicode category Cf 和异常 control characters。
+- 未发现需要删除的隐藏 Unicode、双向文本控制字符或异常控制字符。
+- 已确认两个文档按 UTF-8 和 LF 换行保存。
+- 未修改 `src/paper_trading/portfolio.py` 业务逻辑。
+- 未连接真实券商。
+- 未自动下单。
+- 未加入 API key、secret、password、token。
+
+验证命令：
+
+```bash
+python -m py_compile app/main.py src/data/us_data.py src/data/cn_data.py src/data/sample_data.py src/data/watchlist_manager.py src/paper_trading/portfolio.py src/indicators/technical.py src/strategies/trend_score.py src/backtest/simple_backtest.py src/risk/position.py src/reports/daily_report.py
+python -m pytest
+```
+
+结果：
+
+```text
+py_compile: passed
+pytest: 49 passed
+```
+
+## PR #6 GitHub Files Hidden Unicode 定位结论
+
+用户反馈 ChatGPT 在 GitHub PR / Files changed 页面仍然看到：
+
+```text
+This file contains hidden or bidirectional Unicode text that may be interpreted or compiled differently than what appears below.
+```
+
+进一步定位结论：
+
+- 已逐个检查 PR #6 相关文件：
+  - README.md
+  - REVIEW_PACKAGE.md
+  - app/main.py
+  - config/paper_portfolio.json
+  - src/paper_trading/__init__.py
+  - src/paper_trading/portfolio.py
+  - tests/test_paper_portfolio.py
+- 本地文件扫描未发现 hidden Unicode、bidi、zero-width、BOM、Unicode category Cf 或异常 control characters。
+- 远程 raw 文件扫描也未发现上述风险字符。
+- GitHub Files changed 页面的 HTML 源码中确实包含 hidden Unicode warning 文案，但它位于 GitHub 自带的 `<template>` 中。
+- 该模板会被 GitHub 静态插入到 diff 页面中，不等于某个文件实际触发了警告。
+- 实际可见页面检查结果：
+  - `hasVisibleHiddenWarning=false`
+  - `hasShowHiddenCharacters=false`
+- 因此，如果审查工具直接搜索 GitHub HTML 源码，会误判；应以页面实际可见 warning 条、`Show hidden characters` 按钮或远程 raw 字符扫描为准。
+
+最终验证：
+
+```text
+py_compile: passed
+pytest: 49 passed
+真实券商连接: 否
+自动下单: 否
+API key / secret / password / token: 否
+PR merge: 否
 ```

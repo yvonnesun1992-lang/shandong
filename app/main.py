@@ -7,6 +7,14 @@ from src.backtest.simple_backtest import run_simple_backtest
 from src.data.cn_data import get_cn_ohlcv
 from src.data.us_data import get_us_ohlcv
 from src.data.watchlist_manager import load_watchlists, normalize_symbols, save_watchlist, validate_watchlist_name
+from src.paper_trading.portfolio import (
+    buy_paper_position,
+    calculate_portfolio_summary,
+    get_trade_history,
+    load_paper_portfolio,
+    reset_paper_portfolio,
+    sell_paper_position,
+)
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
 
 
@@ -16,6 +24,7 @@ st.set_page_config(page_title="山洞趋势量化系统", layout="wide")
 SAMPLE_WARNING = "当前真实数据源获取失败，正在使用本地示例数据。示例数据仅用于功能演示，不代表真实行情，不构成投资建议。"
 DISCLAIMER = "本系统仅用于学习、研究、历史回测和模拟交易演示，不构成投资建议。历史回测不代表未来收益。当前版本不连接真实券商，不自动下单。"
 CACHE_NOTE = "行情数据使用缓存，默认缓存 1 小时。如需强制刷新，请重启应用或清理 Streamlit cache。"
+PAPER_TRADING_WARNING = "模拟交易仅用于学习和功能演示，不代表真实交易，不构成投资建议，不会连接真实券商，也不会产生真实订单。"
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
@@ -54,6 +63,10 @@ def trend_scores_to_csv(rank_table: pd.DataFrame) -> bytes:
         }
     )
     return export.to_csv(index=False).encode("utf-8-sig")
+
+
+def trades_to_csv(trades: list[dict]) -> bytes:
+    return pd.DataFrame(trades).to_csv(index=False).encode("utf-8-sig")
 
 
 def parse_symbols_text(symbols_text: str) -> list[str]:
@@ -101,6 +114,24 @@ def build_rank_table(market: str, symbols: list[str]) -> pd.DataFrame:
                 }
             )
     return pd.DataFrame(rows).sort_values("趋势分数", ascending=False, na_position="last")
+
+
+def market_label_from_code(market: str) -> str:
+    if market.lower() == "cn":
+        return "A股"
+    return "美股"
+
+
+def latest_prices_for_positions(portfolio: dict) -> dict[str, float]:
+    prices = {}
+    for symbol, position in portfolio.get("positions", {}).items():
+        try:
+            market_label = market_label_from_code(position.get("market", "us"))
+            data = load_data(market_label, symbol)
+            prices[symbol] = float(data.iloc[-1]["close"])
+        except Exception:
+            prices[symbol] = float(position.get("avg_cost", 0.0))
+    return prices
 
 
 def show_score_rules() -> None:
@@ -172,7 +203,9 @@ def main() -> None:
         st.warning("股票池为空，请在左侧输入至少一个股票代码。")
         st.stop()
 
-    rank_tab, chart_tab, backtest_tab, info_tab = st.tabs(["趋势评分", "单只股票分析", "简单回测", "说明与风险提示"])
+    rank_tab, chart_tab, backtest_tab, paper_tab, info_tab = st.tabs(
+        ["趋势评分", "单只股票分析", "简单回测", "模拟交易", "说明与风险提示"]
+    )
 
     with rank_tab:
         st.subheader("趋势评分排名")
@@ -216,6 +249,93 @@ def main() -> None:
             except Exception as error:
                 st.error(f"无法完成 {backtest_symbol} 的回测：{error}")
 
+    with paper_tab:
+        st.subheader("本地模拟交易")
+        st.warning(PAPER_TRADING_WARNING)
+        try:
+            portfolio = load_paper_portfolio()
+            latest_prices = latest_prices_for_positions(portfolio)
+            summary = calculate_portfolio_summary(portfolio, latest_prices)
+        except Exception as error:
+            st.error(f"无法读取模拟账户：{error}")
+            summary = calculate_portfolio_summary({"cash": 0.0, "positions": {}, "trades": []})
+            portfolio = {"cash": 0.0, "positions": {}, "trades": []}
+
+        cash_col, value_col, total_col, pnl_col, count_col = st.columns(5)
+        cash_col.metric("当前现金", f"{summary['cash']:,.2f}")
+        value_col.metric("持仓市值", f"{summary['positions_value']:,.2f}")
+        total_col.metric("总资产", f"{summary['total_assets']:,.2f}")
+        pnl_col.metric("浮动盈亏", f"{summary['unrealized_pnl']:,.2f}")
+        count_col.metric("持仓数量", summary["position_count"])
+
+        st.subheader("当前持仓")
+        positions_table = pd.DataFrame(summary["positions"])
+        if positions_table.empty:
+            st.info("当前没有模拟持仓。")
+        else:
+            st.dataframe(positions_table, use_container_width=True, hide_index=True)
+
+        buy_col, sell_col = st.columns(2)
+        with buy_col:
+            st.markdown("### 模拟买入")
+            buy_market = st.selectbox("买入市场", ["us", "cn"], key="paper_buy_market")
+            buy_symbol = st.text_input("买入 symbol", value=symbols[0] if symbols else "", key="paper_buy_symbol")
+            buy_price = st.number_input("买入价格", min_value=0.0, value=100.0, step=1.0, key="paper_buy_price")
+            buy_quantity = st.number_input("买入数量", min_value=1, value=1, step=1, key="paper_buy_quantity")
+            if st.button("模拟买入"):
+                try:
+                    buy_paper_position(buy_symbol, buy_price, int(buy_quantity), buy_market)
+                    st.success("模拟买入成功。")
+                    st.rerun()
+                except Exception as error:
+                    st.error(f"模拟买入失败：{error}")
+
+        with sell_col:
+            st.markdown("### 模拟卖出")
+            position_symbols = sorted(portfolio.get("positions", {}))
+            if position_symbols:
+                sell_symbol = st.selectbox("卖出 symbol", position_symbols, key="paper_sell_symbol")
+                sell_market = portfolio["positions"][sell_symbol].get("market", "us")
+            else:
+                sell_symbol = st.text_input("卖出 symbol", value="", key="paper_sell_symbol_text")
+                sell_market = st.selectbox("卖出市场", ["us", "cn"], key="paper_sell_market")
+            sell_price = st.number_input("卖出价格", min_value=0.0, value=100.0, step=1.0, key="paper_sell_price")
+            sell_quantity = st.number_input("卖出数量", min_value=1, value=1, step=1, key="paper_sell_quantity")
+            if st.button("模拟卖出"):
+                try:
+                    sell_paper_position(sell_symbol, sell_price, int(sell_quantity), sell_market)
+                    st.success("模拟卖出成功。")
+                    st.rerun()
+                except Exception as error:
+                    st.error(f"模拟卖出失败：{error}")
+
+        st.subheader("交易记录")
+        trades = get_trade_history(portfolio)
+        recent_trades = trades[-20:]
+        if recent_trades:
+            st.dataframe(pd.DataFrame(recent_trades), use_container_width=True, hide_index=True)
+            st.download_button(
+                label="下载交易记录 CSV",
+                data=trades_to_csv(trades),
+                file_name="paper_trades.csv",
+                mime="text/csv",
+            )
+        else:
+            st.info("暂无模拟交易记录。")
+
+        st.subheader("重置模拟账户")
+        confirm_reset = st.checkbox("确认重置模拟账户为 100000 虚拟资金，并清空持仓和交易记录。")
+        if st.button("重置模拟账户"):
+            if not confirm_reset:
+                st.error("请先勾选确认框，再重置模拟账户。")
+            else:
+                try:
+                    reset_paper_portfolio()
+                    st.success("模拟账户已重置。")
+                    st.rerun()
+                except Exception as error:
+                    st.error(f"重置失败：{error}")
+
     with info_tab:
         st.subheader("说明与风险提示")
         st.info("数据源：实时/历史行情数据或本地示例数据，取决于当前网络和数据源可用性。")
@@ -234,6 +354,7 @@ V1.3 仍然只做研究、历史回测、趋势观察和模拟交易演示：
 - 不保存 API key、secret、password、token 或券商凭证
 - 不使用 AI 预测股价
 - 自选股配置只保存股票代码列表，不保存账户信息
+- 模拟交易只保存虚拟资金、持仓和交易记录，不连接真实券商
 """
         )
 
