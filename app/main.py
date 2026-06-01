@@ -25,6 +25,15 @@ from src.reports.backtest_report import (
     load_backtest_report,
     save_backtest_report,
 )
+from src.reports.daily_research_report import (
+    build_daily_research_report,
+    daily_report_to_markdown,
+    delete_daily_research_report,
+    export_daily_report_summary_csv,
+    list_daily_research_reports,
+    load_daily_research_report,
+    save_daily_research_report,
+)
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
 
 
@@ -37,6 +46,7 @@ CACHE_NOTE = "行情数据使用缓存，默认缓存 1 小时。如需强制刷
 PAPER_TRADING_WARNING = "模拟交易仅用于学习和功能演示，不代表真实交易，不构成投资建议，不会连接真实券商，也不会产生真实订单。"
 PORTFOLIO_BACKTEST_WARNING = "组合回测仅用于历史研究和功能演示，不代表未来收益，不构成投资建议。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
+DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
@@ -91,6 +101,10 @@ def report_to_json_bytes(report: dict) -> bytes:
 
 def report_records_to_csv(records: list[dict]) -> bytes:
     return pd.DataFrame(records).to_csv(index=False).encode("utf-8-sig")
+
+
+def text_to_download(text: str) -> bytes:
+    return text.encode("utf-8-sig")
 
 
 def parse_symbols_text(symbols_text: str) -> list[str]:
@@ -149,6 +163,27 @@ def load_price_data_for_symbols(market: str, symbols: list[str]) -> tuple[dict[s
         except Exception:
             failed_symbols.append(symbol)
     return price_data, failed_symbols
+
+
+def data_source_summary_from_rank_table(rank_table: pd.DataFrame) -> dict:
+    if rank_table.empty or "数据来源" not in rank_table.columns:
+        return {}
+    counts = rank_table["数据来源"].fillna("未知").value_counts().to_dict()
+    return {str(key): int(value) for key, value in counts.items()}
+
+
+def latest_backtest_summary() -> dict:
+    reports = list_backtest_reports()
+    if reports.empty:
+        return {}
+    latest_report_id = str(reports.iloc[0]["report_id"])
+    report = load_backtest_report(latest_report_id)
+    return {
+        "report_id": latest_report_id,
+        "report_type": report.get("report_type"),
+        "created_at": report.get("created_at"),
+        "summary": report.get("summary", {}),
+    }
 
 
 def market_label_from_code(market: str) -> str:
@@ -238,8 +273,8 @@ def main() -> None:
         st.warning("股票池为空，请在左侧输入至少一个股票代码。")
         st.stop()
 
-    rank_tab, chart_tab, backtest_tab, portfolio_tab, report_tab, paper_tab, info_tab = st.tabs(
-        ["趋势评分", "单只股票分析", "简单回测", "组合回测", "报告中心", "模拟交易", "说明与风险提示"]
+    rank_tab, chart_tab, backtest_tab, portfolio_tab, daily_tab, report_tab, paper_tab, info_tab = st.tabs(
+        ["趋势评分", "单只股票分析", "简单回测", "组合回测", "每日研究报告", "报告中心", "模拟交易", "说明与风险提示"]
     )
 
     with rank_tab:
@@ -418,6 +453,111 @@ def main() -> None:
                     st.success(f"组合回测报告已保存：{saved_report['report_id']}")
                 except Exception as error:
                     st.error(f"保存组合回测报告失败：{error}")
+
+    with daily_tab:
+        st.subheader("每日量化研究报告")
+        st.warning(DAILY_REPORT_WARNING)
+        if st.button("生成今日研究报告"):
+            try:
+                rank_table = build_rank_table(market, symbols)
+                try:
+                    portfolio = load_paper_portfolio()
+                    latest_prices = latest_prices_for_positions(portfolio)
+                    paper_summary = calculate_portfolio_summary(portfolio, latest_prices)
+                except Exception as error:
+                    paper_summary = {}
+                    st.info(f"模拟账户摘要不可用：{error}")
+
+                try:
+                    backtest_summary = latest_backtest_summary()
+                except Exception as error:
+                    backtest_summary = {"note": f"最近回测摘要不可用：{error}"}
+
+                daily_report = build_daily_research_report(
+                    market=market,
+                    watchlist_name=selected_watchlist,
+                    trend_scores=rank_table,
+                    data_source_summary=data_source_summary_from_rank_table(rank_table),
+                    paper_portfolio_summary=paper_summary,
+                    recent_backtest_summary=backtest_summary,
+                )
+                st.session_state["latest_daily_research_report"] = daily_report
+            except Exception as error:
+                st.error(f"生成日报失败：{error}")
+
+        if "latest_daily_research_report" in st.session_state:
+            daily_report = st.session_state["latest_daily_research_report"]
+            markdown = daily_report_to_markdown(daily_report)
+            st.markdown("### 日报预览")
+            st.markdown(markdown)
+            download_col, save_col = st.columns(2)
+            with download_col:
+                st.download_button(
+                    label="下载当前日报 JSON",
+                    data=report_to_json_bytes(daily_report),
+                    file_name=f"{daily_report['report_id']}.json",
+                    mime="application/json",
+                )
+                st.download_button(
+                    label="下载当前日报 Markdown",
+                    data=text_to_download(markdown),
+                    file_name=f"{daily_report['report_id']}.md",
+                    mime="text/markdown",
+                )
+            with save_col:
+                if st.button("保存今日日报"):
+                    try:
+                        saved_report = save_daily_research_report(daily_report)
+                        st.success(f"日报已保存：{saved_report['report_id']}")
+                    except Exception as error:
+                        st.error(f"保存日报失败：{error}")
+
+        st.markdown("### 历史日报")
+        try:
+            daily_reports = list_daily_research_reports()
+            if daily_reports.empty:
+                st.info("暂无历史日报。生成并保存日报后，这里会显示记录。")
+            else:
+                st.dataframe(daily_reports, use_container_width=True, hide_index=True)
+                st.download_button(
+                    label="下载历史日报 summary CSV",
+                    data=export_daily_report_summary_csv().encode("utf-8-sig"),
+                    file_name="daily_report_summary.csv",
+                    mime="text/csv",
+                )
+                selected_daily_report_id = st.selectbox("选择历史日报", daily_reports["report_id"].tolist())
+                try:
+                    historical_report = load_daily_research_report(selected_daily_report_id)
+                    historical_markdown = daily_report_to_markdown(historical_report)
+                    st.markdown("### 历史日报详情")
+                    st.markdown(historical_markdown)
+                    st.download_button(
+                        label="下载历史日报 JSON",
+                        data=report_to_json_bytes(historical_report),
+                        file_name=f"{selected_daily_report_id}.json",
+                        mime="application/json",
+                    )
+                    st.download_button(
+                        label="下载历史日报 Markdown",
+                        data=text_to_download(historical_markdown),
+                        file_name=f"{selected_daily_report_id}.md",
+                        mime="text/markdown",
+                    )
+                    confirm_delete_daily = st.checkbox(
+                        f"确认删除日报 {selected_daily_report_id}",
+                        key=f"delete_daily_report_{selected_daily_report_id}",
+                    )
+                    if st.button("删除当前日报"):
+                        if not confirm_delete_daily:
+                            st.error("请先勾选确认框，再删除日报。")
+                        else:
+                            delete_daily_research_report(selected_daily_report_id)
+                            st.success(f"已删除日报：{selected_daily_report_id}")
+                            st.rerun()
+                except Exception as error:
+                    st.error(f"无法读取历史日报：{error}")
+        except Exception as error:
+            st.error(f"日报中心加载失败：{error}")
 
     with report_tab:
         st.subheader("报告中心")
@@ -602,6 +742,7 @@ def main() -> None:
 - 模拟交易只保存虚拟资金、持仓和交易记录，不连接真实券商
 - 组合回测不包含手续费、滑点、停牌、涨跌停、分红或真实成交限制
 - 回测报告只保存本地研究数据，不保存真实账户或券商凭证
+- 每日研究报告只基于已有研究数据生成，不调用任何 AI API
 """
         )
 

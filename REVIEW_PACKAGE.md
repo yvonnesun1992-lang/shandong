@@ -1123,3 +1123,86 @@ dashboard: passed
 是否使用 AI 预测股价：否
 是否建议创建 PR：是
 ```
+
+## V1.7: daily research report center
+
+V1.7 目标：
+
+- 增加每日量化研究报告功能。
+- 基于当前 watchlist、趋势评分、数据源状态、模拟持仓和最近回测报告生成本地研究日报。
+- dashboard 增加“每日研究报告”页面。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+reports/daily/.gitkeep
+src/reports/daily_research_report.py
+tests/test_daily_research_report.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+每日研究报告功能说明：
+
+- `generate_daily_report_id` 生成路径安全的日报 ID。
+- `build_daily_research_report` 基于已计算的趋势评分表生成日报。
+- `daily_report_to_markdown` 将日报转换为可读 Markdown。
+- `save_daily_research_report` 将日报保存为本地 JSON。
+- `list_daily_research_reports` 返回历史日报摘要表。
+- `load_daily_research_report` 读取指定日报。
+- `delete_daily_research_report` 删除指定日报。
+- `export_daily_report_summary_csv` 导出日报摘要 CSV。
+
+日报内容：
+
+- report_id
+- created_at
+- market
+- watchlist_name
+- disclaimer
+- market_summary
+- top_symbols
+- risk_symbols
+- data_source_summary
+- paper_portfolio_summary
+- recent_backtest_summary
+- notes
+
+dashboard 更新：
+
+- 新增“每日研究报告”tab。
+- 可以生成今日研究报告。
+- 可以预览 Markdown。
+- 可以保存日报到 `reports/daily/`。
+- 可以下载当前日报 JSON。
+- 可以下载当前日报 Markdown。
+- 可以查看历史日报列表。
+- 可以下载历史日报 summary CSV。
+- 可以选择历史日报查看详情。
+- 可以勾选确认后删除历史日报。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 88 passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
