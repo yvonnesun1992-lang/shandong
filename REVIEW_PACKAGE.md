@@ -1206,3 +1206,75 @@ dashboard: passed
 是否使用 AI 预测股价：否
 是否建议创建 PR：是
 ```
+
+## V1.8: daily workflow runner
+
+V1.8 目标：
+
+- 增加本地一键每日研究流程。
+- 基于当前市场、watchlist 和股票池自动获取行情、计算趋势评分、生成并保存每日研究报告。
+- dashboard 增加“每日流程”页面。
+- 增加 CLI 脚本，支持本地命令行运行。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+scripts/run_daily_workflow.py
+src/workflows/__init__.py
+src/workflows/daily_workflow.py
+tests/test_daily_workflow.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+每日 workflow 功能说明：
+
+- `run_daily_research_workflow` 接收 market、watchlist_name、symbols 和可注入的数据获取函数。
+- 自动清洗股票池，过滤空值并去重。
+- 单只股票数据失败时记录到 failed_symbols，不让整个流程崩溃。
+- 至少一个股票成功时生成 trend_scores，并保存每日研究报告。
+- 全部股票失败时返回失败结果，不保存空报告。
+- 返回 report_id、report_path、trend_scores、summary、success_symbols 和 failed_symbols。
+
+dashboard 更新：
+
+- 新增“每日流程”tab。
+- 显示当前市场、watchlist 和股票数量。
+- 支持点击“运行每日研究流程”。
+- 显示成功处理股票数、失败股票列表、report_id 和趋势评分摘要。
+- 显示 Top 趋势股票和风险观察股票。
+- 支持下载本次生成日报 JSON。
+- 支持下载本次趋势评分 CSV。
+
+CLI 更新：
+
+```bash
+python scripts/run_daily_workflow.py --market us --watchlist us_default
+python scripts/run_daily_workflow.py --market cn --watchlist cn_default
+```
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 96 passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```

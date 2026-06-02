@@ -35,6 +35,7 @@ from src.reports.daily_research_report import (
     save_daily_research_report,
 )
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
+from src.workflows.daily_workflow import run_daily_research_workflow
 
 
 st.set_page_config(page_title="山洞趋势量化系统", layout="wide")
@@ -47,6 +48,7 @@ PAPER_TRADING_WARNING = "模拟交易仅用于学习和功能演示，不代表�
 PORTFOLIO_BACKTEST_WARNING = "组合回测仅用于历史研究和功能演示，不代表未来收益，不构成投资建议。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
+DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
@@ -192,6 +194,16 @@ def market_label_from_code(market: str) -> str:
     return "美股"
 
 
+def market_code_from_label(market: str) -> str:
+    if market == "A股":
+        return "cn"
+    return "us"
+
+
+def fetch_workflow_data(market: str, symbol: str) -> pd.DataFrame:
+    return load_data(market_label_from_code(market), symbol)
+
+
 def latest_prices_for_positions(portfolio: dict) -> dict[str, float]:
     prices = {}
     for symbol, position in portfolio.get("positions", {}).items():
@@ -273,8 +285,18 @@ def main() -> None:
         st.warning("股票池为空，请在左侧输入至少一个股票代码。")
         st.stop()
 
-    rank_tab, chart_tab, backtest_tab, portfolio_tab, daily_tab, report_tab, paper_tab, info_tab = st.tabs(
-        ["趋势评分", "单只股票分析", "简单回测", "组合回测", "每日研究报告", "报告中心", "模拟交易", "说明与风险提示"]
+    rank_tab, chart_tab, backtest_tab, portfolio_tab, workflow_tab, daily_tab, report_tab, paper_tab, info_tab = st.tabs(
+        [
+            "趋势评分",
+            "单只股票分析",
+            "简单回测",
+            "组合回测",
+            "每日流程",
+            "每日研究报告",
+            "报告中心",
+            "模拟交易",
+            "说明与风险提示",
+        ]
     )
 
     with rank_tab:
@@ -453,6 +475,77 @@ def main() -> None:
                     st.success(f"组合回测报告已保存：{saved_report['report_id']}")
                 except Exception as error:
                     st.error(f"保存组合回测报告失败：{error}")
+
+    with workflow_tab:
+        st.subheader("一键每日研究流程")
+        st.warning(DAILY_WORKFLOW_WARNING)
+        st.markdown("每日流程会基于当前市场和当前 watchlist，自动获取行情、计算趋势评分、生成并保存每日研究报告。")
+        workflow_market_code = market_code_from_label(market)
+        workflow_col_market, workflow_col_watchlist, workflow_col_count = st.columns(3)
+        workflow_col_market.metric("当前市场", workflow_market_code)
+        workflow_col_watchlist.metric("当前 watchlist", selected_watchlist)
+        workflow_col_count.metric("股票数量", len(symbols))
+
+        if st.button("运行每日研究流程"):
+            try:
+                workflow_result = run_daily_research_workflow(
+                    market=workflow_market_code,
+                    watchlist_name=selected_watchlist,
+                    symbols=symbols,
+                    fetch_data_func=fetch_workflow_data,
+                )
+                st.session_state["latest_daily_workflow_result"] = workflow_result
+            except Exception as error:
+                st.error(f"每日流程运行失败：{error}")
+
+        if "latest_daily_workflow_result" in st.session_state:
+            workflow_result = st.session_state["latest_daily_workflow_result"]
+            if not workflow_result.get("success"):
+                st.error(workflow_result.get("error", "每日流程失败，未保存空报告。"))
+            else:
+                st.success(f"每日流程完成，日报已保存：{workflow_result['report_id']}")
+
+            failed_symbols = workflow_result.get("failed_symbols", [])
+            if failed_symbols:
+                st.warning(f"部分股票处理失败：{len(failed_symbols)} 个")
+                st.dataframe(pd.DataFrame(failed_symbols), use_container_width=True, hide_index=True)
+
+            result_col_success, result_col_failed, result_col_report = st.columns(3)
+            result_col_success.metric("成功处理股票数", len(workflow_result.get("success_symbols", [])))
+            result_col_failed.metric("失败股票数", len(failed_symbols))
+            result_col_report.metric("Report ID", workflow_result.get("report_id") or "未生成")
+
+            st.markdown("### 趋势评分摘要")
+            st.json(workflow_result.get("summary", {}))
+
+            workflow_scores = workflow_result.get("trend_scores", pd.DataFrame())
+            if isinstance(workflow_scores, pd.DataFrame) and not workflow_scores.empty:
+                top_scores = workflow_scores.sort_values("score", ascending=False).head(5)
+                risk_scores = workflow_scores[
+                    (workflow_scores["status"] == "Weak") | (workflow_scores["score"] < 40)
+                ].sort_values("score", ascending=True)
+                st.markdown("### Top 趋势股票")
+                st.dataframe(top_scores, use_container_width=True, hide_index=True)
+                st.markdown("### 风险观察股票")
+                if risk_scores.empty:
+                    st.info("本次流程没有 Weak 或低分风险观察股票。")
+                else:
+                    st.dataframe(risk_scores.head(10), use_container_width=True, hide_index=True)
+                st.download_button(
+                    label="下载本次趋势评分 CSV",
+                    data=dataframe_to_csv(workflow_scores),
+                    file_name="daily_workflow_trend_scores.csv",
+                    mime="text/csv",
+                )
+
+            workflow_report = workflow_result.get("report")
+            if workflow_report:
+                st.download_button(
+                    label="下载本次生成日报 JSON",
+                    data=report_to_json_bytes(workflow_report),
+                    file_name=f"{workflow_result['report_id']}.json",
+                    mime="application/json",
+                )
 
     with daily_tab:
         st.subheader("每日量化研究报告")
@@ -743,6 +836,7 @@ def main() -> None:
 - 组合回测不包含手续费、滑点、停牌、涨跌停、分红或真实成交限制
 - 回测报告只保存本地研究数据，不保存真实账户或券商凭证
 - 每日研究报告只基于已有研究数据生成，不调用任何 AI API
+- 每日流程只在用户点击按钮或本地 CLI 命令时运行，不提供后台定时任务
 """
         )
 
