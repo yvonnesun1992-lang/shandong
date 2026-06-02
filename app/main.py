@@ -36,6 +36,13 @@ from src.reports.daily_research_report import (
 )
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
 from src.workflows.daily_workflow import run_daily_research_workflow
+from src.workflows.run_log import (
+    delete_workflow_run_log,
+    export_workflow_run_summary_csv,
+    list_workflow_run_logs,
+    load_workflow_run_log,
+    save_workflow_run_log,
+)
 
 
 st.set_page_config(page_title="山洞趋势量化系统", layout="wide")
@@ -49,6 +56,7 @@ PORTFOLIO_BACKTEST_WARNING = "组合回测仅用于历史研究和功能演示�
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
+WORKFLOW_RUN_LOG_WARNING = "运行记录仅用于本地研究流程审计和复盘，不代表投资建议，不会产生真实交易。"
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
@@ -285,13 +293,25 @@ def main() -> None:
         st.warning("股票池为空，请在左侧输入至少一个股票代码。")
         st.stop()
 
-    rank_tab, chart_tab, backtest_tab, portfolio_tab, workflow_tab, daily_tab, report_tab, paper_tab, info_tab = st.tabs(
+    (
+        rank_tab,
+        chart_tab,
+        backtest_tab,
+        portfolio_tab,
+        workflow_tab,
+        run_log_tab,
+        daily_tab,
+        report_tab,
+        paper_tab,
+        info_tab,
+    ) = st.tabs(
         [
             "趋势评分",
             "单只股票分析",
             "简单回测",
             "组合回测",
             "每日流程",
+            "运行记录",
             "每日研究报告",
             "报告中心",
             "模拟交易",
@@ -494,7 +514,11 @@ def main() -> None:
                     symbols=symbols,
                     fetch_data_func=fetch_workflow_data,
                 )
+                saved_log = save_workflow_run_log(workflow_result)
+                workflow_result["run_log_saved"] = True
+                workflow_result["run_log_id"] = saved_log["run_id"]
                 st.session_state["latest_daily_workflow_result"] = workflow_result
+                st.success(f"运行记录已保存：{saved_log['run_id']}")
             except Exception as error:
                 st.error(f"每日流程运行失败：{error}")
 
@@ -511,9 +535,13 @@ def main() -> None:
                 st.dataframe(pd.DataFrame(failed_symbols), use_container_width=True, hide_index=True)
 
             result_col_success, result_col_failed, result_col_report = st.columns(3)
-            result_col_success.metric("成功处理股票数", len(workflow_result.get("success_symbols", [])))
-            result_col_failed.metric("失败股票数", len(failed_symbols))
+            result_col_success.metric("成功处理股票数", workflow_result.get("success_count", 0))
+            result_col_failed.metric("失败股票数", workflow_result.get("failed_count", len(failed_symbols)))
             result_col_report.metric("Report ID", workflow_result.get("report_id") or "未生成")
+            st.caption(
+                f"run_id: {workflow_result.get('run_id')} | elapsed_seconds: "
+                f"{workflow_result.get('elapsed_seconds', 0):.2f}"
+            )
 
             st.markdown("### 趋势评分摘要")
             st.json(workflow_result.get("summary", {}))
@@ -546,6 +574,75 @@ def main() -> None:
                     file_name=f"{workflow_result['report_id']}.json",
                     mime="application/json",
                 )
+
+    with run_log_tab:
+        st.subheader("运行记录中心")
+        st.warning(WORKFLOW_RUN_LOG_WARNING)
+        try:
+            run_logs = list_workflow_run_logs()
+            if run_logs.empty:
+                st.info("暂无 workflow 运行记录。运行每日流程后，这里会显示记录。")
+            else:
+                st.dataframe(run_logs, use_container_width=True, hide_index=True)
+                st.download_button(
+                    label="下载运行记录 summary CSV",
+                    data=export_workflow_run_summary_csv().encode("utf-8-sig"),
+                    file_name="workflow_run_summary.csv",
+                    mime="text/csv",
+                )
+                selected_run_id = st.selectbox("选择 run_id", run_logs["run_id"].tolist())
+                try:
+                    run_log = load_workflow_run_log(selected_run_id)
+                    st.markdown("### 运行详情")
+                    detail_cols = st.columns(5)
+                    detail_cols[0].metric("market", run_log.get("market", ""))
+                    detail_cols[1].metric("watchlist", run_log.get("watchlist_name", ""))
+                    detail_cols[2].metric("success_count", run_log.get("success_count", 0))
+                    detail_cols[3].metric("failed_count", run_log.get("failed_count", 0))
+                    detail_cols[4].metric("elapsed_seconds", f"{run_log.get('elapsed_seconds', 0):.2f}")
+
+                    st.markdown("### success_symbols")
+                    success_symbols = run_log.get("success_symbols", [])
+                    if success_symbols:
+                        st.dataframe(pd.DataFrame({"symbol": success_symbols}), use_container_width=True, hide_index=True)
+                    else:
+                        st.info("没有成功处理的股票。")
+
+                    st.markdown("### failed_symbols")
+                    failed_symbols = run_log.get("failed_symbols", [])
+                    if failed_symbols:
+                        st.dataframe(pd.DataFrame(failed_symbols), use_container_width=True, hide_index=True)
+                    else:
+                        st.info("没有失败股票。")
+
+                    st.markdown("### error_message")
+                    st.write(run_log.get("error_message") or run_log.get("error") or "无")
+                    st.markdown("### report_id")
+                    st.write(run_log.get("report_id") or "未生成")
+                    st.markdown("### summary")
+                    st.json(run_log.get("summary", {}))
+                    st.download_button(
+                        label="下载当前运行日志 JSON",
+                        data=report_to_json_bytes(run_log),
+                        file_name=f"{selected_run_id}.json",
+                        mime="application/json",
+                    )
+
+                    confirm_delete_run = st.checkbox(
+                        f"确认删除运行记录 {selected_run_id}",
+                        key=f"delete_workflow_run_{selected_run_id}",
+                    )
+                    if st.button("删除当前运行记录"):
+                        if not confirm_delete_run:
+                            st.error("请先勾选确认框，再删除运行记录。")
+                        else:
+                            delete_workflow_run_log(selected_run_id)
+                            st.success(f"已删除运行记录：{selected_run_id}")
+                            st.rerun()
+                except Exception as error:
+                    st.error(f"无法读取运行记录详情：{error}")
+        except Exception as error:
+            st.error(f"运行记录中心加载失败：{error}")
 
     with daily_tab:
         st.subheader("每日量化研究报告")
@@ -837,6 +934,7 @@ def main() -> None:
 - 回测报告只保存本地研究数据，不保存真实账户或券商凭证
 - 每日研究报告只基于已有研究数据生成，不调用任何 AI API
 - 每日流程只在用户点击按钮或本地 CLI 命令时运行，不提供后台定时任务
+- 运行记录只保存本地研究流程运行信息，不保存真实账户或密钥
 """
         )
 

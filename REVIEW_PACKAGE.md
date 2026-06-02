@@ -1207,6 +1207,98 @@ dashboard: passed
 是否建议创建 PR：是
 ```
 
+## V1.9: workflow run logs
+
+V1.9 目标：
+
+- 为每日 workflow 增加本地运行日志。
+- 每次运行保存 run_id、时间、成功/失败股票、失败原因、report_id 和运行耗时。
+- dashboard 增加“运行记录”页面。
+- CLI 运行每日 workflow 后也保存日志。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+reports/workflow_runs/.gitkeep
+src/workflows/run_log.py
+tests/test_workflow_run_log.py
+```
+
+修改文件：
+
+```text
+app/main.py
+scripts/run_daily_workflow.py
+src/workflows/daily_workflow.py
+tests/test_daily_workflow.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+workflow run log 功能说明：
+
+- `generate_run_id` 生成路径安全的运行 ID。
+- `save_workflow_run_log` 将 workflow_result 保存为本地 JSON。
+- `list_workflow_run_logs` 返回历史运行记录摘要表。
+- `load_workflow_run_log` 读取指定运行记录。
+- `delete_workflow_run_log` 删除指定运行记录。
+- `export_workflow_run_summary_csv` 导出运行记录摘要 CSV。
+
+运行记录内容：
+
+- run_id
+- created_at
+- started_at
+- finished_at
+- elapsed_seconds
+- success
+- market
+- watchlist_name
+- total_symbols
+- success_count
+- failed_count
+- success_symbols
+- failed_symbols
+- report_id
+- error_message
+- summary
+
+dashboard 更新：
+
+- 每次点击“运行每日研究流程”后自动保存一条 workflow run log。
+- 新增“运行记录”tab。
+- 显示历史运行记录列表。
+- 支持选择 run_id 查看详情。
+- 展示 success_symbols、failed_symbols、error_message、report_id 和 summary。
+- 支持下载当前运行日志 JSON。
+- 支持下载运行记录 summary CSV。
+- 支持勾选确认后删除运行记录。
+
+CLI 更新：
+
+- CLI 运行每日 workflow 后自动保存运行日志。
+- 打印 run_id、report_id、success_count、failed_count 和 elapsed_seconds。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 110 passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.8: daily workflow runner
 
 V1.8 目标：
