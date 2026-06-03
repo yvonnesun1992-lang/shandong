@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import yfinance as yf
 
+from src.data.price_cache import cache_price_data, has_cached_price_data, load_cached_price_data
 from src.data.sample_data import load_sample_ohlcv
 
 
@@ -12,6 +13,8 @@ STANDARD_COLUMNS = ["date", "open", "high", "low", "close", "volume"]
 def _fallback_us_sample(error: Exception) -> pd.DataFrame:
     data = load_sample_ohlcv("us", "NVDA")
     data.attrs["fallback_reason"] = str(error)
+    data.attrs["market"] = "us"
+    data.attrs["symbol"] = "NVDA"
     return data
 
 
@@ -29,16 +32,28 @@ def _validate_ohlcv(data: pd.DataFrame, symbol: str) -> pd.DataFrame:
         raise ValueError(f"No valid US OHLCV rows found for symbol: {symbol}")
 
     result.attrs["is_sample_data"] = False
-    result.attrs["data_source"] = "yfinance"
+    result.attrs["data_source"] = "remote"
+    result.attrs["market"] = "us"
+    result.attrs["symbol"] = symbol.strip().upper()
     return result
 
 
-def get_us_ohlcv(symbol: str, period: str = "2y", use_sample_fallback: bool = True) -> pd.DataFrame:
+def get_us_ohlcv(
+    symbol: str,
+    period: str = "2y",
+    use_sample_fallback: bool = True,
+    use_cache: bool = True,
+    refresh_cache: bool = False,
+) -> pd.DataFrame:
     """Download US stock data and return a standard OHLCV table."""
+    clean_symbol = symbol.strip().upper()
+    if use_cache and not refresh_cache and has_cached_price_data("us", clean_symbol):
+        return load_cached_price_data("us", clean_symbol)
+
     try:
-        data = yf.download(symbol, period=period, auto_adjust=False, progress=False, timeout=5)
+        data = yf.download(clean_symbol, period=period, auto_adjust=False, progress=False, timeout=5)
         if data.empty:
-            raise ValueError(f"No US data found for symbol: {symbol}")
+            raise ValueError(f"No US data found for symbol: {clean_symbol}")
 
         data = data.reset_index()
         if isinstance(data.columns, pd.MultiIndex):
@@ -54,7 +69,10 @@ def get_us_ohlcv(symbol: str, period: str = "2y", use_sample_fallback: bool = Tr
                 "Volume": "volume",
             }
         )
-        return _validate_ohlcv(result, symbol)
+        result = _validate_ohlcv(result, clean_symbol)
+        if use_cache:
+            cache_price_data("us", clean_symbol, result)
+        return result
     except Exception as error:
         if use_sample_fallback:
             return _fallback_us_sample(error)

@@ -8,6 +8,8 @@ import streamlit as st
 from src.backtest.portfolio_backtest import run_portfolio_backtest
 from src.backtest.simple_backtest import run_simple_backtest
 from src.data.cn_data import get_cn_ohlcv
+from src.data.data_quality import build_data_quality_report
+from src.data.price_cache import delete_cached_price_data, list_cached_symbols
 from src.data.us_data import get_us_ohlcv
 from src.data.watchlist_manager import load_watchlists, normalize_symbols, save_watchlist, validate_watchlist_name
 from src.paper_trading.portfolio import (
@@ -57,6 +59,7 @@ REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表�
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
 WORKFLOW_RUN_LOG_WARNING = "运行记录仅用于本地研究流程审计和复盘，不代表投资建议，不会产生真实交易。"
+PRICE_CACHE_WARNING = "行情缓存仅用于研究和演示，不代表实时行情，不构成投资建议。"
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
@@ -66,6 +69,12 @@ def load_data(market: str, symbol: str) -> pd.DataFrame:
     return get_cn_ohlcv(symbol)
 
 
+def fetch_price_data(market: str, symbol: str, refresh_cache: bool = False) -> pd.DataFrame:
+    if market == "美股":
+        return get_us_ohlcv(symbol, refresh_cache=refresh_cache)
+    return get_cn_ohlcv(symbol, refresh_cache=refresh_cache)
+
+
 def is_sample_data(data: pd.DataFrame) -> bool:
     return bool(data.attrs.get("is_sample_data", False))
 
@@ -73,12 +82,19 @@ def is_sample_data(data: pd.DataFrame) -> bool:
 def data_source_label(data: pd.DataFrame) -> str:
     if is_sample_data(data):
         return "示例数据"
-    return "实时/历史行情数据"
+    source = str(data.attrs.get("data_source", "remote"))
+    if source == "cache":
+        return "本地缓存"
+    if source == "remote":
+        return "实时/历史行情数据"
+    return source
 
 
 def show_data_source_status(data: pd.DataFrame) -> None:
     if is_sample_data(data):
         st.warning(SAMPLE_WARNING)
+    elif data.attrs.get("data_source") == "cache":
+        st.info("数据源：本地行情缓存")
     else:
         st.info("数据源：实时/历史行情数据")
 
@@ -300,6 +316,7 @@ def main() -> None:
         portfolio_tab,
         workflow_tab,
         run_log_tab,
+        data_quality_tab,
         daily_tab,
         report_tab,
         paper_tab,
@@ -312,6 +329,7 @@ def main() -> None:
             "组合回测",
             "每日流程",
             "运行记录",
+            "数据缓存与质量",
             "每日研究报告",
             "报告中心",
             "模拟交易",
@@ -533,6 +551,10 @@ def main() -> None:
             if failed_symbols:
                 st.warning(f"部分股票处理失败：{len(failed_symbols)} 个")
                 st.dataframe(pd.DataFrame(failed_symbols), use_container_width=True, hide_index=True)
+            workflow_warnings = workflow_result.get("warnings", [])
+            if workflow_warnings:
+                st.warning("部分股票使用了本地示例数据或存在数据源提示。")
+                st.dataframe(pd.DataFrame({"warning": workflow_warnings}), use_container_width=True, hide_index=True)
 
             result_col_success, result_col_failed, result_col_report = st.columns(3)
             result_col_success.metric("成功处理股票数", workflow_result.get("success_count", 0))
@@ -643,6 +665,91 @@ def main() -> None:
                     st.error(f"无法读取运行记录详情：{error}")
         except Exception as error:
             st.error(f"运行记录中心加载失败：{error}")
+
+    with data_quality_tab:
+        st.subheader("数据缓存与质量")
+        st.warning(PRICE_CACHE_WARNING)
+
+        st.markdown("### 当前缓存列表")
+        try:
+            cached_symbols = list_cached_symbols()
+            if cached_symbols.empty:
+                st.info("暂无本地行情缓存。点击更新当前 watchlist 缓存后，这里会显示缓存文件。")
+            else:
+                display_cache = cached_symbols.drop(columns=["path"], errors="ignore")
+                st.dataframe(display_cache, use_container_width=True, hide_index=True)
+        except Exception as error:
+            st.error(f"缓存列表读取失败：{error}")
+
+        st.markdown("### 更新当前 watchlist 缓存")
+        st.caption(f"当前市场：{market_code_from_label(market)}；当前 watchlist：{selected_watchlist}；股票数量：{len(symbols)}")
+        if st.button("更新当前 watchlist 缓存"):
+            quality_rows = []
+            for symbol in symbols:
+                try:
+                    data = fetch_price_data(market, symbol, refresh_cache=True)
+                    quality = build_data_quality_report(market_code_from_label(market), symbol, data)
+                    quality_rows.append(
+                        {
+                            "symbol": symbol,
+                            "data_source": str(data.attrs.get("data_source", "unknown")),
+                            "quality_status": quality["status"],
+                            "rows": quality["row_count"],
+                            "start_date": quality["start_date"],
+                            "end_date": quality["end_date"],
+                            "latest_close": quality["latest_close"],
+                            "warnings": "; ".join(quality["warnings"]),
+                            "errors": "; ".join(quality["errors"]),
+                        }
+                    )
+                except Exception as error:
+                    quality_rows.append(
+                        {
+                            "symbol": symbol,
+                            "data_source": "unavailable",
+                            "quality_status": "error",
+                            "rows": 0,
+                            "start_date": None,
+                            "end_date": None,
+                            "latest_close": None,
+                            "warnings": "",
+                            "errors": str(error),
+                        }
+                    )
+            st.session_state["latest_data_quality_rows"] = quality_rows
+
+        if "latest_data_quality_rows" in st.session_state:
+            st.markdown("### 当前 watchlist 数据质量")
+            quality_table = pd.DataFrame(st.session_state["latest_data_quality_rows"])
+            st.dataframe(quality_table, use_container_width=True, hide_index=True)
+            if (quality_table["data_source"] == "sample").any():
+                st.warning(SAMPLE_WARNING)
+
+        st.markdown("### 删除缓存文件")
+        try:
+            cached_symbols_for_delete = list_cached_symbols()
+            if cached_symbols_for_delete.empty:
+                st.info("没有可删除的缓存文件。")
+            else:
+                cache_choices = [
+                    f"{row.market}:{row.symbol}"
+                    for row in cached_symbols_for_delete.itertuples(index=False)
+                ]
+                selected_cache = st.selectbox("选择缓存", cache_choices)
+                confirm_delete_cache = st.checkbox(
+                    f"确认删除缓存 {selected_cache}",
+                    key=f"delete_cache_{selected_cache}",
+                )
+                if st.button("删除当前缓存"):
+                    if not confirm_delete_cache:
+                        st.error("请先勾选确认框，再删除缓存。")
+                    else:
+                        cache_market, cache_symbol = selected_cache.split(":", 1)
+                        delete_cached_price_data(cache_market, cache_symbol)
+                        st.success(f"已删除缓存：{selected_cache}")
+                        st.rerun()
+        except Exception as error:
+            st.error(f"缓存删除区域加载失败：{error}")
 
     with daily_tab:
         st.subheader("每日量化研究报告")
@@ -935,6 +1042,7 @@ def main() -> None:
 - 每日研究报告只基于已有研究数据生成，不调用任何 AI API
 - 每日流程只在用户点击按钮或本地 CLI 命令时运行，不提供后台定时任务
 - 运行记录只保存本地研究流程运行信息，不保存真实账户或密钥
+- 行情缓存只保存 OHLCV 数据，不保存账户信息、密钥或券商凭证
 """
         )
 
