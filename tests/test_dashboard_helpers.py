@@ -33,6 +33,14 @@ def test_data_source_label_reads_sample_attrs():
     assert data_source_label(data) == "示例数据"
 
 
+def test_data_source_label_reads_cache_attrs():
+    data = load_sample_ohlcv("us", "NVDA")
+    data.attrs["is_sample_data"] = False
+    data.attrs["data_source"] = "cache"
+
+    assert data_source_label(data) == "本地缓存"
+
+
 def test_sample_data_can_generate_latest_trend_score():
     data = load_sample_ohlcv("cn", "300308")
 

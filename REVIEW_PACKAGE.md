@@ -527,6 +527,83 @@ http://localhost:8502 返回 200
 是否建议创建 PR：是
 ```
 
+## V1.10: price cache and data quality checks
+
+V1.10 目标：
+
+- 增加本地行情缓存，减少对 yfinance / akshare 的重复请求。
+- 增加数据质量检查，识别缺字段、数据不足、日期异常、价格异常、缺失值和数据过旧。
+- dashboard 增加“数据缓存与质量”页面。
+- 每日 workflow 记录每只股票的数据来源。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+data/cache/.gitkeep
+src/data/price_cache.py
+src/data/data_quality.py
+tests/test_price_cache.py
+tests/test_data_quality.py
+```
+
+修改文件：
+
+```text
+app/main.py
+src/data/us_data.py
+src/data/cn_data.py
+src/workflows/daily_workflow.py
+tests/test_daily_workflow.py
+tests/test_dashboard_helpers.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+行情缓存功能说明：
+
+- 缓存文件使用 CSV，保存到 `data/cache/`。
+- 缓存字段固定为 `date, open, high, low, close, volume`。
+- `get_us_ohlcv` 和 `get_cn_ohlcv` 默认优先读取本地缓存。
+- 如果没有缓存或用户刷新缓存，则尝试真实数据源。
+- 真实数据成功后会写入缓存。
+- 真实数据失败时继续使用本地 sample fallback。
+- 返回的 DataFrame 使用 `attrs["data_source"]` 标记 `cache` / `remote` / `sample`。
+
+数据质量检查功能说明：
+
+- `validate_ohlcv_data` 检查字段、行数、日期、价格、成交量和缺失值。
+- `check_data_freshness` 检查最近数据是否过旧。
+- `build_data_quality_report` 输出统一质量状态、warnings、errors、起止日期和最新收盘价。
+
+dashboard 更新：
+
+- 新增“数据缓存与质量”tab。
+- 显示当前缓存列表。
+- 支持更新当前 watchlist 缓存。
+- 显示每只股票的数据源和质量状态。
+- 支持勾选确认后删除单个缓存文件。
+- 显示行情缓存风险提示。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 128 passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.2: dashboard polish and CSV export
 
 V1.2 目标：

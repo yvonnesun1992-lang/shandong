@@ -61,10 +61,13 @@ def run_daily_research_workflow(
     success_symbols = []
     failed_symbols = []
     data_sources = []
+    data_source_by_symbol = {}
+    warnings = []
 
     for symbol in clean_symbols:
         try:
             data = fetch_data_func(market_code, symbol)
+            data_source = _data_source_label(data)
             score = latest_trend_score(symbol, data)
             rows.append(
                 {
@@ -73,11 +76,14 @@ def run_daily_research_workflow(
                     "status": score.status,
                     "close": score.close,
                     "rsi14": score.rsi14,
-                    "data_source": _data_source_label(data),
+                    "data_source": data_source,
                 }
             )
             success_symbols.append(symbol)
-            data_sources.append(_data_source_label(data))
+            data_sources.append(data_source)
+            data_source_by_symbol[symbol] = data_source
+            if data_source == "sample":
+                warnings.append(f"{symbol} used local sample fallback data.")
         except Exception as error:
             failed_symbols.append({"symbol": symbol, "error": str(error)})
 
@@ -105,6 +111,8 @@ def run_daily_research_workflow(
             "report_path": None,
             "trend_scores": trend_scores,
             "summary": summary,
+            "data_sources": data_source_by_symbol,
+            "warnings": warnings,
             "error_message": "No symbols were processed successfully. Daily report was not saved.",
             "error": "No symbols were processed successfully. Daily report was not saved.",
         }
@@ -145,4 +153,6 @@ def run_daily_research_workflow(
         "report": saved_report,
         "trend_scores": trend_scores.sort_values("score", ascending=False).reset_index(drop=True),
         "summary": summary,
+        "data_sources": data_source_by_symbol,
+        "warnings": warnings,
     }

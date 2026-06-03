@@ -43,6 +43,8 @@ def test_daily_workflow_single_symbol_generates_report(tmp_path):
     assert result["failed_count"] == 0
     assert result["summary"]["average_score"] >= 0
     assert not result["trend_scores"].empty
+    assert result["data_sources"]["NVDA"] == "sample"
+    assert result["warnings"] == ["NVDA used local sample fallback data."]
 
 
 def test_daily_workflow_partial_failure_still_generates_report(tmp_path):
@@ -93,10 +95,11 @@ def test_daily_workflow_failure_result_can_be_saved_as_run_log(tmp_path):
 def test_daily_workflow_result_contains_expected_fields(tmp_path):
     result = run_daily_research_workflow("cn", "cn_default", ["300308"], sample_fetch_data, output_dir=tmp_path)
 
-    assert {"report_id", "summary", "success_symbols", "failed_symbols"}.issubset(result)
+    assert {"report_id", "summary", "success_symbols", "failed_symbols", "data_sources"}.issubset(result)
     assert result["market"] == "cn"
     assert result["total_symbols"] == 1
     assert result["report"]["market"] == "cn"
+    assert result["trend_scores"].iloc[0]["data_source"] == "sample"
 
 
 def test_daily_workflow_rejects_invalid_market(tmp_path):
