@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
+from time import perf_counter
 
 import pandas as pd
 
@@ -11,6 +13,7 @@ from src.reports.daily_research_report import (
     save_daily_research_report,
 )
 from src.strategies.trend_score import latest_trend_score
+from src.workflows.run_log import generate_run_id
 
 
 def _data_source_label(data: pd.DataFrame) -> str:
@@ -43,6 +46,9 @@ def run_daily_research_workflow(
     output_dir: str | Path | None = None,
 ) -> dict:
     """Run the local daily research workflow once and save a daily report."""
+    run_id = generate_run_id()
+    started_at = datetime.now()
+    start_time = perf_counter()
     market_code = market.strip().lower()
     if market_code not in {"us", "cn"}:
         raise ValueError("market must be 'us' or 'cn'.")
@@ -79,17 +85,27 @@ def run_daily_research_workflow(
     summary = _trend_summary(trend_scores)
 
     if trend_scores.empty:
+        finished_at = datetime.now()
+        elapsed_seconds = perf_counter() - start_time
         return {
+            "run_id": run_id,
+            "started_at": started_at.isoformat(timespec="seconds"),
+            "finished_at": finished_at.isoformat(timespec="seconds"),
+            "created_at": finished_at.isoformat(timespec="seconds"),
+            "elapsed_seconds": elapsed_seconds,
             "success": False,
             "market": market_code,
             "watchlist_name": str(watchlist_name),
             "total_symbols": len(clean_symbols),
+            "success_count": len(success_symbols),
+            "failed_count": len(failed_symbols),
             "success_symbols": success_symbols,
             "failed_symbols": failed_symbols,
             "report_id": None,
             "report_path": None,
             "trend_scores": trend_scores,
             "summary": summary,
+            "error_message": "No symbols were processed successfully. Daily report was not saved.",
             "error": "No symbols were processed successfully. Daily report was not saved.",
         }
 
@@ -107,12 +123,21 @@ def run_daily_research_workflow(
         saved_report = save_daily_research_report(report, output_dir)
         report_dir = Path(output_dir)
     report_path = (report_dir / f"{saved_report['report_id']}.json").resolve()
+    finished_at = datetime.now()
+    elapsed_seconds = perf_counter() - start_time
 
     return {
+        "run_id": run_id,
+        "started_at": started_at.isoformat(timespec="seconds"),
+        "finished_at": finished_at.isoformat(timespec="seconds"),
+        "created_at": finished_at.isoformat(timespec="seconds"),
+        "elapsed_seconds": elapsed_seconds,
         "success": True,
         "market": market_code,
         "watchlist_name": str(watchlist_name),
         "total_symbols": len(clean_symbols),
+        "success_count": len(success_symbols),
+        "failed_count": len(failed_symbols),
         "success_symbols": success_symbols,
         "failed_symbols": failed_symbols,
         "report_id": saved_report["report_id"],

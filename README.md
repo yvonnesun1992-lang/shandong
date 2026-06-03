@@ -187,6 +187,24 @@ python scripts/run_daily_workflow.py --market us --watchlist us_default
 
 本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不构成投资建议。
 
+## V1.9 workflow 运行记录
+
+V1.9 支持每日 workflow 本地运行日志：
+
+- 每次运行保存一个 run_id。
+- 保存开始时间、结束时间、运行耗时、成功股票、失败股票、失败原因和 report_id。
+- dashboard 新增“运行记录”页面。
+- 可以查看历史运行记录列表。
+- 可以查看单次运行详情。
+- 可以下载当前运行日志 JSON。
+- 可以下载运行记录 summary CSV。
+- CLI 运行每日 workflow 后也会保存日志。
+- 运行日志保存在 `reports/workflow_runs/`。
+
+运行记录仅用于研究流程审计和复盘，不代表投资建议，不会产生真实交易。
+
+本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不构成投资建议。
+
 ## 运行测试
 
 ```bash

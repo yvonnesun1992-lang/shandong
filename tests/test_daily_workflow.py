@@ -7,6 +7,7 @@ import pytest
 
 from src.data.sample_data import load_sample_ohlcv
 from src.workflows.daily_workflow import run_daily_research_workflow
+from src.workflows.run_log import save_workflow_run_log
 
 
 def sample_fetch_data(market: str, symbol: str) -> pd.DataFrame:
@@ -34,6 +35,12 @@ def test_daily_workflow_single_symbol_generates_report(tmp_path):
     assert Path(result["report_path"]).exists()
     assert result["success_symbols"] == ["NVDA"]
     assert result["failed_symbols"] == []
+    assert result["run_id"]
+    assert result["started_at"]
+    assert result["finished_at"]
+    assert result["elapsed_seconds"] >= 0
+    assert result["success_count"] == 1
+    assert result["failed_count"] == 0
     assert result["summary"]["average_score"] >= 0
     assert not result["trend_scores"].empty
 
@@ -56,8 +63,31 @@ def test_daily_workflow_all_failures_do_not_save_empty_report(tmp_path):
     assert result["report_id"] is None
     assert result["report_path"] is None
     assert result["success_symbols"] == []
+    assert result["success_count"] == 0
+    assert result["failed_count"] == 2
+    assert result["error_message"]
     assert len(result["failed_symbols"]) == 2
     assert list(tmp_path.glob("*.json")) == []
+
+
+def test_daily_workflow_failure_result_can_be_saved_as_run_log(tmp_path):
+    report_dir = tmp_path / "reports"
+    log_dir = tmp_path / "logs"
+    result = run_daily_research_workflow(
+        "us",
+        "broken",
+        ["NVDA"],
+        failing_fetch_data,
+        output_dir=report_dir,
+    )
+
+    saved_log = save_workflow_run_log(result, log_dir)
+
+    assert result["success"] is False
+    assert saved_log["success"] is False
+    assert saved_log["failed_count"] == 1
+    assert list(report_dir.glob("*.json")) == []
+    assert (log_dir / f"{saved_log['run_id']}.json").exists()
 
 
 def test_daily_workflow_result_contains_expected_fields(tmp_path):

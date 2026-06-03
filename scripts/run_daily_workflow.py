@@ -13,6 +13,7 @@ from src.data.cn_data import get_cn_ohlcv
 from src.data.us_data import get_us_ohlcv
 from src.data.watchlist_manager import load_watchlist
 from src.workflows.daily_workflow import run_daily_research_workflow
+from src.workflows.run_log import save_workflow_run_log
 
 
 def fetch_data(market: str, symbol: str):
@@ -40,18 +41,26 @@ def main() -> int:
             symbols=symbols,
             fetch_data_func=fetch_data,
         )
+        saved_log = save_workflow_run_log(result)
     except Exception as error:
         print(f"Daily workflow failed: {error}", file=sys.stderr)
         return 1
 
     if not result["success"]:
+        print(f"run_id: {saved_log['run_id']}")
+        print(f"report_id: {result.get('report_id')}")
+        print(f"success_count: {result['success_count']}")
+        print(f"failed_count: {result['failed_count']}")
+        print(f"elapsed_seconds: {result['elapsed_seconds']:.2f}")
         print(f"Daily workflow failed: {result.get('error', 'unknown error')}", file=sys.stderr)
         return 1
 
+    print(f"run_id: {saved_log['run_id']}")
     print(f"report_id: {result['report_id']}")
     print(f"report_path: {result['report_path']}")
-    print(f"success_symbols: {len(result['success_symbols'])}")
-    print(f"failed_symbols: {len(result['failed_symbols'])}")
+    print(f"success_count: {result['success_count']}")
+    print(f"failed_count: {result['failed_count']}")
+    print(f"elapsed_seconds: {result['elapsed_seconds']:.2f}")
     return 0
 
 
