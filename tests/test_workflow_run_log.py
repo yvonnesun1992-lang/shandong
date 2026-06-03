@@ -111,6 +111,13 @@ def test_load_invalid_workflow_run_json_raises(tmp_path):
         load_workflow_run_log("broken", tmp_path)
 
 
+def test_list_workflow_run_logs_invalid_json_raises(tmp_path):
+    (tmp_path / "broken.json").write_text("{bad json", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="broken.json"):
+        list_workflow_run_logs(tmp_path)
+
+
 def test_missing_workflow_run_log_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
         load_workflow_run_log("missing_run", tmp_path)

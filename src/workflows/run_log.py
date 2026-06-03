@@ -117,8 +117,8 @@ def list_workflow_run_logs(
     for path in sorted(base_dir.glob("*.json"), reverse=True):
         try:
             log = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            continue
+        except json.JSONDecodeError as error:
+            raise ValueError(f"Workflow run log JSON is invalid: {path.name}") from error
         rows.append(
             {
                 "run_id": log.get("run_id", path.stem),
