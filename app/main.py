@@ -7,6 +7,7 @@ import streamlit as st
 
 from src.backtest.portfolio_backtest import run_portfolio_backtest
 from src.backtest.simple_backtest import run_simple_backtest
+from src.config.settings import load_settings, reset_settings, save_settings
 from src.data.cn_data import get_cn_ohlcv
 from src.data.data_quality import build_data_quality_report
 from src.data.price_cache import delete_cached_price_data, list_cached_symbols
@@ -60,19 +61,26 @@ DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示�
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
 WORKFLOW_RUN_LOG_WARNING = "运行记录仅用于本地研究流程审计和复盘，不代表投资建议，不会产生真实交易。"
 PRICE_CACHE_WARNING = "行情缓存仅用于研究和演示，不代表实时行情，不构成投资建议。"
+SETTINGS_WARNING = "系统设置仅用于本地研究环境配置，不应保存任何真实账户、密码、API key 或券商凭证。"
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
-def load_data(market: str, symbol: str) -> pd.DataFrame:
+def load_data(market: str, symbol: str, use_cache: bool = True) -> pd.DataFrame:
     if market == "美股":
-        return get_us_ohlcv(symbol)
-    return get_cn_ohlcv(symbol)
+        return get_us_ohlcv(symbol, use_cache=use_cache)
+    return get_cn_ohlcv(symbol, use_cache=use_cache)
 
 
-def fetch_price_data(market: str, symbol: str, refresh_cache: bool = False) -> pd.DataFrame:
+def fetch_price_data(market: str, symbol: str, refresh_cache: bool = False, use_cache: bool = True) -> pd.DataFrame:
     if market == "美股":
-        return get_us_ohlcv(symbol, refresh_cache=refresh_cache)
-    return get_cn_ohlcv(symbol, refresh_cache=refresh_cache)
+        return get_us_ohlcv(symbol, refresh_cache=refresh_cache, use_cache=use_cache)
+    return get_cn_ohlcv(symbol, refresh_cache=refresh_cache, use_cache=use_cache)
+
+
+def market_label_from_setting(default_market: str) -> str:
+    if str(default_market).strip().lower() == "cn":
+        return "A股"
+    return "美股"
 
 
 def is_sample_data(data: pd.DataFrame) -> bool:
@@ -150,11 +158,11 @@ def default_market_symbols(market: str) -> list[str]:
     return CN_WATCHLIST.copy()
 
 
-def build_rank_table(market: str, symbols: list[str]) -> pd.DataFrame:
+def build_rank_table(market: str, symbols: list[str], use_cache: bool = True) -> pd.DataFrame:
     rows = []
     for symbol in symbols:
         try:
-            data = load_data(market, symbol)
+            data = load_data(market, symbol, use_cache=use_cache)
             score = latest_trend_score(symbol, data)
             rows.append(
                 {
@@ -180,12 +188,16 @@ def build_rank_table(market: str, symbols: list[str]) -> pd.DataFrame:
     return pd.DataFrame(rows).sort_values("趋势分数", ascending=False, na_position="last")
 
 
-def load_price_data_for_symbols(market: str, symbols: list[str]) -> tuple[dict[str, pd.DataFrame], list[str]]:
+def load_price_data_for_symbols(
+    market: str,
+    symbols: list[str],
+    use_cache: bool = True,
+) -> tuple[dict[str, pd.DataFrame], list[str]]:
     price_data = {}
     failed_symbols = []
     for symbol in symbols:
         try:
-            price_data[symbol] = load_data(market, symbol)
+            price_data[symbol] = load_data(market, symbol, use_cache=use_cache)
         except Exception:
             failed_symbols.append(symbol)
     return price_data, failed_symbols
@@ -264,9 +276,27 @@ def show_score_rules() -> None:
 
 def main() -> None:
     st.title("山洞趋势量化系统")
-    st.warning(DISCLAIMER)
+    try:
+        settings = load_settings()
+        settings_error = None
+    except Exception as error:
+        settings = {
+            "cache": {"enabled": True, "max_age_days": 7},
+            "paper_trading": {"initial_cash": 100000.0},
+            "dashboard": {"default_market": "us", "show_disclaimer": True},
+            "workflow": {"min_success_symbols": 1},
+            "reports": {},
+        }
+        settings_error = error
+        st.error(f"无法读取系统设置，已使用本次运行的默认值：{error}")
 
-    market = st.sidebar.radio("市场", ["美股", "A股"])
+    if settings.get("dashboard", {}).get("show_disclaimer", True):
+        st.warning(DISCLAIMER)
+    cache_enabled = bool(settings.get("cache", {}).get("enabled", True))
+
+    default_market_label = market_label_from_setting(settings.get("dashboard", {}).get("default_market", "us"))
+    default_market_index = ["美股", "A股"].index(default_market_label)
+    market = st.sidebar.radio("市场", ["美股", "A股"], index=default_market_index)
     fallback_symbols = default_market_symbols(market)
     fallback_watchlist_name = default_watchlist_name(market)
 
@@ -317,6 +347,7 @@ def main() -> None:
         workflow_tab,
         run_log_tab,
         data_quality_tab,
+        settings_tab,
         daily_tab,
         report_tab,
         paper_tab,
@@ -330,6 +361,7 @@ def main() -> None:
             "每日流程",
             "运行记录",
             "数据缓存与质量",
+            "系统设置",
             "每日研究报告",
             "报告中心",
             "模拟交易",
@@ -340,7 +372,7 @@ def main() -> None:
     with rank_tab:
         st.subheader("趋势评分排名")
         show_score_rules()
-        rank_table = build_rank_table(market, symbols)
+        rank_table = build_rank_table(market, symbols, use_cache=cache_enabled)
         if (rank_table["数据来源"] == "示例数据").any():
             st.warning(SAMPLE_WARNING)
         else:
@@ -357,7 +389,7 @@ def main() -> None:
         st.subheader("收盘价、均线和 RSI")
         selected_symbol = st.selectbox("选择股票", symbols)
         try:
-            data = load_data(market, selected_symbol)
+            data = load_data(market, selected_symbol, use_cache=cache_enabled)
             show_data_source_status(data)
             scored = add_trend_scores(data)
             st.line_chart(scored.set_index("date")[["close", "ma20", "ma60", "ma120"]])
@@ -372,7 +404,7 @@ def main() -> None:
         initial_cash = st.number_input("初始资金", min_value=10_000, value=100_000, step=10_000)
         if st.button("运行回测"):
             try:
-                data = load_data(market, backtest_symbol)
+                data = load_data(market, backtest_symbol, use_cache=cache_enabled)
                 show_data_source_status(data)
                 result = run_simple_backtest(data, initial_cash=float(initial_cash))
                 st.json(result)
@@ -436,7 +468,7 @@ def main() -> None:
 
         if st.button("运行组合回测"):
             try:
-                price_data, failed_symbols = load_price_data_for_symbols(market, symbols)
+                price_data, failed_symbols = load_price_data_for_symbols(market, symbols, use_cache=cache_enabled)
                 if not price_data:
                     st.error("没有可用于组合回测的数据。")
                 else:
@@ -687,8 +719,13 @@ def main() -> None:
             quality_rows = []
             for symbol in symbols:
                 try:
-                    data = fetch_price_data(market, symbol, refresh_cache=True)
-                    quality = build_data_quality_report(market_code_from_label(market), symbol, data)
+                    data = fetch_price_data(market, symbol, refresh_cache=True, use_cache=cache_enabled)
+                    quality = build_data_quality_report(
+                        market_code_from_label(market),
+                        symbol,
+                        data,
+                        max_age_days=int(settings.get("cache", {}).get("max_age_days", 7)),
+                    )
                     quality_rows.append(
                         {
                             "symbol": symbol,
@@ -751,12 +788,95 @@ def main() -> None:
         except Exception as error:
             st.error(f"缓存删除区域加载失败：{error}")
 
+    with settings_tab:
+        st.subheader("系统设置")
+        st.warning(SETTINGS_WARNING)
+        if settings_error is not None:
+            st.error(f"当前 settings.json 读取失败：{settings_error}")
+
+        st.markdown("### 当前配置")
+        st.json(settings)
+
+        st.markdown("### 修改常用设置")
+        cache_enabled_input = st.checkbox(
+            "启用本地行情缓存",
+            value=bool(settings.get("cache", {}).get("enabled", True)),
+        )
+        cache_max_age_input = st.number_input(
+            "缓存数据 freshness 最大天数",
+            min_value=1,
+            value=int(settings.get("cache", {}).get("max_age_days", 7)),
+            step=1,
+        )
+        paper_initial_cash_input = st.number_input(
+            "模拟交易默认初始资金",
+            min_value=1.0,
+            value=float(settings.get("paper_trading", {}).get("initial_cash", 100000.0)),
+            step=1000.0,
+        )
+        dashboard_default_market_input = st.selectbox(
+            "dashboard 默认市场",
+            ["us", "cn"],
+            index=["us", "cn"].index(str(settings.get("dashboard", {}).get("default_market", "us"))),
+        )
+        dashboard_show_disclaimer_input = st.checkbox(
+            "显示全局免责声明",
+            value=bool(settings.get("dashboard", {}).get("show_disclaimer", True)),
+        )
+        workflow_min_success_input = st.number_input(
+            "每日 workflow 最少成功股票数",
+            min_value=1,
+            value=int(settings.get("workflow", {}).get("min_success_symbols", 1)),
+            step=1,
+        )
+
+        if st.button("保存设置"):
+            next_settings = {
+                **settings,
+                "cache": {
+                    **settings.get("cache", {}),
+                    "enabled": bool(cache_enabled_input),
+                    "max_age_days": int(cache_max_age_input),
+                },
+                "paper_trading": {
+                    **settings.get("paper_trading", {}),
+                    "initial_cash": float(paper_initial_cash_input),
+                },
+                "dashboard": {
+                    **settings.get("dashboard", {}),
+                    "default_market": dashboard_default_market_input,
+                    "show_disclaimer": bool(dashboard_show_disclaimer_input),
+                },
+                "workflow": {
+                    **settings.get("workflow", {}),
+                    "min_success_symbols": int(workflow_min_success_input),
+                },
+            }
+            try:
+                save_settings(next_settings)
+                st.success("系统设置已保存。请刷新页面查看默认市场等启动类设置变化。")
+            except Exception as error:
+                st.error(f"保存系统设置失败：{error}")
+
+        st.markdown("### 重置设置")
+        confirm_reset_settings = st.checkbox("确认重置 settings.json 为默认配置。")
+        if st.button("重置为默认设置"):
+            if not confirm_reset_settings:
+                st.error("请先勾选确认框，再重置系统设置。")
+            else:
+                try:
+                    reset_settings()
+                    st.success("系统设置已重置为默认配置。")
+                    st.rerun()
+                except Exception as error:
+                    st.error(f"重置系统设置失败：{error}")
+
     with daily_tab:
         st.subheader("每日量化研究报告")
         st.warning(DAILY_REPORT_WARNING)
         if st.button("生成今日研究报告"):
             try:
-                rank_table = build_rank_table(market, symbols)
+                rank_table = build_rank_table(market, symbols, use_cache=cache_enabled)
                 try:
                     portfolio = load_paper_portfolio()
                     latest_prices = latest_prices_for_positions(portfolio)
@@ -1006,13 +1126,16 @@ def main() -> None:
             st.info("暂无模拟交易记录。")
 
         st.subheader("重置模拟账户")
-        confirm_reset = st.checkbox("确认重置模拟账户为 100000 虚拟资金，并清空持仓和交易记录。")
+        configured_initial_cash = float(settings.get("paper_trading", {}).get("initial_cash", 100000.0))
+        confirm_reset = st.checkbox(
+            f"确认重置模拟账户为 {configured_initial_cash:,.2f} 虚拟资金，并清空持仓和交易记录。"
+        )
         if st.button("重置模拟账户"):
             if not confirm_reset:
                 st.error("请先勾选确认框，再重置模拟账户。")
             else:
                 try:
-                    reset_paper_portfolio()
+                    reset_paper_portfolio(initial_cash=configured_initial_cash)
                     st.success("模拟账户已重置。")
                     st.rerun()
                 except Exception as error:

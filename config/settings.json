@@ -1,0 +1,21 @@
+{
+  "cache": {
+    "enabled": true,
+    "max_age_days": 7
+  },
+  "reports": {
+    "daily_report_dir": "reports/daily",
+    "backtest_report_dir": "reports/backtests",
+    "workflow_run_dir": "reports/workflow_runs"
+  },
+  "paper_trading": {
+    "initial_cash": 100000.0
+  },
+  "dashboard": {
+    "default_market": "us",
+    "show_disclaimer": true
+  },
+  "workflow": {
+    "min_success_symbols": 1
+  }
+}
