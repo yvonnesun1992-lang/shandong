@@ -527,6 +527,75 @@ http://localhost:8502 返回 200
 是否建议创建 PR：是
 ```
 
+## V1.12: system health check center
+
+V1.12 目标：
+
+- 增加本地系统健康检查中心。
+- 检查配置、缓存、报告、示例数据、workflow 日志和安全边界。
+- dashboard 增加“系统健康”页面。
+- 支持导出健康检查 JSON / CSV。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/system/__init__.py
+src/system/health_check.py
+tests/test_system_health_check.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+系统健康检查功能说明：
+
+- `run_system_health_check` 汇总所有检查并返回 overall_status、checks、ok_count、warning_count、error_count 和 generated_at。
+- `check_required_directories` 检查 config、sample、cache、reports 等关键目录。
+- `check_required_files` 检查 settings、watchlists、paper portfolio 和示例 CSV。
+- `check_settings_health` 复用 settings 管理模块验证配置。
+- `check_watchlist_health` 检查默认 watchlist 和空列表。
+- `check_sample_data_health` 复用 OHLCV 数据质量检查。
+- `check_cache_health` 检查本地行情缓存目录和损坏 CSV。
+- `check_reports_health` 检查报告目录和损坏 JSON。
+- `check_workflow_logs_health` 检查 workflow 运行日志。
+- `check_security_boundary` 扫描运行代码中的真实券商连接、自动下单、密钥保存和 AI API 风险。
+- 单项检查失败时不会让整体 health check 崩溃，会记录为 error。
+
+dashboard 更新：
+
+- 新增“系统健康”tab。
+- 支持点击“运行系统健康检查”。
+- 显示 overall_status、OK / Warning / Error 数量。
+- 用表格展示每个检查项的 name、status、message。
+- 对 error / warning / ok 项分别显示状态提示。
+- 支持下载健康检查 JSON。
+- 支持下载健康检查 CSV。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 155 passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.11: settings center and configuration management
 
 V1.11 目标：
