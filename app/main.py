@@ -38,6 +38,7 @@ from src.reports.daily_research_report import (
     save_daily_research_report,
 )
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
+from src.system.health_check import health_check_to_dataframe, run_system_health_check
 from src.workflows.daily_workflow import run_daily_research_workflow
 from src.workflows.run_log import (
     delete_workflow_run_log,
@@ -62,6 +63,7 @@ DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演
 WORKFLOW_RUN_LOG_WARNING = "运行记录仅用于本地研究流程审计和复盘，不代表投资建议，不会产生真实交易。"
 PRICE_CACHE_WARNING = "行情缓存仅用于研究和演示，不代表实时行情，不构成投资建议。"
 SETTINGS_WARNING = "系统设置仅用于本地研究环境配置，不应保存任何真实账户、密码、API key 或券商凭证。"
+SYSTEM_HEALTH_WARNING = "系统健康检查仅用于本地研究环境诊断，不代表投资建议，不会连接真实券商，也不会产生真实订单。"
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
@@ -347,6 +349,7 @@ def main() -> None:
         workflow_tab,
         run_log_tab,
         data_quality_tab,
+        system_health_tab,
         settings_tab,
         daily_tab,
         report_tab,
@@ -361,6 +364,7 @@ def main() -> None:
             "每日流程",
             "运行记录",
             "数据缓存与质量",
+            "系统健康",
             "系统设置",
             "每日研究报告",
             "报告中心",
@@ -787,6 +791,61 @@ def main() -> None:
                         st.rerun()
         except Exception as error:
             st.error(f"缓存删除区域加载失败：{error}")
+
+    with system_health_tab:
+        st.subheader("系统健康检查中心")
+        st.warning(SYSTEM_HEALTH_WARNING)
+        st.markdown("检查本地配置、缓存、报告、示例数据、workflow 运行记录和安全边界。")
+
+        if st.button("运行系统健康检查"):
+            try:
+                st.session_state["latest_system_health_check"] = run_system_health_check()
+            except Exception as error:
+                st.error(f"系统健康检查运行失败：{error}")
+
+        if "latest_system_health_check" in st.session_state:
+            health_result = st.session_state["latest_system_health_check"]
+            overall_status = health_result.get("overall_status", "unknown")
+            status_message = f"整体状态：{overall_status}"
+            if overall_status == "error":
+                st.error(status_message)
+            elif overall_status == "warning":
+                st.warning(status_message)
+            else:
+                st.success(status_message)
+
+            ok_col, warning_col, error_col = st.columns(3)
+            ok_col.metric("OK", int(health_result.get("ok_count", 0)))
+            warning_col.metric("Warning", int(health_result.get("warning_count", 0)))
+            error_col.metric("Error", int(health_result.get("error_count", 0)))
+
+            health_table = health_check_to_dataframe(health_result)
+            st.dataframe(health_table, use_container_width=True, hide_index=True)
+
+            for check in health_result.get("checks", []):
+                check_message = f"{check.get('name')}: {check.get('message')}"
+                if check.get("status") == "error":
+                    st.error(check_message)
+                elif check.get("status") == "warning":
+                    st.warning(check_message)
+                else:
+                    st.success(check_message)
+
+            health_json = json.dumps(health_result, ensure_ascii=False, indent=2)
+            st.download_button(
+                label="下载健康检查 JSON",
+                data=health_json,
+                file_name="system_health_check.json",
+                mime="application/json",
+            )
+            st.download_button(
+                label="下载健康检查 CSV",
+                data=health_table.to_csv(index=False).encode("utf-8-sig"),
+                file_name="system_health_check.csv",
+                mime="text/csv",
+            )
+        else:
+            st.info("点击按钮后运行一次本地系统健康检查。")
 
     with settings_tab:
         st.subheader("系统设置")
