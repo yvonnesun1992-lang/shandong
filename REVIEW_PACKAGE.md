@@ -527,6 +527,72 @@ http://localhost:8502 返回 200
 是否建议创建 PR：是
 ```
 
+## V1.11: settings center and configuration management
+
+V1.11 目标：
+
+- 增加本地系统设置文件。
+- 增加 settings 管理模块。
+- dashboard 增加“系统设置”页面。
+- 轻量集成默认市场、缓存启用状态、缓存 freshness 天数和模拟账户重置初始资金。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+config/settings.json
+src/config/__init__.py
+src/config/settings.py
+tests/test_settings.py
+```
+
+修改文件：
+
+```text
+app/main.py
+src/data/data_quality.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+系统设置中心功能说明：
+
+- `load_settings` 会在 `config/settings.json` 不存在时创建默认配置。
+- `save_settings` 保存经过校验的配置。
+- `reset_settings` 恢复默认配置。
+- `validate_settings` 校验 cache、paper_trading、dashboard 和 workflow 的关键配置。
+- `get_setting` 和 `update_setting` 提供简单读写接口。
+- 路径只允许 `config/settings.json`，拒绝路径穿越和其他文件名。
+- 设置文件拒绝 API key、secret、password、token 等敏感字段。
+
+dashboard 更新：
+
+- 新增“系统设置”tab。
+- 显示当前 settings JSON。
+- 支持修改 `cache.enabled`、`cache.max_age_days`、`paper_trading.initial_cash`、`dashboard.default_market`、`dashboard.show_disclaimer` 和 `workflow.min_success_symbols`。
+- 支持保存设置。
+- 支持勾选确认后重置为默认设置。
+- 设置读取失败时显示错误，并使用本次运行的默认值，不让 dashboard 崩溃。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 143 passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.10: price cache and data quality checks
 
 V1.10 目标：

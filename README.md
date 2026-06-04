@@ -224,6 +224,24 @@ V1.10 支持本地行情缓存和数据质量检查：
 
 本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不使用 AI 预测股价。
 
+## V1.11 系统设置中心
+
+V1.11 支持本地系统设置中心：
+
+- 新增 `config/settings.json`。
+- 新增 dashboard “系统设置”页面。
+- 支持管理缓存配置、报告目录配置、模拟交易初始资金、dashboard 默认市场和 workflow 最少成功股票数。
+- 支持保存设置。
+- 支持重置为默认设置，重置前需要勾选确认。
+- dashboard 默认市场优先读取 `settings.dashboard.default_market`。
+- 模拟交易账户重置资金优先读取 `settings.paper_trading.initial_cash`。
+- 数据质量 freshness 默认天数优先读取 `settings.cache.max_age_days`。
+- 行情读取会参考 `settings.cache.enabled`。
+
+配置文件只用于本地研究环境，不应保存任何真实账户、密码、API key、secret、password、token 或券商凭证。
+
+本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不使用 AI 预测股价，不构成投资建议。
+
 ## 运行测试
 
 ```bash

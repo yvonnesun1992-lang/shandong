@@ -100,10 +100,10 @@ def check_data_freshness(data: pd.DataFrame, max_age_days: int = 7) -> dict:
     }
 
 
-def build_data_quality_report(market: str, symbol: str, data: pd.DataFrame) -> dict:
+def build_data_quality_report(market: str, symbol: str, data: pd.DataFrame, max_age_days: int = 7) -> dict:
     quality = validate_ohlcv_data(data)
     try:
-        freshness = check_data_freshness(data)
+        freshness = check_data_freshness(data, max_age_days=max_age_days)
     except ValueError as error:
         freshness = {"is_fresh": False, "warning": str(error)}
 
