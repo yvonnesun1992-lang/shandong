@@ -527,6 +527,71 @@ http://localhost:8502 返回 200
 是否建议创建 PR：是
 ```
 
+## V1.13: local launcher and quick start guide
+
+V1.13 目标：
+
+- 增加本地一键启动能力。
+- 增加启动前自检脚本。
+- 增加 Windows bat / PowerShell 启动入口。
+- 增加新手 Quick Start 文档。
+- 启动失败时给出清晰错误提示和下一步建议。
+
+新增文件：
+
+```text
+scripts/system_doctor.py
+scripts/start_dashboard.py
+start_shandong.bat
+start_shandong.ps1
+docs/QUICK_START.md
+tests/test_system_doctor.py
+tests/test_launcher_scripts.py
+```
+
+修改文件：
+
+```text
+README.md
+REVIEW_PACKAGE.md
+```
+
+一键启动功能说明：
+
+- `scripts/start_dashboard.py` 会先运行启动前检查。
+- 如果存在阻塞错误，会提示安装依赖和运行测试，不直接崩溃。
+- 检查通过后启动 `python -m streamlit run app/main.py`。
+- `start_shandong.bat` 和 `start_shandong.ps1` 会优先使用 `.venv\Scripts\python.exe`。
+
+system_doctor 功能说明：
+
+- 检查 Python 版本。
+- 检查 pandas、numpy、matplotlib、streamlit、yfinance、akshare、pytest 是否可 import。
+- 检查 config、sample data、cache、reports 等关键目录。
+- 检查 settings、watchlists、paper portfolio 和示例数据文件。
+- 调用系统健康检查中心。
+- 输出 OK / WARNING / ERROR 和下一步建议。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 170 passed
+system_doctor: passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.12: system health check center
 
 V1.12 目标：
