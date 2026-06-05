@@ -20,6 +20,32 @@ shandong 是一个股票量化研究与模拟交易平台原型。
 - 基于 watchlist 做多股票组合回测
 - 用 Streamlit dashboard 查看评分、均线和 RSI
 
+## 快速启动
+
+新手建议先阅读：
+
+```text
+docs/QUICK_START.md
+```
+
+推荐一键启动：
+
+```bash
+python scripts/start_dashboard.py
+```
+
+Windows 可以运行：
+
+```bash
+start_shandong.bat
+```
+
+启动前诊断：
+
+```bash
+python scripts/system_doctor.py
+```
+
 ## 安装
 
 建议先进入项目目录：
@@ -257,6 +283,18 @@ V1.12 支持本地系统健康检查中心：
 系统健康检查仅用于本地研究环境诊断，不代表投资建议。
 
 本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不使用 AI 预测股价，不构成投资建议。
+
+## V1.13 一键启动与启动前自检
+
+V1.13 增加本地启动工具：
+
+- 新增 `scripts/system_doctor.py`，用于检查 Python 版本、关键依赖、关键目录、关键文件和系统健康状态。
+- 新增 `scripts/start_dashboard.py`，先运行启动前检查，再启动 Streamlit dashboard。
+- 新增 `start_shandong.bat`，适合 Windows 双击或命令行启动。
+- 新增 `start_shandong.ps1`，适合 PowerShell 用户启动。
+- 新增 `docs/QUICK_START.md`，面向新手说明安装、测试、启动和常见问题。
+
+启动工具只用于本地研究环境，不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不使用 AI 预测股价。
 
 ## 运行测试
 
