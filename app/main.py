@@ -39,6 +39,16 @@ from src.reports.daily_research_report import (
 )
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
 from src.system.health_check import health_check_to_dataframe, run_system_health_check
+from src.ui.layout import (
+    dataframe_to_csv_bytes,
+    format_data_source_label,
+    format_health_status,
+    format_return_pct,
+    render_page_header,
+    render_risk_disclaimer,
+    render_section_header,
+    render_status_message,
+)
 from src.workflows.daily_workflow import run_daily_research_workflow
 from src.workflows.run_log import (
     delete_workflow_run_log,
@@ -49,7 +59,7 @@ from src.workflows.run_log import (
 )
 
 
-st.set_page_config(page_title="山洞趋势量化系统", layout="wide")
+st.set_page_config(page_title="Shandong Quant Research", layout="wide")
 
 
 SAMPLE_WARNING = "当前真实数据源获取失败，正在使用本地示例数据。示例数据仅用于功能演示，不代表真实行情，不构成投资建议。"
@@ -91,13 +101,9 @@ def is_sample_data(data: pd.DataFrame) -> bool:
 
 def data_source_label(data: pd.DataFrame) -> str:
     if is_sample_data(data):
-        return "示例数据"
+        return format_data_source_label("sample")
     source = str(data.attrs.get("data_source", "remote"))
-    if source == "cache":
-        return "本地缓存"
-    if source == "remote":
-        return "实时/历史行情数据"
-    return source
+    return format_data_source_label(source)
 
 
 def show_data_source_status(data: pd.DataFrame) -> None:
@@ -128,7 +134,7 @@ def trades_to_csv(trades: list[dict]) -> bytes:
 
 
 def dataframe_to_csv(data: pd.DataFrame) -> bytes:
-    return data.to_csv(index=False).encode("utf-8-sig")
+    return dataframe_to_csv_bytes(data)
 
 
 def report_to_json_bytes(report: dict) -> bytes:
@@ -277,7 +283,10 @@ def show_score_rules() -> None:
 
 
 def main() -> None:
-    st.title("山洞趋势量化系统")
+    render_page_header(
+        "Shandong Quant Research",
+        "A-share & US stock quant research prototype",
+    )
     try:
         settings = load_settings()
         settings_error = None
@@ -293,11 +302,12 @@ def main() -> None:
         st.error(f"无法读取系统设置，已使用本次运行的默认值：{error}")
 
     if settings.get("dashboard", {}).get("show_disclaimer", True):
-        st.warning(DISCLAIMER)
+        render_risk_disclaimer()
     cache_enabled = bool(settings.get("cache", {}).get("enabled", True))
 
     default_market_label = market_label_from_setting(settings.get("dashboard", {}).get("default_market", "us"))
     default_market_index = ["美股", "A股"].index(default_market_label)
+    st.sidebar.header("研究配置")
     market = st.sidebar.radio("市场", ["美股", "A股"], index=default_market_index)
     fallback_symbols = default_market_symbols(market)
     fallback_watchlist_name = default_watchlist_name(market)
@@ -316,6 +326,7 @@ def main() -> None:
         default_index = 0
 
     selected_watchlist = st.sidebar.selectbox("选择 watchlist", watchlist_names, index=default_index)
+    st.sidebar.metric("当前股票数量", len(watchlists.get(selected_watchlist, fallback_symbols)))
     new_watchlist_name = st.sidebar.text_input("新 watchlist 名称（可选）", value="")
     current_symbols = watchlists.get(selected_watchlist, fallback_symbols)
     symbols_text = st.sidebar.text_area(
@@ -336,6 +347,7 @@ def main() -> None:
             st.sidebar.error(f"保存失败：{error}")
 
     st.sidebar.caption(CACHE_NOTE)
+    st.sidebar.caption("系统健康页可检查本地配置、缓存、报告和运行环境。")
 
     if not symbols:
         st.warning("股票池为空，请在左侧输入至少一个股票代码。")
@@ -346,42 +358,52 @@ def main() -> None:
         chart_tab,
         backtest_tab,
         portfolio_tab,
+        paper_tab,
         workflow_tab,
-        run_log_tab,
-        data_quality_tab,
-        system_health_tab,
-        settings_tab,
         daily_tab,
         report_tab,
-        paper_tab,
+        data_quality_tab,
+        run_log_tab,
+        settings_tab,
+        system_health_tab,
         info_tab,
     ) = st.tabs(
         [
-            "趋势评分",
-            "单只股票分析",
-            "简单回测",
+            "市场总览",
+            "单股分析",
+            "单股回测",
             "组合回测",
+            "模拟交易",
             "每日流程",
-            "运行记录",
-            "数据缓存与质量",
-            "系统健康",
-            "系统设置",
             "每日研究报告",
             "报告中心",
-            "模拟交易",
-            "说明与风险提示",
+            "数据质量",
+            "运行记录",
+            "系统设置",
+            "系统健康",
+            "说明",
         ]
     )
 
     with rank_tab:
-        st.subheader("趋势评分排名")
+        render_section_header("市场总览", "查看当前自选股的趋势评分、研究信号和数据来源。")
         show_score_rules()
         rank_table = build_rank_table(market, symbols, use_cache=cache_enabled)
         if (rank_table["数据来源"] == "示例数据").any():
             st.warning(SAMPLE_WARNING)
         else:
             st.info("数据源：实时/历史行情数据")
-        st.dataframe(rank_table, use_container_width=True, hide_index=True)
+        total_count = len(rank_table)
+        strong_count = int((rank_table["状态"] == "Strong trend").sum())
+        watchlist_count = int((rank_table["状态"] == "Watchlist").sum())
+        weak_count = int((rank_table["状态"] == "Weak").sum())
+        metric_cols = st.columns(4)
+        metric_cols[0].metric("趋势评分数量", total_count)
+        metric_cols[1].metric("Strong trend", strong_count)
+        metric_cols[2].metric("Watchlist", watchlist_count)
+        metric_cols[3].metric("Weak", weak_count)
+        key_columns = ["股票代码", "趋势分数", "状态", "收盘价", "RSI14", "数据来源"]
+        st.dataframe(rank_table[key_columns], use_container_width=True, hide_index=True)
         st.download_button(
             label="下载趋势评分 CSV",
             data=trend_scores_to_csv(rank_table),
@@ -390,7 +412,7 @@ def main() -> None:
         )
 
     with chart_tab:
-        st.subheader("收盘价、均线和 RSI")
+        render_section_header("单股分析", "查看单只股票的收盘价、均线和 RSI，用于研究趋势状态。")
         selected_symbol = st.selectbox("选择股票", symbols)
         try:
             data = load_data(market, selected_symbol, use_cache=cache_enabled)
@@ -403,7 +425,7 @@ def main() -> None:
             st.error(f"无法加载 {selected_symbol} 的数据：{error}")
 
     with backtest_tab:
-        st.subheader("V1 简单回测")
+        render_section_header("单股回测", "用固定趋势规则观察单只股票的历史表现。")
         backtest_symbol = st.selectbox("回测股票", symbols, key="backtest_symbol")
         initial_cash = st.number_input("初始资金", min_value=10_000, value=100_000, step=10_000)
         if st.button("运行回测"):
@@ -411,7 +433,13 @@ def main() -> None:
                 data = load_data(market, backtest_symbol, use_cache=cache_enabled)
                 show_data_source_status(data)
                 result = run_simple_backtest(data, initial_cash=float(initial_cash))
-                st.json(result)
+                backtest_metrics = st.columns(4)
+                backtest_metrics[0].metric("总收益", format_return_pct(result.get("total_return")))
+                backtest_metrics[1].metric("年化收益", format_return_pct(result.get("annualized_return")))
+                backtest_metrics[2].metric("最大回撤", format_return_pct(result.get("max_drawdown")))
+                backtest_metrics[3].metric("最终资金", f"{float(result.get('final_portfolio_value', 0)):,.2f}")
+                with st.expander("查看回测明细"):
+                    st.json(result)
                 st.session_state["latest_single_backtest_report"] = {
                     "parameters": {
                         "symbol": backtest_symbol,
@@ -436,8 +464,8 @@ def main() -> None:
                     st.error(f"保存单票回测报告失败：{error}")
 
     with portfolio_tab:
-        st.subheader("V1.5 组合回测")
-        st.warning(PORTFOLIO_BACKTEST_WARNING)
+        render_section_header("组合回测", "基于当前 watchlist 观察多股票组合的历史净值、交易和风险指标。")
+        st.info(PORTFOLIO_BACKTEST_WARNING)
         portfolio_initial_cash = st.number_input(
             "组合回测初始资金",
             min_value=10_000,
@@ -492,9 +520,9 @@ def main() -> None:
                     skipped_symbols = sorted(set(failed_symbols + result["skipped_symbols"]))
 
                     total_col, annual_col, drawdown_col, final_col, trades_col = st.columns(5)
-                    total_col.metric("总收益", f"{summary['total_return']:.2%}")
-                    annual_col.metric("年化收益", f"{summary['annualized_return']:.2%}")
-                    drawdown_col.metric("最大回撤", f"{summary['max_drawdown']:.2%}")
+                    total_col.metric("总收益", format_return_pct(summary["total_return"]))
+                    annual_col.metric("年化收益", format_return_pct(summary["annualized_return"]))
+                    drawdown_col.metric("最大回撤", format_return_pct(summary["max_drawdown"]))
                     final_col.metric("最终资产", f"{summary['final_portfolio_value']:,.2f}")
                     trades_col.metric("交易次数", summary["number_of_trades"])
 
@@ -551,9 +579,8 @@ def main() -> None:
                     st.error(f"保存组合回测报告失败：{error}")
 
     with workflow_tab:
-        st.subheader("一键每日研究流程")
-        st.warning(DAILY_WORKFLOW_WARNING)
-        st.markdown("每日流程会基于当前市场和当前 watchlist，自动获取行情、计算趋势评分、生成并保存每日研究报告。")
+        render_section_header("每日流程", "基于当前市场和 watchlist，一键生成每日研究报告和运行记录。")
+        st.info(DAILY_WORKFLOW_WARNING)
         workflow_market_code = market_code_from_label(market)
         workflow_col_market, workflow_col_watchlist, workflow_col_count = st.columns(3)
         workflow_col_market.metric("当前市场", workflow_market_code)
@@ -634,8 +661,8 @@ def main() -> None:
                 )
 
     with run_log_tab:
-        st.subheader("运行记录中心")
-        st.warning(WORKFLOW_RUN_LOG_WARNING)
+        render_section_header("运行记录", "查看每日流程的历史运行记录、成功股票和失败原因。")
+        st.info(WORKFLOW_RUN_LOG_WARNING)
         try:
             run_logs = list_workflow_run_logs()
             if run_logs.empty:
@@ -703,8 +730,8 @@ def main() -> None:
             st.error(f"运行记录中心加载失败：{error}")
 
     with data_quality_tab:
-        st.subheader("数据缓存与质量")
-        st.warning(PRICE_CACHE_WARNING)
+        render_section_header("数据质量", "检查本地缓存、数据完整性和行情 freshness。")
+        st.info(PRICE_CACHE_WARNING)
 
         st.markdown("### 当前缓存列表")
         try:
@@ -793,9 +820,8 @@ def main() -> None:
             st.error(f"缓存删除区域加载失败：{error}")
 
     with system_health_tab:
-        st.subheader("系统健康检查中心")
-        st.warning(SYSTEM_HEALTH_WARNING)
-        st.markdown("检查本地配置、缓存、报告、示例数据、workflow 运行记录和安全边界。")
+        render_section_header("系统健康", "检查本地配置、缓存、报告、示例数据、workflow 运行记录和安全边界。")
+        st.info(SYSTEM_HEALTH_WARNING)
 
         if st.button("运行系统健康检查"):
             try:
@@ -806,13 +832,7 @@ def main() -> None:
         if "latest_system_health_check" in st.session_state:
             health_result = st.session_state["latest_system_health_check"]
             overall_status = health_result.get("overall_status", "unknown")
-            status_message = f"整体状态：{overall_status}"
-            if overall_status == "error":
-                st.error(status_message)
-            elif overall_status == "warning":
-                st.warning(status_message)
-            else:
-                st.success(status_message)
+            render_status_message(overall_status, f"整体状态：{format_health_status(overall_status)}")
 
             ok_col, warning_col, error_col = st.columns(3)
             ok_col.metric("OK", int(health_result.get("ok_count", 0)))
@@ -848,8 +868,8 @@ def main() -> None:
             st.info("点击按钮后运行一次本地系统健康检查。")
 
     with settings_tab:
-        st.subheader("系统设置")
-        st.warning(SETTINGS_WARNING)
+        render_section_header("系统设置", "统一管理本地缓存、报告、模拟交易、dashboard 和 workflow 配置。")
+        st.info(SETTINGS_WARNING)
         if settings_error is not None:
             st.error(f"当前 settings.json 读取失败：{settings_error}")
 
@@ -931,8 +951,8 @@ def main() -> None:
                     st.error(f"重置系统设置失败：{error}")
 
     with daily_tab:
-        st.subheader("每日量化研究报告")
-        st.warning(DAILY_REPORT_WARNING)
+        render_section_header("每日研究报告", "基于当前研究数据生成本地日报，不调用 AI API。")
+        st.info(DAILY_REPORT_WARNING)
         if st.button("生成今日研究报告"):
             try:
                 rank_table = build_rank_table(market, symbols, use_cache=cache_enabled)
@@ -1036,8 +1056,8 @@ def main() -> None:
             st.error(f"日报中心加载失败：{error}")
 
     with report_tab:
-        st.subheader("报告中心")
-        st.warning(REPORT_CENTER_WARNING)
+        render_section_header("报告中心", "查看和导出已保存的回测报告与研究记录。")
+        st.info(REPORT_CENTER_WARNING)
         try:
             reports_table = list_backtest_reports()
             if reports_table.empty:
@@ -1111,8 +1131,8 @@ def main() -> None:
             st.error(f"报告中心加载失败：{error}")
 
     with paper_tab:
-        st.subheader("本地模拟交易")
-        st.warning(PAPER_TRADING_WARNING)
+        render_section_header("模拟交易", "用虚拟资金记录买卖、持仓和交易流水，仅用于演示和学习。")
+        st.info(PAPER_TRADING_WARNING)
         try:
             portfolio = load_paper_portfolio()
             latest_prices = latest_prices_for_positions(portfolio)
@@ -1129,7 +1149,7 @@ def main() -> None:
         pnl_col.metric("浮动盈亏", f"{summary['unrealized_pnl']:,.2f}")
         count_col.metric("持仓数量", summary["position_count"])
 
-        st.subheader("当前持仓")
+        render_section_header("当前持仓", "查看模拟账户的持仓数量、成本和浮动盈亏。")
         positions_table = pd.DataFrame(summary["positions"])
         if positions_table.empty:
             st.info("当前没有模拟持仓。")
@@ -1170,7 +1190,7 @@ def main() -> None:
                 except Exception as error:
                     st.error(f"模拟卖出失败：{error}")
 
-        st.subheader("交易记录")
+        render_section_header("交易记录", "查看最近 20 条模拟交易流水，并可导出 CSV。")
         trades = get_trade_history(portfolio)
         recent_trades = trades[-20:]
         if recent_trades:
@@ -1184,7 +1204,7 @@ def main() -> None:
         else:
             st.info("暂无模拟交易记录。")
 
-        st.subheader("重置模拟账户")
+        render_section_header("重置模拟账户", "重置会清空本地模拟持仓和交易记录。")
         configured_initial_cash = float(settings.get("paper_trading", {}).get("initial_cash", 100000.0))
         confirm_reset = st.checkbox(
             f"确认重置模拟账户为 {configured_initial_cash:,.2f} 虚拟资金，并清空持仓和交易记录。"
@@ -1201,7 +1221,7 @@ def main() -> None:
                     st.error(f"重置失败：{error}")
 
     with info_tab:
-        st.subheader("说明与风险提示")
+        render_section_header("说明", "了解趋势评分规则、数据来源和系统安全边界。")
         st.info("数据源：实时/历史行情数据或本地示例数据，取决于当前网络和数据源可用性。")
         show_score_rules()
         st.markdown(
