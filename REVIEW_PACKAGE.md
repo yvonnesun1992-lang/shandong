@@ -578,6 +578,7 @@ py_compile: passed
 pytest: 174 passed
 system_doctor: passed
 dashboard: passed
+hidden/bidi unicode cleanup: passed
 ```
 
 安全边界：
