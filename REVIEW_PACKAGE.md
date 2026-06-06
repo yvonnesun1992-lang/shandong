@@ -527,6 +527,71 @@ http://localhost:8502 返回 200
 是否建议创建 PR：是
 ```
 
+## V1.14: dashboard UI polish
+
+V1.14 目标：
+
+- 优化 Streamlit dashboard 的整体页面结构和视觉层级。
+- 统一标题、说明、风险提示、状态展示和指标卡片。
+- 增加轻量 UI helper，减少重复格式化逻辑。
+- 不新增复杂业务功能。
+- 不改变策略核心逻辑。
+
+新增文件：
+
+```text
+src/ui/__init__.py
+src/ui/layout.py
+tests/test_ui_layout.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+UI 优化说明：
+
+- 页面标题改为 `Shandong Quant Research`。
+- 页面顶部增加英文副标题和统一研究风险提示。
+- sidebar 增加研究配置分组、当前股票数量和系统状态入口说明。
+- tabs 顺序优化为市场总览、单股分析、单股回测、组合回测、模拟交易、每日流程、报告、数据质量、运行记录、系统设置、系统健康和说明。
+- 每个核心 tab 增加简短页面说明。
+- 市场总览增加趋势评分数量、Strong trend、Watchlist 和 Weak 指标。
+- 单股回测增加总收益、年化收益、最大回撤和最终资金指标卡片。
+- 组合回测收益指标统一格式化。
+- 系统健康状态使用统一状态文案。
+
+策略逻辑：
+
+```text
+是否改变策略逻辑：否
+```
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 174 passed
+system_doctor: passed
+dashboard: passed
+hidden/bidi unicode cleanup: passed
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.13: local launcher and quick start guide
 
 V1.13 目标：
