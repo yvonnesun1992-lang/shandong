@@ -92,3 +92,11 @@ def render_compact_table(dataframe: pd.DataFrame, columns: list[str] | None = No
         if available_columns:
             display = display[available_columns]
     st.dataframe(display.head(max_rows), use_container_width=True, hide_index=True)
+
+
+def render_parameter_summary(parameters: dict) -> None:
+    if not parameters:
+        render_empty_state("暂无参数。")
+        return
+    rows = [{"参数": str(key), "值": value} for key, value in parameters.items()]
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)

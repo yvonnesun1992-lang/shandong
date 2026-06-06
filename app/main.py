@@ -38,6 +38,12 @@ from src.reports.daily_research_report import (
     save_daily_research_report,
 )
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
+from src.strategies.presets import (
+    DEFAULT_PRESET_NAMES,
+    delete_strategy_preset,
+    load_strategy_presets,
+    save_strategy_preset,
+)
 from src.system.health_check import health_check_to_dataframe, run_system_health_check
 from src.ui.layout import (
     dataframe_to_csv_bytes,
@@ -47,6 +53,7 @@ from src.ui.layout import (
     render_compact_table,
     render_empty_state,
     render_metric_row,
+    render_parameter_summary,
     render_page_header,
     render_risk_disclaimer,
     render_section_header,
@@ -222,6 +229,22 @@ def data_source_summary_from_rank_table(rank_table: pd.DataFrame) -> dict:
     return {str(key): int(value) for key, value in counts.items()}
 
 
+def strategy_presets_to_dataframe(presets: dict) -> pd.DataFrame:
+    rows = []
+    for name, preset in presets.items():
+        rows.append(
+            {
+                "name": name,
+                "description": preset.get("description", ""),
+                "min_score_to_buy": preset.get("min_score_to_buy"),
+                "min_score_to_hold": preset.get("min_score_to_hold"),
+                "max_position_pct": preset.get("max_position_pct"),
+                "rebalance_frequency": preset.get("rebalance_frequency"),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def latest_backtest_summary() -> dict:
     reports = list_backtest_reports()
     if reports.empty:
@@ -384,6 +407,7 @@ def main() -> None:
     (
         home_tab,
         rank_tab,
+        strategy_lab_tab,
         chart_tab,
         backtest_tab,
         portfolio_tab,
@@ -400,6 +424,7 @@ def main() -> None:
         [
             "首页",
             "市场总览",
+            "策略实验室",
             "单股分析",
             "单股回测",
             "组合回测",
@@ -570,6 +595,166 @@ def main() -> None:
             file_name="trend_scores.csv",
             mime="text/csv",
         )
+
+    with strategy_lab_tab:
+        render_section_header(
+            "策略实验室",
+            "管理本地策略参数预设，并基于历史数据运行研究回测。",
+        )
+        st.info("策略实验室用于管理本地策略参数预设，并基于历史数据进行研究回测。结果不代表未来收益，不构成投资建议。")
+
+        try:
+            strategy_presets = load_strategy_presets()
+        except Exception as error:
+            strategy_presets = {}
+            st.error(f"无法读取策略预设：{error}")
+
+        if not strategy_presets:
+            render_empty_state("暂无策略预设。请先重置或保存一个策略预设。")
+        else:
+            render_section_header("策略预设", "默认只展示关键参数，便于快速比较。")
+            presets_table = strategy_presets_to_dataframe(strategy_presets)
+            render_compact_table(
+                presets_table,
+                ["name", "description", "min_score_to_buy", "min_score_to_hold", "max_position_pct", "rebalance_frequency"],
+                10,
+            )
+
+            preset_names = sorted(strategy_presets)
+            selected_preset_name = st.selectbox("选择策略预设", preset_names)
+            selected_preset = strategy_presets[selected_preset_name]
+
+            detail_col, edit_col = st.columns(2)
+            with detail_col:
+                render_section_header("当前预设详情", "查看所选策略参数。")
+                render_parameter_summary(
+                    {
+                        "name": selected_preset.get("name"),
+                        "strategy_type": selected_preset.get("strategy_type"),
+                        "min_score_to_buy": selected_preset.get("min_score_to_buy"),
+                        "min_score_to_hold": selected_preset.get("min_score_to_hold"),
+                        "max_position_pct": selected_preset.get("max_position_pct"),
+                        "rebalance_frequency": selected_preset.get("rebalance_frequency"),
+                    }
+                )
+                st.caption(str(selected_preset.get("description", "")))
+
+            with edit_col:
+                render_section_header("编辑 / 保存预设", "保存为现有名称会覆盖该预设，保存为新名称会新增预设。")
+                preset_name_input = st.text_input("preset name", value=selected_preset_name)
+                preset_description_input = st.text_area(
+                    "description",
+                    value=str(selected_preset.get("description", "")),
+                    height=90,
+                )
+                buy_threshold_input = st.number_input(
+                    "min_score_to_buy",
+                    min_value=0,
+                    max_value=100,
+                    value=int(selected_preset.get("min_score_to_buy", 80)),
+                    step=1,
+                )
+                hold_threshold_input = st.number_input(
+                    "min_score_to_hold",
+                    min_value=0,
+                    max_value=100,
+                    value=int(selected_preset.get("min_score_to_hold", 60)),
+                    step=1,
+                )
+                max_position_input = st.number_input(
+                    "max_position_pct",
+                    min_value=0.01,
+                    max_value=1.0,
+                    value=float(selected_preset.get("max_position_pct", 0.15)),
+                    step=0.01,
+                )
+                rebalance_frequency_input = st.selectbox(
+                    "rebalance_frequency",
+                    ["monthly"],
+                    index=0,
+                )
+                if st.button("保存策略预设"):
+                    try:
+                        save_strategy_preset(
+                            preset_name_input,
+                            {
+                                "description": preset_description_input,
+                                "strategy_type": "trend_score",
+                                "min_score_to_buy": int(buy_threshold_input),
+                                "min_score_to_hold": int(hold_threshold_input),
+                                "max_position_pct": float(max_position_input),
+                                "rebalance_frequency": rebalance_frequency_input,
+                            },
+                        )
+                        st.success(f"策略预设已保存：{preset_name_input}")
+                        st.rerun()
+                    except Exception as error:
+                        st.error(f"保存策略预设失败：{error}")
+
+            render_section_header("删除预设", "默认策略禁止删除，避免误删基础配置。")
+            if selected_preset_name in DEFAULT_PRESET_NAMES:
+                st.info("当前选择的是默认策略，不能在 dashboard 中删除。")
+            else:
+                confirm_delete_preset = st.checkbox(f"确认删除策略预设 {selected_preset_name}")
+                if st.button("删除策略预设"):
+                    if not confirm_delete_preset:
+                        st.error("请先勾选确认框，再删除策略预设。")
+                    else:
+                        try:
+                            delete_strategy_preset(selected_preset_name)
+                            st.success(f"已删除策略预设：{selected_preset_name}")
+                            st.rerun()
+                        except Exception as error:
+                            st.error(f"删除策略预设失败：{error}")
+
+            render_section_header("使用该策略运行组合回测", "使用当前 watchlist 和所选参数运行历史研究回测。")
+            st.caption(f"当前 watchlist：{selected_watchlist}，股票数量：{len(symbols)}")
+            if st.button("使用该策略运行组合回测"):
+                try:
+                    price_data, failed_symbols = load_price_data_for_symbols(market, symbols, use_cache=cache_enabled)
+                    if failed_symbols:
+                        st.warning(f"以下股票数据获取失败，已跳过：{', '.join(failed_symbols)}")
+                    if not price_data:
+                        st.error("没有可用于组合回测的行情数据。")
+                    else:
+                        strategy_result = run_portfolio_backtest(
+                            price_data,
+                            initial_cash=100000.0,
+                            max_position_pct=float(selected_preset["max_position_pct"]),
+                            rebalance_frequency=str(selected_preset["rebalance_frequency"]),
+                            min_score_to_buy=int(selected_preset["min_score_to_buy"]),
+                            min_score_to_hold=int(selected_preset["min_score_to_hold"]),
+                        )
+                        summary = strategy_result["summary"]
+                        strategy_metrics = st.columns(5)
+                        strategy_metrics[0].metric("总收益", format_return_pct(summary.get("total_return")))
+                        strategy_metrics[1].metric("年化收益", format_return_pct(summary.get("annualized_return")))
+                        strategy_metrics[2].metric("最大回撤", format_return_pct(summary.get("max_drawdown")))
+                        strategy_metrics[3].metric("最终资产", f"{summary.get('final_portfolio_value', 0):,.2f}")
+                        strategy_metrics[4].metric("交易次数", summary.get("number_of_trades", 0))
+
+                        equity_curve = strategy_result["equity_curve"]
+                        trades = strategy_result["trades"]
+                        if not equity_curve.empty:
+                            st.line_chart(equity_curve.set_index("date")[["total_value"]])
+                            st.download_button(
+                                label="下载 strategy_equity_curve.csv",
+                                data=dataframe_to_csv(equity_curve),
+                                file_name="strategy_equity_curve.csv",
+                                mime="text/csv",
+                            )
+                        if trades.empty:
+                            render_empty_state("本次策略回测没有交易记录。")
+                        else:
+                            render_compact_table(trades, None, 20)
+                            st.download_button(
+                                label="下载 strategy_trades.csv",
+                                data=dataframe_to_csv(trades),
+                                file_name="strategy_trades.csv",
+                                mime="text/csv",
+                            )
+                except Exception as error:
+                    st.error(f"策略组合回测失败：{error}")
 
     with chart_tab:
         render_section_header("单股分析", "查看单只股票的收盘价、均线和 RSI，用于研究趋势状态。")
