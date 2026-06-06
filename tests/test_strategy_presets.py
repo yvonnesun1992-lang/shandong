@@ -80,16 +80,39 @@ def test_delete_strategy_preset_removes_non_default(tmp_path):
     assert "custom_trend" not in load_strategy_presets(path)
 
 
-@pytest.mark.parametrize("default_name", ["trend_default", "trend_conservative", "trend_aggressive"])
-def test_delete_strategy_preset_rejects_default_presets(tmp_path, default_name):
+def test_delete_strategy_preset_rejects_trend_default(tmp_path):
     path = preset_path(tmp_path)
     reset_strategy_presets(path)
 
     with pytest.raises(ValueError, match="Default strategy presets cannot be deleted"):
-        delete_strategy_preset(default_name, path)
+        delete_strategy_preset("trend_default", path)
 
     presets = load_strategy_presets(path)
-    assert default_name in presets
+    assert "trend_default" in presets
+    assert {"trend_default", "trend_conservative", "trend_aggressive"}.issubset(presets)
+
+
+def test_delete_strategy_preset_rejects_trend_conservative(tmp_path):
+    path = preset_path(tmp_path)
+    reset_strategy_presets(path)
+
+    with pytest.raises(ValueError, match="Default strategy presets cannot be deleted"):
+        delete_strategy_preset("trend_conservative", path)
+
+    presets = load_strategy_presets(path)
+    assert "trend_conservative" in presets
+    assert {"trend_default", "trend_conservative", "trend_aggressive"}.issubset(presets)
+
+
+def test_delete_strategy_preset_rejects_trend_aggressive(tmp_path):
+    path = preset_path(tmp_path)
+    reset_strategy_presets(path)
+
+    with pytest.raises(ValueError, match="Default strategy presets cannot be deleted"):
+        delete_strategy_preset("trend_aggressive", path)
+
+    presets = load_strategy_presets(path)
+    assert "trend_aggressive" in presets
     assert {"trend_default", "trend_conservative", "trend_aggressive"}.issubset(presets)
 
 
