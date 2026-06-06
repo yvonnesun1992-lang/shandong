@@ -178,6 +178,8 @@ def save_strategy_preset(name: str, preset: dict, path: str | Path = DEFAULT_STR
 
 def delete_strategy_preset(name: str, path: str | Path = DEFAULT_STRATEGY_PRESETS_PATH) -> None:
     clean_name = normalize_preset_name(name)
+    if clean_name in DEFAULT_PRESET_NAMES:
+        raise ValueError("Default strategy presets cannot be deleted.")
     presets = load_strategy_presets(path)
     if clean_name not in presets:
         raise ValueError(f"Strategy preset not found: {clean_name}")

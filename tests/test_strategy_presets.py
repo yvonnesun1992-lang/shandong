@@ -80,6 +80,16 @@ def test_delete_strategy_preset_removes_non_default(tmp_path):
     assert "custom_trend" not in load_strategy_presets(path)
 
 
+def test_delete_strategy_preset_rejects_default_preset(tmp_path):
+    path = preset_path(tmp_path)
+    reset_strategy_presets(path)
+
+    with pytest.raises(ValueError, match="Default strategy presets cannot be deleted"):
+        delete_strategy_preset("trend_default", path)
+
+    assert "trend_default" in load_strategy_presets(path)
+
+
 def test_reset_strategy_presets_restores_defaults(tmp_path):
     path = preset_path(tmp_path)
     reset_strategy_presets(path)
