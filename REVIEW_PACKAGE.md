@@ -48,6 +48,74 @@ V1 明确不做：
 - 不使用 AI 预测股价
 - 不保存或读取 API key、密码、券商凭证
 
+## V1.15: dashboard home overview
+
+V1.15 目标：
+
+- 增加首页 / 总览工作台。
+- 用户打开 dashboard 后可以先看到系统状态、市场趋势概览、自选股概览、模拟账户概览、最近 workflow 和最近报告。
+- 页面风格保持简约、美观、大方、实用。
+- 不新增复杂业务功能。
+- 不改变策略核心逻辑。
+
+新增文件：
+
+```text
+src/ui/home.py
+tests/test_home_summary.py
+```
+
+修改文件：
+
+```text
+app/main.py
+src/ui/layout.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+首页功能说明：
+
+- 新增“首页”tab，并放在 dashboard tab 顺序第一位。
+- 首页显示当前市场、watchlist、股票数量、系统健康状态、Strong trend、Watchlist、Weak 和模拟总资产。
+- 首页显示平均趋势评分、Top 5 趋势股票和风险观察股票。
+- 首页显示模拟账户现金、持仓市值、总资产和浮动盈亏。
+- 首页显示最近 workflow 运行记录。
+- 首页显示最近日报或回测报告。
+- 首页提供常用功能入口说明。
+
+UI 优化说明：
+
+- 新增 `build_home_summary` 纯逻辑 helper，方便测试和复用。
+- `src/ui/layout.py` 增加轻量指标行、空状态和紧凑表格 helper。
+- 首页优先使用 Streamlit 原生组件，不新增 UI 依赖。
+
+策略逻辑：
+
+```text
+是否改变策略逻辑：否
+```
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 179 passed
+system_doctor: passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## 最新格式修复说明
 
 之前担心 GitHub raw 文件显示为一整行，导致 Python 代码不可运行。

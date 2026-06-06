@@ -44,11 +44,15 @@ from src.ui.layout import (
     format_data_source_label,
     format_health_status,
     format_return_pct,
+    render_compact_table,
+    render_empty_state,
+    render_metric_row,
     render_page_header,
     render_risk_disclaimer,
     render_section_header,
     render_status_message,
 )
+from src.ui.home import build_home_summary
 from src.workflows.daily_workflow import run_daily_research_workflow
 from src.workflows.run_log import (
     delete_workflow_run_log,
@@ -260,6 +264,30 @@ def latest_prices_for_positions(portfolio: dict) -> dict[str, float]:
     return prices
 
 
+def latest_reports_overview(max_rows: int = 3) -> pd.DataFrame:
+    tables = []
+    try:
+        daily_reports = list_daily_research_reports()
+        if not daily_reports.empty:
+            daily = daily_reports.copy()
+            daily["report_type"] = "daily_research"
+            tables.append(daily)
+    except Exception:
+        pass
+    try:
+        backtest_reports = list_backtest_reports()
+        if not backtest_reports.empty:
+            tables.append(backtest_reports.copy())
+    except Exception:
+        pass
+    if not tables:
+        return pd.DataFrame()
+    reports = pd.concat(tables, ignore_index=True, sort=False)
+    if "created_at" in reports.columns:
+        reports = reports.sort_values("created_at", ascending=False, na_position="last")
+    return reports.head(max_rows)
+
+
 def show_score_rules() -> None:
     with st.expander("趋势评分规则说明", expanded=False):
         st.markdown(
@@ -354,6 +382,7 @@ def main() -> None:
         st.stop()
 
     (
+        home_tab,
         rank_tab,
         chart_tab,
         backtest_tab,
@@ -369,6 +398,7 @@ def main() -> None:
         info_tab,
     ) = st.tabs(
         [
+            "首页",
             "市场总览",
             "单股分析",
             "单股回测",
@@ -384,6 +414,136 @@ def main() -> None:
             "说明",
         ]
     )
+
+    with home_tab:
+        render_section_header(
+            "首页",
+            "快速查看系统状态、趋势概览、模拟账户、最近 workflow 和报告。",
+        )
+        st.caption("本系统用于学习、研究、历史回测和模拟交易演示，不构成投资建议。")
+
+        try:
+            home_rank_table = build_rank_table(market, symbols, use_cache=cache_enabled)
+        except Exception as error:
+            home_rank_table = pd.DataFrame()
+            st.warning(f"趋势评分暂不可用：{error}")
+
+        try:
+            home_portfolio = load_paper_portfolio()
+            home_latest_prices = latest_prices_for_positions(home_portfolio)
+            home_paper_summary = calculate_portfolio_summary(home_portfolio, home_latest_prices)
+        except Exception as error:
+            home_paper_summary = {}
+            st.info(f"模拟账户摘要暂不可用：{error}")
+
+        try:
+            home_health_summary = run_system_health_check()
+        except Exception as error:
+            home_health_summary = {"overall_status": "unknown", "note": str(error)}
+            st.info(f"系统健康摘要暂不可用：{error}")
+
+        try:
+            home_workflow_runs = list_workflow_run_logs()
+        except Exception as error:
+            home_workflow_runs = pd.DataFrame()
+            st.info(f"workflow 运行记录暂不可用：{error}")
+
+        home_reports = latest_reports_overview()
+        home_summary = build_home_summary(
+            market=market,
+            watchlist_name=selected_watchlist,
+            symbols=symbols,
+            trend_scores=home_rank_table,
+            paper_portfolio_summary=home_paper_summary,
+            health_summary=home_health_summary,
+            latest_workflow_runs=home_workflow_runs,
+            latest_reports=home_reports,
+        )
+
+        render_metric_row(
+            [
+                {"label": "当前市场", "value": home_summary["market"]},
+                {"label": "当前 watchlist", "value": home_summary["watchlist_name"]},
+                {"label": "股票数量", "value": home_summary["symbol_count"]},
+                {"label": "系统健康", "value": format_health_status(home_summary["health_status"])},
+            ]
+        )
+        render_metric_row(
+            [
+                {"label": "Strong trend", "value": home_summary["strong_trend_count"]},
+                {"label": "Watchlist", "value": home_summary["watchlist_count"]},
+                {"label": "Weak", "value": home_summary["weak_count"]},
+                {"label": "模拟总资产", "value": f"{home_summary['paper_total_value']:,.2f}"},
+            ]
+        )
+
+        overview_col, account_col = st.columns(2)
+        with overview_col:
+            render_section_header("今日研究概览", "当前自选股的趋势分布和重点观察对象。")
+            st.metric("平均趋势评分", f"{home_summary['average_score']:.2f}")
+            if home_rank_table.empty:
+                render_empty_state("暂无趋势评分数据。")
+            else:
+                top_trends = home_rank_table.dropna(subset=["趋势分数"]).head(5)
+                risk_watch = home_rank_table[home_rank_table["状态"] == "Weak"].head(5)
+                st.markdown("**Top 5 趋势股票**")
+                render_compact_table(top_trends, ["股票代码", "趋势分数", "状态", "收盘价", "数据来源"], 5)
+                st.markdown("**风险观察股票**")
+                if risk_watch.empty:
+                    render_empty_state("当前没有 Weak 状态股票。")
+                else:
+                    render_compact_table(risk_watch, ["股票代码", "趋势分数", "状态", "收盘价"], 5)
+
+        with account_col:
+            render_section_header("模拟账户概览", "虚拟资金、持仓市值和浮动盈亏，仅用于演示。")
+            if not home_paper_summary:
+                render_empty_state("暂无模拟账户数据。")
+            else:
+                render_metric_row(
+                    [
+                        {"label": "现金", "value": f"{home_summary['paper_cash']:,.2f}"},
+                        {"label": "持仓市值", "value": f"{home_summary['paper_positions_value']:,.2f}"},
+                    ]
+                )
+                render_metric_row(
+                    [
+                        {"label": "总资产", "value": f"{home_summary['paper_total_value']:,.2f}"},
+                        {"label": "浮动盈亏", "value": f"{home_summary['paper_unrealized_pnl']:,.2f}"},
+                    ]
+                )
+
+        workflow_col, report_col = st.columns(2)
+        with workflow_col:
+            render_section_header("最近 workflow", "最近 3 条每日研究流程运行记录。")
+            if home_workflow_runs.empty:
+                render_empty_state("暂无 workflow 运行记录。")
+            else:
+                render_compact_table(
+                    home_workflow_runs,
+                    ["run_id", "market", "watchlist_name", "success_count", "failed_count", "report_id", "elapsed_seconds"],
+                    3,
+                )
+
+        with report_col:
+            render_section_header("最近报告", "最近 3 条日报或回测报告。")
+            if home_reports.empty:
+                render_empty_state("暂无历史报告。")
+            else:
+                render_compact_table(
+                    home_reports,
+                    ["report_id", "created_at", "report_type", "final_portfolio_value", "average_score"],
+                    3,
+                )
+
+        render_section_header("常用功能入口", "按目标选择对应页面。")
+        st.markdown(
+            """
+- 去“市场总览”查看趋势评分和研究信号。
+- 去“组合回测”验证当前 watchlist 的历史表现。
+- 去“每日流程”生成并保存每日研究报告。
+- 去“系统健康”检查本地配置、缓存和运行环境。
+"""
+        )
 
     with rank_tab:
         render_section_header("市场总览", "查看当前自选股的趋势评分、研究信号和数据来源。")
