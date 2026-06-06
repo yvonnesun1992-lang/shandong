@@ -65,3 +65,30 @@ def format_return_pct(value: float | None) -> str:
 def dataframe_to_csv_bytes(dataframe: pd.DataFrame) -> bytes:
     return dataframe.to_csv(index=False).encode("utf-8-sig")
 
+
+def render_metric_row(metrics: list[dict]) -> None:
+    if not metrics:
+        return
+    columns = st.columns(len(metrics))
+    for column, metric in zip(columns, metrics):
+        column.metric(
+            str(metric.get("label", "")),
+            metric.get("value", "N/A"),
+            metric.get("delta"),
+        )
+
+
+def render_empty_state(message: str) -> None:
+    st.info(message)
+
+
+def render_compact_table(dataframe: pd.DataFrame, columns: list[str] | None = None, max_rows: int = 10) -> None:
+    if dataframe is None or dataframe.empty:
+        render_empty_state("暂无可展示数据。")
+        return
+    display = dataframe.copy()
+    if columns:
+        available_columns = [column for column in columns if column in display.columns]
+        if available_columns:
+            display = display[available_columns]
+    st.dataframe(display.head(max_rows), use_container_width=True, hide_index=True)
