@@ -354,6 +354,7 @@ V1.17 增加“策略对比”页面：
 
 V1.17 相关文本文件已按 UTF-8 + LF 保存，并清理 hidden/bidi/zero-width/control characters。
 V1.17 文件已再次刷新，用于确认 GitHub PR 页面重新渲染为干净文本。
+V1.17 raw 文件已再次强制刷新，用于确认远程 raw 是真实多行文本。
 
 ## 运行测试
 

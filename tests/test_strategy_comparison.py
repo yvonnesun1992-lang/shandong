@@ -11,6 +11,7 @@ from src.strategies.presets import DEFAULT_STRATEGY_PRESETS
 
 
 # Tests use local sample data only and never call external trading services.
+# V1.17 raw refresh marker: this test file must stay real multiline Python.
 def sample_price_data() -> dict[str, pd.DataFrame]:
     return {
         "NVDA": load_sample_ohlcv("us", "NVDA"),

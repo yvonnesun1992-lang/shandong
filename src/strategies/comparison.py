@@ -17,6 +17,7 @@ RANKING_COLUMNS = [
 
 # V1.17 only compares local research presets through the existing backtest engine.
 # It does not alter the core strategy or portfolio backtest implementation.
+# V1.17 raw refresh marker: this file must stay real multiline Python.
 def _preset_parameters(preset: dict) -> dict:
     return {
         "max_position_pct": float(preset.get("max_position_pct", 0.15)),
