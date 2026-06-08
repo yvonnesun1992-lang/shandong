@@ -48,6 +48,74 @@ V1 明确不做：
 - 不使用 AI 预测股价
 - 不保存或读取 API key、密码、券商凭证
 
+## V1.16: strategy lab and presets
+
+V1.16 目标：
+
+- 增加“策略实验室”页面。
+- 支持本地策略参数预设。
+- 支持用策略预设运行组合回测。
+- 页面保持简约、美观、大方、实用。
+- 不改变已有核心策略逻辑，只做参数预设和调用。
+
+新增文件：
+
+```text
+config/strategy_presets.json
+src/strategies/presets.py
+tests/test_strategy_presets.py
+```
+
+修改文件：
+
+```text
+app/main.py
+src/ui/layout.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+策略实验室功能说明：
+
+- dashboard 新增“策略实验室”tab，位于首页和市场总览之后。
+- 显示本地策略预设列表和关键参数。
+- 支持查看所选策略预设详情。
+- 支持保存现有或新增策略预设。
+- 默认策略禁止在 dashboard 删除，避免误删基础配置。
+- 非默认策略支持勾选确认后删除。
+- 支持用当前 watchlist 和所选策略参数运行组合回测。
+- 展示总收益、年化收益、最大回撤、最终资产和交易次数。
+- 支持导出策略回测净值曲线和交易记录 CSV。
+
+配置管理说明：
+
+- `config/strategy_presets.json` 只保存研究参数，不保存账户、密码、API key 或券商凭证。
+- `src/strategies/presets.py` 校验 preset 名称、参数范围、策略类型和调仓频率。
+- JSON 损坏时抛出清晰 `ValueError`。
+- 路径只允许 `config/strategy_presets.json`，拒绝路径穿越。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 211 passed
+system_doctor: passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否改变核心策略逻辑：否
+UI 是否保持简约、美观、大方、实用：是
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.15: dashboard home overview
 
 V1.15 目标：
