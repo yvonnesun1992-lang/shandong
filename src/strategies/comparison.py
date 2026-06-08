@@ -15,6 +15,7 @@ RANKING_COLUMNS = [
 ]
 
 
+# V1.17 only compares local research presets through the existing backtest engine.
 def _preset_parameters(preset: dict) -> dict:
     return {
         "max_position_pct": float(preset.get("max_position_pct", 0.15)),

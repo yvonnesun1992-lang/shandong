@@ -352,6 +352,8 @@ V1.17 增加“策略对比”页面：
 
 本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不构成投资建议。
 
+V1.17 相关文本文件已按 UTF-8 + LF 保存，并清理 hidden/bidi/zero-width/control characters。
+
 ## 运行测试
 
 ```bash

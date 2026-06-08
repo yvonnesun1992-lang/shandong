@@ -151,6 +151,7 @@ REVIEW_PACKAGE.md
 - ranking 表包含 `preset_name`、`total_return`、`annualized_return`、`max_drawdown`、`number_of_trades`、`final_portfolio_value`。
 - 页面展示成功策略数、失败策略数、最优总收益策略、最低回撤策略和最终资产最高策略。
 - 支持导出 ranking CSV、单个策略 trades CSV 和对比结果 JSON。
+- V1.17 相关文件已按 UTF-8 + LF 保存，并清理 hidden/bidi/zero-width/control characters。
 
 检查结果：
 
