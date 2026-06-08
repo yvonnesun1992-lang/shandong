@@ -160,6 +160,7 @@ def report_records_to_csv(records: list[dict]) -> bytes:
 
 def strategy_comparison_to_json_bytes(comparison_result: dict) -> bytes:
     # Export the local research comparison result without changing backtest logic.
+    # This stays a dashboard-only serialization helper and never places orders.
     export = {
         "ranking": comparison_result.get("ranking", pd.DataFrame()).to_dict(orient="records"),
         "failed_presets": comparison_result.get("failed_presets", []),

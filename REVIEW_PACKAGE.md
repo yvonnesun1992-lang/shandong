@@ -152,6 +152,7 @@ REVIEW_PACKAGE.md
 - 页面展示成功策略数、失败策略数、最优总收益策略、最低回撤策略和最终资产最高策略。
 - 支持导出 ranking CSV、单个策略 trades CSV 和对比结果 JSON。
 - V1.17 相关文件已按 UTF-8 + LF 保存，并清理 hidden/bidi/zero-width/control characters。
+- V1.17 文件已再次刷新，用于确认 GitHub PR 页面重新渲染为干净文本。
 
 检查结果：
 

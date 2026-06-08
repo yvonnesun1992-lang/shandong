@@ -10,6 +10,7 @@ from src.strategies.comparison import compare_strategy_presets
 from src.strategies.presets import DEFAULT_STRATEGY_PRESETS
 
 
+# Tests use local sample data only and never call external trading services.
 def sample_price_data() -> dict[str, pd.DataFrame]:
     return {
         "NVDA": load_sample_ohlcv("us", "NVDA"),
