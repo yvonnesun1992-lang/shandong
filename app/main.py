@@ -44,6 +44,7 @@ from src.strategies.presets import (
     load_strategy_presets,
     save_strategy_preset,
 )
+from src.strategies.comparison import compare_strategy_presets
 from src.system.health_check import health_check_to_dataframe, run_system_health_check
 from src.ui.layout import (
     dataframe_to_csv_bytes,
@@ -78,6 +79,7 @@ DISCLAIMER = "本系统仅用于学习、研究、历史回测和模拟交易演
 CACHE_NOTE = "行情数据使用缓存，默认缓存 1 小时。如需强制刷新，请重启应用或清理 Streamlit cache。"
 PAPER_TRADING_WARNING = "模拟交易仅用于学习和功能演示，不代表真实交易，不构成投资建议，不会连接真实券商，也不会产生真实订单。"
 PORTFOLIO_BACKTEST_WARNING = "组合回测仅用于历史研究和功能演示，不代表未来收益，不构成投资建议。"
+STRATEGY_COMPARISON_WARNING = "策略对比仅用于历史研究和功能演示。历史回测不代表未来收益，不构成投资建议。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
@@ -154,6 +156,24 @@ def report_to_json_bytes(report: dict) -> bytes:
 
 def report_records_to_csv(records: list[dict]) -> bytes:
     return pd.DataFrame(records).to_csv(index=False).encode("utf-8-sig")
+
+
+def strategy_comparison_to_json_bytes(comparison_result: dict) -> bytes:
+    # Export the local research comparison result without changing backtest logic.
+    # This stays a dashboard-only serialization helper and never places orders.
+    # V1.17 raw refresh marker: keep this helper as real multiline Python.
+    export = {
+        "ranking": comparison_result.get("ranking", pd.DataFrame()).to_dict(orient="records"),
+        "failed_presets": comparison_result.get("failed_presets", []),
+        "results": {},
+    }
+    for preset_name, result in comparison_result.get("results", {}).items():
+        export["results"][preset_name] = {
+            "summary": result.get("summary", {}),
+            "equity_curve": result.get("equity_curve", pd.DataFrame()).to_dict(orient="records"),
+            "trades": result.get("trades", pd.DataFrame()).to_dict(orient="records"),
+        }
+    return json.dumps(export, ensure_ascii=False, indent=2, default=str).encode("utf-8")
 
 
 def text_to_download(text: str) -> bytes:
@@ -408,6 +428,7 @@ def main() -> None:
         home_tab,
         rank_tab,
         strategy_lab_tab,
+        strategy_comparison_tab,
         chart_tab,
         backtest_tab,
         portfolio_tab,
@@ -425,6 +446,7 @@ def main() -> None:
             "首页",
             "市场总览",
             "策略实验室",
+            "策略对比",
             "单股分析",
             "单股回测",
             "组合回测",
@@ -755,6 +777,139 @@ def main() -> None:
                             )
                 except Exception as error:
                     st.error(f"策略组合回测失败：{error}")
+
+    with strategy_comparison_tab:
+        render_section_header(
+            "策略对比",
+            "比较多个本地策略预设在同一 watchlist 上的历史回测表现。",
+        )
+        st.info(STRATEGY_COMPARISON_WARNING)
+        st.caption(f"当前市场：{market}；当前 watchlist：{selected_watchlist}；股票数量：{len(symbols)}")
+
+        try:
+            comparison_presets = load_strategy_presets()
+        except Exception as error:
+            comparison_presets = {}
+            st.error(f"无法读取策略预设：{error}")
+
+        if not comparison_presets:
+            render_empty_state("暂无可用于对比的策略预设。")
+        else:
+            comparison_preset_names = sorted(comparison_presets)
+            default_comparison_selection = [
+                name for name in ["trend_default", "trend_conservative", "trend_aggressive"] if name in comparison_presets
+            ]
+            selected_comparison_presets = st.multiselect(
+                "选择要对比的策略预设",
+                comparison_preset_names,
+                default=default_comparison_selection or comparison_preset_names[: min(3, len(comparison_preset_names))],
+            )
+            comparison_initial_cash = st.number_input(
+                "策略对比初始资金",
+                min_value=10_000,
+                value=100_000,
+                step=10_000,
+                key="strategy_comparison_initial_cash",
+            )
+
+            if st.button("运行策略对比"):
+                if not selected_comparison_presets:
+                    st.warning("请至少选择一个策略预设。")
+                else:
+                    try:
+                        price_data, failed_symbols = load_price_data_for_symbols(market, symbols, use_cache=cache_enabled)
+                        if failed_symbols:
+                            st.warning(f"以下股票数据获取失败，已跳过：{', '.join(failed_symbols)}")
+                        if not price_data:
+                            st.error("没有可用于策略对比的数据。")
+                        else:
+                            if any(is_sample_data(data) for data in price_data.values()):
+                                st.warning(SAMPLE_WARNING)
+                            selected_presets = {
+                                name: comparison_presets[name]
+                                for name in selected_comparison_presets
+                                if name in comparison_presets
+                            }
+                            comparison_result = compare_strategy_presets(
+                                selected_presets,
+                                price_data,
+                                initial_cash=float(comparison_initial_cash),
+                            )
+                            st.session_state["latest_strategy_comparison"] = comparison_result
+                    except Exception as error:
+                        st.error(f"策略对比运行失败：{error}")
+
+            comparison_result = st.session_state.get("latest_strategy_comparison")
+            if comparison_result:
+                comparison_ranking = comparison_result.get("ranking", pd.DataFrame())
+                comparison_failed = comparison_result.get("failed_presets", [])
+                comparison_results = comparison_result.get("results", {})
+
+                if comparison_ranking.empty:
+                    st.error("所有策略对比均失败，暂无 ranking 结果。")
+                else:
+                    best_total = comparison_ranking.sort_values("total_return", ascending=False).iloc[0]
+                    best_drawdown = comparison_ranking.sort_values("max_drawdown", ascending=False).iloc[0]
+                    best_final = comparison_ranking.sort_values("final_portfolio_value", ascending=False).iloc[0]
+                    render_metric_row(
+                        [
+                            {"label": "成功策略数", "value": len(comparison_results)},
+                            {"label": "失败策略数", "value": len(comparison_failed)},
+                            {"label": "最优总收益", "value": str(best_total["preset_name"]), "delta": format_return_pct(best_total["total_return"])},
+                            {"label": "最低回撤", "value": str(best_drawdown["preset_name"]), "delta": format_return_pct(best_drawdown["max_drawdown"])},
+                            {"label": "最终资产最高", "value": str(best_final["preset_name"]), "delta": f"{best_final['final_portfolio_value']:,.2f}"},
+                        ]
+                    )
+
+                    display_ranking = comparison_ranking.copy()
+                    for percent_column in ["total_return", "annualized_return", "max_drawdown"]:
+                        display_ranking[percent_column] = display_ranking[percent_column].map(format_return_pct)
+                    st.dataframe(display_ranking, use_container_width=True, hide_index=True)
+                    st.download_button(
+                        label="下载 strategy_comparison_ranking.csv",
+                        data=dataframe_to_csv(comparison_ranking),
+                        file_name="strategy_comparison_ranking.csv",
+                        mime="text/csv",
+                    )
+
+                    equity_tables = []
+                    for preset_name, result in comparison_results.items():
+                        equity_curve = result.get("equity_curve", pd.DataFrame())
+                        if not equity_curve.empty and {"date", "total_value"}.issubset(equity_curve.columns):
+                            equity_tables.append(
+                                equity_curve[["date", "total_value"]]
+                                .rename(columns={"total_value": preset_name})
+                                .set_index("date")
+                            )
+                    if equity_tables:
+                        comparison_curve = pd.concat(equity_tables, axis=1).sort_index()
+                        st.line_chart(comparison_curve)
+                    else:
+                        render_empty_state("暂无可展示的策略净值曲线。")
+
+                    render_section_header("交易记录下载", "按策略下载对应的组合回测交易记录。")
+                    for preset_name, result in comparison_results.items():
+                        trades = result.get("trades", pd.DataFrame())
+                        if trades.empty:
+                            st.caption(f"{preset_name}：无交易记录。")
+                        else:
+                            st.download_button(
+                                label=f"下载 {preset_name}_trades.csv",
+                                data=dataframe_to_csv(trades),
+                                file_name=f"{preset_name}_trades.csv",
+                                mime="text/csv",
+                            )
+
+                    st.download_button(
+                        label="下载 strategy_comparison_result.json",
+                        data=strategy_comparison_to_json_bytes(comparison_result),
+                        file_name="strategy_comparison_result.json",
+                        mime="application/json",
+                    )
+
+                if comparison_failed:
+                    st.warning("部分策略运行失败。")
+                    st.dataframe(pd.DataFrame(comparison_failed), use_container_width=True, hide_index=True)
 
     with chart_tab:
         render_section_header("单股分析", "查看单只股票的收盘价、均线和 RSI，用于研究趋势状态。")

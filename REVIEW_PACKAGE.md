@@ -116,6 +116,67 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.17: strategy comparison center
+
+V1.17 目标：
+
+- 增加“策略对比”页面。
+- 支持多个本地策略预设批量运行组合回测。
+- 支持对比收益、回撤、交易次数和最终资产。
+- 支持净值曲线对比和结果导出。
+- 不改变已有核心策略逻辑，只调用策略预设和组合回测模块。
+
+新增文件：
+
+```text
+src/strategies/comparison.py
+tests/test_strategy_comparison.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+策略对比中心功能说明：
+
+- dashboard 新增“策略对比”tab，位于“策略实验室”和“单股分析”之间。
+- 用户可以选择多个本地策略预设，并设置初始资金。
+- 系统会对当前 market 和当前 watchlist 批量运行组合回测。
+- 成功策略会进入 `results` 和 ranking 表。
+- 失败策略会进入 `failed_presets`，不会导致整个对比页面崩溃。
+- ranking 表包含 `preset_name`、`total_return`、`annualized_return`、`max_drawdown`、`number_of_trades`、`final_portfolio_value`。
+- 页面展示成功策略数、失败策略数、最优总收益策略、最低回撤策略和最终资产最高策略。
+- 支持导出 ranking CSV、单个策略 trades CSV 和对比结果 JSON。
+- V1.17 相关文件已按 UTF-8 + LF 保存，并清理 hidden/bidi/zero-width/control characters。
+- V1.17 文件已再次刷新，用于确认 GitHub PR 页面重新渲染为干净文本。
+- V1.17 raw 文件已再次强制刷新，用于确认远程 raw 是真实多行文本。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 220 passed
+system_doctor: passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否改变核心策略逻辑：否
+UI 是否保持简约、美观、大方、实用：是
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.15: dashboard home overview
 
 V1.15 目标：
