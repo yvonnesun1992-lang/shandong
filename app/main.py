@@ -21,6 +21,7 @@ from src.paper_trading.portfolio import (
     reset_paper_portfolio,
     sell_paper_position,
 )
+from src.portfolio.allocation import build_allocation_plan
 from src.reports.backtest_report import (
     delete_backtest_report,
     export_report_summary_csv,
@@ -80,6 +81,7 @@ CACHE_NOTE = "行情数据使用缓存，默认缓存 1 小时。如需强制刷
 PAPER_TRADING_WARNING = "模拟交易仅用于学习和功能演示，不代表真实交易，不构成投资建议，不会连接真实券商，也不会产生真实订单。"
 PORTFOLIO_BACKTEST_WARNING = "组合回测仅用于历史研究和功能演示，不代表未来收益，不构成投资建议。"
 STRATEGY_COMPARISON_WARNING = "策略对比仅用于历史研究和功能演示。历史回测不代表未来收益，不构成投资建议。"
+ALLOCATION_LAB_WARNING = "组合配置实验室仅供投资研究，不构成投资建议，不代表未来收益，不会生成真实交易指令。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
@@ -176,6 +178,16 @@ def strategy_comparison_to_json_bytes(comparison_result: dict) -> bytes:
     return json.dumps(export, ensure_ascii=False, indent=2, default=str).encode("utf-8")
 
 
+def allocation_summary_to_json_bytes(allocation_result: dict) -> bytes:
+    export = {
+        "summary": allocation_result.get("summary", {}),
+        "warnings": allocation_result.get("warnings", []),
+        "failed_symbols": allocation_result.get("failed_symbols", []),
+        "disclaimer": "仅供投资研究，不构成投资建议，不代表未来收益。",
+    }
+    return json.dumps(export, ensure_ascii=False, indent=2, default=str).encode("utf-8")
+
+
 def text_to_download(text: str) -> bytes:
     return text.encode("utf-8-sig")
 
@@ -183,6 +195,29 @@ def text_to_download(text: str) -> bytes:
 def parse_symbols_text(symbols_text: str) -> list[str]:
     raw_symbols = symbols_text.replace("，", ",").replace("\n", ",").split(",")
     return normalize_symbols(raw_symbols)
+
+
+def parse_current_positions_text(positions_text: str) -> tuple[dict[str, float], list[str]]:
+    positions: dict[str, float] = {}
+    warnings = []
+    for line in positions_text.replace("，", ",").splitlines():
+        clean_line = line.strip()
+        if not clean_line:
+            continue
+        parts = [part.strip() for part in clean_line.split(",")]
+        if len(parts) != 2 or not parts[0]:
+            warnings.append(f"当前持仓格式错误，已忽略：{clean_line}")
+            continue
+        try:
+            quantity = float(parts[1])
+        except ValueError:
+            warnings.append(f"当前持仓数量无效，已忽略：{clean_line}")
+            continue
+        if quantity < 0:
+            warnings.append(f"当前持仓数量不能为负，已忽略：{clean_line}")
+            continue
+        positions[parts[0].upper()] = quantity
+    return positions, warnings
 
 
 def default_watchlist_name(market: str) -> str:
@@ -240,6 +275,28 @@ def load_price_data_for_symbols(
         except Exception:
             failed_symbols.append(symbol)
     return price_data, failed_symbols
+
+
+def build_allocation_inputs(
+    market: str,
+    symbols: list[str],
+    use_cache: bool = True,
+) -> tuple[dict[str, float], dict[str, float], list[str], bool]:
+    scores = {}
+    prices = {}
+    failed_symbols = []
+    used_sample_data = False
+    price_data, load_failures = load_price_data_for_symbols(market, symbols, use_cache=use_cache)
+    failed_symbols.extend(load_failures)
+    for symbol, data in price_data.items():
+        try:
+            score = latest_trend_score(symbol, data)
+            scores[symbol] = float(score.score)
+            prices[symbol] = float(score.close)
+            used_sample_data = used_sample_data or is_sample_data(data)
+        except Exception:
+            failed_symbols.append(symbol)
+    return scores, prices, sorted(set(failed_symbols)), used_sample_data
 
 
 def data_source_summary_from_rank_table(rank_table: pd.DataFrame) -> dict:
@@ -429,6 +486,7 @@ def main() -> None:
         rank_tab,
         strategy_lab_tab,
         strategy_comparison_tab,
+        allocation_lab_tab,
         chart_tab,
         backtest_tab,
         portfolio_tab,
@@ -447,6 +505,7 @@ def main() -> None:
             "市场总览",
             "策略实验室",
             "策略对比",
+            "组合配置实验室",
             "单股分析",
             "单股回测",
             "组合回测",
@@ -910,6 +969,170 @@ def main() -> None:
                 if comparison_failed:
                     st.warning("部分策略运行失败。")
                     st.dataframe(pd.DataFrame(comparison_failed), use_container_width=True, hide_index=True)
+
+    with allocation_lab_tab:
+        render_section_header(
+            "组合配置实验室",
+            "根据本地研究分数和风险参数生成目标仓位方案，并对比当前持仓差异。",
+        )
+        st.info(ALLOCATION_LAB_WARNING)
+        st.caption(f"当前市场：{market}；当前 watchlist：{selected_watchlist}；股票数量：{len(symbols)}")
+
+        try:
+            allocation_presets = load_strategy_presets()
+        except Exception as error:
+            allocation_presets = {}
+            st.warning(f"策略预设暂不可用，将使用默认趋势参数：{error}")
+
+        allocation_preset_names = sorted(allocation_presets)
+        default_allocation_preset = "trend_default" if "trend_default" in allocation_presets else None
+        selected_allocation_preset_name = st.selectbox(
+            "策略预设（用于读取研究参数）",
+            allocation_preset_names,
+            index=allocation_preset_names.index(default_allocation_preset) if default_allocation_preset else 0,
+            disabled=not allocation_preset_names,
+        ) if allocation_preset_names else None
+        selected_allocation_preset = allocation_presets.get(selected_allocation_preset_name or "", {})
+
+        allocation_col_a, allocation_col_b, allocation_col_c, allocation_col_d = st.columns(4)
+        with allocation_col_a:
+            allocation_portfolio_value = st.number_input(
+                "组合总金额",
+                min_value=10_000,
+                value=100_000,
+                step=10_000,
+                key="allocation_portfolio_value",
+            )
+        with allocation_col_b:
+            allocation_max_position_pct = st.number_input(
+                "单股最大仓位（%）",
+                min_value=1,
+                max_value=100,
+                value=int(float(selected_allocation_preset.get("max_position_pct", 0.2)) * 100),
+                step=1,
+                key="allocation_max_position_pct",
+            )
+        with allocation_col_c:
+            allocation_min_score = st.number_input(
+                "最低入选分数",
+                min_value=0,
+                max_value=100,
+                value=int(selected_allocation_preset.get("min_score_to_hold", 60)),
+                step=5,
+                key="allocation_min_score",
+            )
+        with allocation_col_d:
+            allocation_cash_buffer_pct = st.number_input(
+                "现金缓冲（%）",
+                min_value=0,
+                max_value=90,
+                value=10,
+                step=5,
+                key="allocation_cash_buffer_pct",
+            )
+
+        current_positions_text = st.text_area(
+            "当前持仓（每行一个：symbol,数量）",
+            value="",
+            height=120,
+            placeholder="AAPL,10\nMSFT,5\nNVDA,2",
+            key="allocation_current_positions_text",
+        )
+
+        if st.button("生成组合配置方案"):
+            if not symbols:
+                st.info("当前 watchlist 为空，无法生成配置方案。")
+            else:
+                current_positions, position_warnings = parse_current_positions_text(current_positions_text)
+                for warning in position_warnings:
+                    st.warning(warning)
+                try:
+                    scores, prices, failed_symbols, used_sample_data = build_allocation_inputs(
+                        market,
+                        symbols,
+                        use_cache=cache_enabled,
+                    )
+                    if used_sample_data:
+                        st.warning(SAMPLE_WARNING)
+                    if failed_symbols:
+                        st.warning(f"以下股票无法用于配置计算：{', '.join(failed_symbols)}")
+                    if not prices:
+                        st.warning("没有可用于组合配置的价格数据。")
+
+                    allocation_result = build_allocation_plan(
+                        symbols=symbols,
+                        scores=scores,
+                        prices=prices,
+                        current_positions=current_positions,
+                        portfolio_value=float(allocation_portfolio_value),
+                        max_position_pct=float(allocation_max_position_pct) / 100,
+                        min_score=float(allocation_min_score),
+                        cash_buffer_pct=float(allocation_cash_buffer_pct) / 100,
+                    )
+                    st.session_state["latest_allocation_plan"] = allocation_result
+                except Exception as error:
+                    st.error(f"生成组合配置方案失败：{error}")
+
+        allocation_result = st.session_state.get("latest_allocation_plan")
+        if allocation_result:
+            summary = allocation_result.get("summary", {})
+            allocation_rows = allocation_result.get("allocation", [])
+            allocation_warnings = allocation_result.get("warnings", [])
+            allocation_failed_symbols = allocation_result.get("failed_symbols", [])
+
+            render_metric_row(
+                [
+                    {"label": "组合总金额", "value": f"{summary.get('portfolio_value', 0):,.2f}"},
+                    {"label": "可投资金额", "value": f"{summary.get('investable_value', 0):,.2f}"},
+                    {"label": "现金缓冲", "value": f"{summary.get('cash_buffer', 0):,.2f}"},
+                    {"label": "入选股票数", "value": summary.get("selected_symbols", 0)},
+                    {"label": "单股最大仓位", "value": format_return_pct(summary.get("max_position_pct"))},
+                ]
+            )
+
+            if allocation_warnings:
+                render_section_header("风险提示", "配置结果仅用于研究，不代表未来收益。")
+                for warning in allocation_warnings:
+                    st.warning(warning)
+            if allocation_failed_symbols:
+                st.warning("部分股票价格缺失或无效。")
+                st.dataframe(pd.DataFrame(allocation_failed_symbols), use_container_width=True, hide_index=True)
+
+            allocation_table = pd.DataFrame(allocation_rows)
+            if allocation_table.empty:
+                render_empty_state("暂无目标仓位数据。")
+            else:
+                display_columns = [
+                    "symbol",
+                    "score",
+                    "price",
+                    "target_weight",
+                    "target_value",
+                    "target_shares",
+                    "current_shares",
+                    "current_value",
+                    "difference_value",
+                ]
+                st.dataframe(allocation_table[display_columns], use_container_width=True, hide_index=True)
+
+                weight_chart = allocation_table[["symbol", "target_weight"]].set_index("symbol")
+                st.bar_chart(weight_chart)
+
+                value_chart = allocation_table[["symbol", "current_value", "target_value"]].set_index("symbol")
+                st.bar_chart(value_chart)
+
+                st.download_button(
+                    label="下载 allocation_plan.csv",
+                    data=dataframe_to_csv(allocation_table[display_columns]),
+                    file_name="allocation_plan.csv",
+                    mime="text/csv",
+                )
+                st.download_button(
+                    label="下载 allocation_summary.json",
+                    data=allocation_summary_to_json_bytes(allocation_result),
+                    file_name="allocation_summary.json",
+                    mime="application/json",
+                )
 
     with chart_tab:
         render_section_header("单股分析", "查看单只股票的收盘价、均线和 RSI，用于研究趋势状态。")
