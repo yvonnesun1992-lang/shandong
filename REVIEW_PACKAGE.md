@@ -116,6 +116,73 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+V1.18 raw 文件已再次强制刷新，用于确认远程 raw 是真实多行文本。
+V1.18 文件格式已再次验证 6，用于确认 GitHub 远程分支刷新。
+
+## V1.18: allocation lab
+
+V1.18 目标：
+
+- 增加组合配置实验室。
+- 基于当前 watchlist、趋势分数、价格和风险参数生成研究用目标仓位。
+- 对比当前持仓与目标持仓之间的差异。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/portfolio/__init__.py
+src/portfolio/allocation.py
+tests/test_allocation.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+组合配置实验室功能说明：
+
+- `build_allocation_plan` 根据股票池、趋势分数、价格、当前持仓和风险参数生成目标配置。
+- 分数低于最低分数的股票目标仓位为 0。
+- 单只股票目标权重不超过 max_position_pct。
+- 系统保留 cash_buffer_pct 对应的现金缓冲。
+- 缺失价格或无效价格不会导致崩溃，会记录到 failed_symbols 和 warnings。
+- 输出目标权重、目标金额、目标股数、当前金额和差异金额。
+- 所有输出均标注“仅供投资研究，不构成投资建议，不代表未来收益。”
+
+dashboard 更新：
+
+- 新增“组合配置实验室”tab。
+- 支持设置组合总金额、单股最大仓位、最低入选分数和现金缓冲。
+- 支持手动输入当前持仓，格式为 `symbol,数量`。
+- 展示组合总金额、可投资金额、现金缓冲、入选股票数和单股最大仓位。
+- 展示目标仓位表、目标权重柱状图、当前 vs 目标金额对比图。
+- 支持下载 allocation_plan.csv 和 allocation_summary.json。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 228 passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否改变核心策略逻辑：否
+UI 是否保持简约、美观、大方、实用：是
+是否连接真实券商：否
+是否自动下单：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：
