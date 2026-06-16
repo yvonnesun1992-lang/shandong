@@ -6,7 +6,7 @@ from math import floor
 RESEARCH_DISCLAIMER = "仅供投资研究，不构成投资建议，不代表未来收益。"
 
 # V1.18 raw refresh marker: keep allocation.py as real multiline Python.
-# V1.18 formatting verification marker 4: remote raw must stay multiline.
+# V1.18 formatting verification marker 5: remote raw must stay multiline.
 
 
 def _normalize_symbols(symbols: list[str]) -> list[str]:

@@ -91,7 +91,7 @@ SETTINGS_WARNING = "系统设置仅用于本地研究环境配置，不应保存
 SYSTEM_HEALTH_WARNING = "系统健康检查仅用于本地研究环境诊断，不代表投资建议，不会连接真实券商，也不会产生真实订单。"
 
 # V1.18 raw refresh marker: keep app/main.py as real multiline Python.
-# V1.18 formatting verification marker 4: remote raw must stay multiline.
+# V1.18 formatting verification marker 5: remote raw must stay multiline.
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
