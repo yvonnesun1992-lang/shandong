@@ -5,6 +5,7 @@ import inspect
 from src.portfolio.allocation import RESEARCH_DISCLAIMER, build_allocation_plan
 
 
+# V1.18 raw refresh marker: keep test_allocation.py as real multiline Python.
 def test_build_allocation_plan_with_valid_inputs():
     result = build_allocation_plan(
         symbols=["AAPL", "MSFT", "NVDA"],

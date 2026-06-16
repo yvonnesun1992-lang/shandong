@@ -5,6 +5,8 @@ from math import floor
 
 RESEARCH_DISCLAIMER = "仅供投资研究，不构成投资建议，不代表未来收益。"
 
+# V1.18 raw refresh marker: keep allocation.py as real multiline Python.
+
 
 def _normalize_symbols(symbols: list[str]) -> list[str]:
     normalized = []

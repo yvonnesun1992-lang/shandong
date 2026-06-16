@@ -90,6 +90,8 @@ PRICE_CACHE_WARNING = "行情缓存仅用于研究和演示，不代表实时行
 SETTINGS_WARNING = "系统设置仅用于本地研究环境配置，不应保存任何真实账户、密码、API key 或券商凭证。"
 SYSTEM_HEALTH_WARNING = "系统健康检查仅用于本地研究环境诊断，不代表投资建议，不会连接真实券商，也不会产生真实订单。"
 
+# V1.18 raw refresh marker: keep app/main.py as real multiline Python.
+
 
 @st.cache_data(show_spinner=False, ttl=3600)
 def load_data(market: str, symbol: str, use_cache: bool = True) -> pd.DataFrame:
