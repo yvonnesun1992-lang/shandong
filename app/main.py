@@ -38,6 +38,7 @@ from src.reports.daily_research_report import (
     load_daily_research_report,
     save_daily_research_report,
 )
+from src.risk.control import build_risk_control_report
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
 from src.strategies.presets import (
     DEFAULT_PRESET_NAMES,
@@ -82,6 +83,7 @@ PAPER_TRADING_WARNING = "模拟交易仅用于学习和功能演示，不代表�
 PORTFOLIO_BACKTEST_WARNING = "组合回测仅用于历史研究和功能演示，不代表未来收益，不构成投资建议。"
 STRATEGY_COMPARISON_WARNING = "策略对比仅用于历史研究和功能演示。历史回测不代表未来收益，不构成投资建议。"
 ALLOCATION_LAB_WARNING = "组合配置实验室仅供投资研究，不构成投资建议，不代表未来收益，不会生成真实交易指令。"
+RISK_CONTROL_WARNING = "风险控制中心用于检查研究组合的仓位集中度、现金缓冲和基础风险暴露。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
@@ -221,6 +223,37 @@ def parse_current_positions_text(positions_text: str) -> tuple[dict[str, float],
             continue
         positions[parts[0].upper()] = quantity
     return positions, warnings
+
+
+def parse_manual_allocation_text(allocation_text: str) -> tuple[list[dict], list[str]]:
+    allocation_rows = []
+    warnings = []
+    for line in allocation_text.replace("，", ",").splitlines():
+        clean_line = line.strip()
+        if not clean_line:
+            continue
+        parts = [part.strip() for part in clean_line.split(",")]
+        if len(parts) != 3 or not parts[0]:
+            warnings.append(f"仓位格式错误，已忽略：{clean_line}")
+            continue
+        symbol = parts[0].upper()
+        try:
+            target_weight = float(parts[1])
+            target_value = float(parts[2])
+        except ValueError:
+            warnings.append(f"{symbol} 的仓位或金额不是有效数字，已忽略。")
+            continue
+        if target_weight < 0 or target_value < 0:
+            warnings.append(f"{symbol} 的仓位和金额不能为负，已忽略。")
+            continue
+        allocation_rows.append(
+            {
+                "symbol": symbol,
+                "target_weight": target_weight,
+                "target_value": target_value,
+            }
+        )
+    return allocation_rows, warnings
 
 
 def default_watchlist_name(market: str) -> str:
@@ -490,6 +523,7 @@ def main() -> None:
         strategy_lab_tab,
         strategy_comparison_tab,
         allocation_lab_tab,
+        risk_control_tab,
         chart_tab,
         backtest_tab,
         portfolio_tab,
@@ -509,6 +543,7 @@ def main() -> None:
             "策略实验室",
             "策略对比",
             "组合配置实验室",
+            "风险控制中心",
             "单股分析",
             "单股回测",
             "组合回测",
@@ -1136,6 +1171,247 @@ def main() -> None:
                     file_name="allocation_summary.json",
                     mime="application/json",
                 )
+
+    with risk_control_tab:
+        render_section_header(
+            "风险控制中心",
+            "检查研究组合的仓位集中度、现金缓冲、数据质量和基础风险暴露。",
+        )
+        st.info(RISK_CONTROL_WARNING)
+        st.caption("仅供投资研究，不构成投资建议，不代表未来收益。")
+        st.caption(f"当前市场：{market}；当前 watchlist：{selected_watchlist}；股票数量：{len(symbols)}")
+
+        if not symbols:
+            st.info("当前 watchlist 为空，请先在左侧输入股票代码。")
+        risk_col_a, risk_col_b, risk_col_c = st.columns(3)
+        with risk_col_a:
+            risk_portfolio_value = st.number_input(
+                "风险检查组合金额",
+                min_value=1_000,
+                value=100_000,
+                step=10_000,
+                key="risk_control_portfolio_value",
+            )
+            risk_max_position_pct = st.number_input(
+                "单股最大仓位（%）",
+                min_value=1,
+                max_value=100,
+                value=20,
+                step=1,
+                key="risk_control_max_position_pct",
+            )
+        with risk_col_b:
+            risk_max_top3_pct = st.number_input(
+                "前三大持仓上限（%）",
+                min_value=1,
+                max_value=100,
+                value=50,
+                step=1,
+                key="risk_control_max_top3_pct",
+            )
+            risk_min_positions = st.number_input(
+                "最低持仓数量",
+                min_value=1,
+                max_value=100,
+                value=5,
+                step=1,
+                key="risk_control_min_positions",
+            )
+        with risk_col_c:
+            risk_cash_buffer_pct = st.number_input(
+                "现金缓冲（%）",
+                min_value=0,
+                max_value=90,
+                value=10,
+                step=5,
+                key="risk_control_cash_buffer_pct",
+            )
+            risk_min_score = st.number_input(
+                "最低入选分数",
+                min_value=0,
+                max_value=100,
+                value=60,
+                step=5,
+                key="risk_control_min_score",
+            )
+
+        risk_input_mode = st.radio(
+            "风险检查输入方式",
+            ["使用组合配置逻辑生成", "手动输入简化仓位"],
+            horizontal=True,
+            key="risk_control_input_mode",
+        )
+
+        manual_allocation_text = ""
+        use_paper_positions_for_risk = False
+        if risk_input_mode == "手动输入简化仓位":
+            manual_allocation_text = st.text_area(
+                "简化仓位（每行一个：symbol,target_weight,target_value）",
+                value="AAPL,0.18,18000\nMSFT,0.15,15000\nNVDA,0.20,20000",
+                height=140,
+                key="risk_control_manual_allocation_text",
+            )
+            st.caption("示例中的 target_weight 使用小数，例如 0.18 表示 18%。")
+        else:
+            use_paper_positions_for_risk = st.checkbox(
+                "读取本地模拟持仓数量用于配置差异参考",
+                value=True,
+                key="risk_control_use_paper_positions",
+            )
+
+        if st.button("生成风险控制报告"):
+            allocation_rows = []
+            risk_input_warnings = []
+            used_sample_data_for_risk = False
+            if risk_input_mode == "手动输入简化仓位":
+                allocation_rows, risk_input_warnings = parse_manual_allocation_text(manual_allocation_text)
+                for warning in risk_input_warnings:
+                    st.warning(warning)
+            else:
+                if not symbols:
+                    st.info("当前 watchlist 为空，无法生成风险控制报告。")
+                else:
+                    try:
+                        current_positions_for_risk = {}
+                        if use_paper_positions_for_risk:
+                            paper_portfolio = load_paper_portfolio()
+                            current_positions_for_risk = {
+                                str(symbol).upper(): float(position.get("quantity", 0.0))
+                                for symbol, position in paper_portfolio.get("positions", {}).items()
+                            }
+                        scores, prices, failed_symbols, used_sample_data_for_risk = build_allocation_inputs(
+                            market,
+                            symbols,
+                            use_cache=cache_enabled,
+                        )
+                        if used_sample_data_for_risk:
+                            st.warning(SAMPLE_WARNING)
+                        if failed_symbols:
+                            st.warning(f"以下股票数据源失败或不可用，已跳过：{', '.join(failed_symbols)}")
+                        allocation_result_for_risk = build_allocation_plan(
+                            symbols=symbols,
+                            scores=scores,
+                            prices=prices,
+                            current_positions=current_positions_for_risk,
+                            portfolio_value=float(risk_portfolio_value),
+                            max_position_pct=float(risk_max_position_pct) / 100,
+                            min_score=float(risk_min_score),
+                            cash_buffer_pct=float(risk_cash_buffer_pct) / 100,
+                        )
+                        allocation_rows = allocation_result_for_risk.get("allocation", [])
+                        risk_input_warnings.extend(allocation_result_for_risk.get("warnings", []))
+                        if allocation_result_for_risk.get("failed_symbols"):
+                            st.warning("部分股票价格缺失或无效，未进入风险检查。")
+                    except Exception as error:
+                        st.error(f"生成组合配置输入失败：{error}")
+
+            risk_report = build_risk_control_report(
+                allocation_rows,
+                portfolio_value=float(risk_portfolio_value),
+                cash_buffer_pct=float(risk_cash_buffer_pct) / 100,
+                max_position_pct=float(risk_max_position_pct) / 100,
+                max_top3_pct=float(risk_max_top3_pct) / 100,
+                min_positions=int(risk_min_positions),
+            )
+            risk_report["input"] = {
+                "market": market,
+                "watchlist_name": selected_watchlist,
+                "input_mode": risk_input_mode,
+                "used_sample_data": used_sample_data_for_risk,
+                "input_warnings": risk_input_warnings,
+            }
+            risk_report["allocation_rows"] = allocation_rows
+            st.session_state["latest_risk_control_report"] = risk_report
+
+        risk_report = st.session_state.get("latest_risk_control_report")
+        if risk_report:
+            risk_summary = risk_report.get("summary", {})
+            risk_level = risk_summary.get("risk_level", "N/A")
+            if risk_level == "High":
+                st.error(f"风险等级：{risk_level}")
+            elif risk_level == "Medium":
+                st.warning(f"风险等级：{risk_level}")
+            else:
+                st.success(f"风险等级：{risk_level}")
+
+            render_metric_row(
+                [
+                    {"label": "总目标持仓金额", "value": f"{risk_summary.get('total_target_value', 0):,.2f}"},
+                    {"label": "现金缓冲金额", "value": f"{risk_summary.get('cash_buffer_value', 0):,.2f}"},
+                    {"label": "投资比例", "value": format_return_pct(risk_summary.get("invested_pct"))},
+                    {"label": "最大单股仓位", "value": format_return_pct(risk_summary.get("largest_position_pct"))},
+                ]
+            )
+            render_metric_row(
+                [
+                    {"label": "前三大持仓占比", "value": format_return_pct(risk_summary.get("top3_position_pct"))},
+                    {"label": "持仓数量", "value": risk_summary.get("number_of_positions", 0)},
+                    {"label": "风险等级", "value": risk_level},
+                    {"label": "研究边界", "value": "不下单"},
+                ]
+            )
+
+            risk_warnings = risk_report.get("warnings", [])
+            if risk_warnings:
+                render_section_header("风险提示", "按仓位、集中度、现金缓冲、数据质量和回撤风险分类查看。")
+                for warning in risk_warnings:
+                    st.warning(warning)
+
+            checks_table = pd.DataFrame(risk_report.get("checks", []))
+            render_section_header("风险检查表", "逐项查看 pass / warn / fail。")
+            if checks_table.empty:
+                render_empty_state("暂无风险检查结果。")
+            else:
+                st.dataframe(checks_table[["name", "status", "message"]], use_container_width=True, hide_index=True)
+
+            position_risks_table = pd.DataFrame(risk_report.get("position_risks", []))
+            render_section_header("单股风险表", "展示超过单股仓位限制的目标持仓。")
+            if position_risks_table.empty:
+                st.info("当前没有单股超限风险。")
+            else:
+                st.dataframe(
+                    position_risks_table[["symbol", "target_weight", "target_value", "risk"]],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            allocation_for_chart = risk_report.get("allocation_rows", [])
+            if allocation_for_chart:
+                allocation_chart_table = pd.DataFrame(allocation_for_chart)
+                if {"symbol", "target_weight"}.issubset(allocation_chart_table.columns):
+                    render_section_header("目标仓位权重", "用于观察单股和前三大持仓的集中程度。")
+                    st.bar_chart(allocation_chart_table[["symbol", "target_weight"]].set_index("symbol"))
+                    top3_symbols = (
+                        allocation_chart_table.sort_values("target_weight", ascending=False)
+                        .head(3)["symbol"]
+                        .astype(str)
+                        .tolist()
+                    )
+                    st.info(
+                        f"前三大持仓占比：{format_return_pct(risk_summary.get('top3_position_pct'))}；"
+                        f"前三大股票：{', '.join(top3_symbols) if top3_symbols else '暂无'}。"
+                    )
+            else:
+                st.warning("allocation_rows 为空，暂无目标仓位权重图。")
+
+            st.download_button(
+                label="下载 risk_control_report.json",
+                data=report_to_json_bytes(risk_report),
+                file_name="risk_control_report.json",
+                mime="application/json",
+            )
+            st.download_button(
+                label="下载 position_risks.csv",
+                data=dataframe_to_csv(position_risks_table),
+                file_name="position_risks.csv",
+                mime="text/csv",
+            )
+            st.download_button(
+                label="下载 risk_checks.csv",
+                data=dataframe_to_csv(checks_table),
+                file_name="risk_checks.csv",
+                mime="text/csv",
+            )
 
     with chart_tab:
         render_section_header("单股分析", "查看单只股票的收盘价、均线和 RSI，用于研究趋势状态。")

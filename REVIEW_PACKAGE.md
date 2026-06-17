@@ -183,6 +183,67 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.19: risk control center
+
+V1.19 目标：
+
+- 增加“风险控制中心”页面。
+- 基于当前 watchlist、组合配置方案、模拟持仓和本地行情数据，检查研究组合风险。
+- 展示仓位风险、集中度风险、现金缓冲风险、数据质量风险和回撤风险提示。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/risk/control.py
+tests/test_risk_control.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+风险控制中心功能说明：
+
+- `build_risk_control_report` 根据目标仓位行生成研究用风险报告。
+- 输出组合总金额、目标持仓金额、现金缓冲、投资比例、最大单股仓位、前三大持仓占比、持仓数量和风险等级。
+- 检查单股最大仓位、前三大持仓集中度、持仓分散度、现金缓冲、数据质量和回撤风险提示。
+- 支持 Low / Medium / High 风险等级。
+- allocation_rows 为空、portfolio_value 无效、target_weight 或 target_value 缺失时不会崩溃，会返回 warnings 和 checks。
+- dashboard 新增“风险控制中心”tab，位于“组合配置实验室”之后。
+- 支持使用组合配置逻辑重新生成 allocation 后检查风险。
+- 支持手动输入简化仓位，格式为 `AAPL,0.18,18000`。
+- 展示风险指标、风险检查表、单股风险表和目标仓位权重柱状图。
+- 支持下载 risk_control_report.json、position_risks.csv 和 risk_checks.csv。
+- 所有输出均标注“仅供投资研究，不构成投资建议，不代表未来收益。”
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 237 passed
+system_doctor: passed
+dashboard: passed
+```
+
+安全边界：
+
+```text
+是否改变核心策略逻辑：否
+UI 是否保持简约、美观、大方、实用：是
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：
