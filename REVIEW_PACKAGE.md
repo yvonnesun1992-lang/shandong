@@ -501,6 +501,70 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.24: strategy research report center
+
+V1.24 目标：
+
+- 增加“策略研究报告中心”页面。
+- 汇总组合回测、策略稳定性、样本外测试、压力测试、风险控制和质量评分结果。
+- 输出 Positive / Neutral / Cautious 研究视图。
+- 生成 dashboard 预览和 Markdown 报告。
+- 支持 JSON / Markdown / CSV 下载。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/reports/strategy_research_report.py
+tests/test_strategy_research_report.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+策略研究报告中心功能说明：
+
+- `build_strategy_research_report` 只汇总已有研究结果，不重新实现核心回测逻辑。
+- `strategy_report_to_markdown` 将研究报告渲染为 Markdown 文本。
+- 支持缺少 stability / out_of_sample / stress / risk 输入时继续生成报告。
+- 支持根据质量等级、样本外风险和压力测试等级生成 Positive / Neutral / Cautious 研究视图。
+- dashboard 新增“研究报告”tab，位于“质量评分”之后、“单股分析”之前。
+- 支持选择 market、watchlist、strategy preset、initial_cash 和是否纳入稳定性 / 样本外 / 压力测试 / 风险控制。
+- 展示研究结论、综合质量分、质量等级、总收益、最大回撤、样本外风险、压力等级和数据质量分。
+- 展示主要风险和 Markdown 报告预览。
+- 支持下载 strategy_research_report.json、strategy_research_report.md 和 strategy_research_warnings.csv。
+- 所有输出均标注“仅供投资研究，不构成投资建议，不代表未来收益。”
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 288 passed
+system_doctor: passed
+dashboard: returned 200
+hidden/bidi scan: passed, risk_count=0
+```
+
+安全边界：
+
+```text
+是否改变核心策略逻辑：否
+是否改变 allocation/risk 逻辑：否
+UI 是否保持简约、美观、大方、实用：是
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：
