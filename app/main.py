@@ -48,6 +48,7 @@ from src.strategies.presets import (
 )
 from src.strategies.comparison import compare_strategy_presets
 from src.strategies.out_of_sample import build_out_of_sample_report, split_train_test_data
+from src.strategies.quality_score import build_backtest_quality_score
 from src.strategies.stability import build_strategy_stability_report, split_backtest_windows
 from src.strategies.stress_test import build_strategy_stress_report
 from src.system.health_check import health_check_to_dataframe, run_system_health_check
@@ -90,6 +91,7 @@ RISK_CONTROL_WARNING = "风险控制中心用于检查研究组合的仓位集�
 STRATEGY_STABILITY_WARNING = "策略稳定性用于检查同一策略在不同时间窗口中的表现是否稳定。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 OUT_OF_SAMPLE_WARNING = "样本外测试用于比较策略在训练区间和未知测试区间的表现，帮助识别过拟合风险。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 STRATEGY_STRESS_WARNING = "压力测试用于估算策略在不利情景下的收益下修和回撤放大风险。结果仅供投资研究，不构成投资建议，不代表未来收益。"
+QUALITY_SCORE_WARNING = "回测质量评分用于综合观察策略的收益、回撤、稳定性、样本外表现和压力测试表现。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
@@ -533,6 +535,7 @@ def main() -> None:
         strategy_stability_tab,
         out_of_sample_tab,
         strategy_stress_tab,
+        quality_score_tab,
         chart_tab,
         backtest_tab,
         portfolio_tab,
@@ -556,6 +559,7 @@ def main() -> None:
             "策略稳定性",
             "样本外测试",
             "压力测试",
+            "质量评分",
             "单股分析",
             "单股回测",
             "组合回测",
@@ -2192,6 +2196,316 @@ def main() -> None:
                 label="下载 stress_checks.csv",
                 data=dataframe_to_csv(stress_checks_table),
                 file_name="stress_checks.csv",
+                mime="text/csv",
+            )
+
+    with quality_score_tab:
+        render_section_header(
+            "质量评分",
+            "综合观察策略收益、回撤、稳定性、样本外表现和压力测试表现。",
+        )
+        st.info(QUALITY_SCORE_WARNING)
+        st.caption("仅供投资研究，不构成投资建议，不代表未来收益。")
+        st.caption(f"当前市场：{market}；当前 watchlist：{selected_watchlist}；股票数量：{len(symbols)}")
+
+        try:
+            quality_presets = load_strategy_presets()
+        except Exception as error:
+            quality_presets = {}
+            st.warning(f"策略预设暂不可用：{error}")
+
+        quality_preset_names = sorted(quality_presets)
+        default_quality_preset = "trend_default" if "trend_default" in quality_presets else None
+        selected_quality_preset_name = (
+            st.selectbox(
+                "策略预设",
+                quality_preset_names,
+                index=quality_preset_names.index(default_quality_preset) if default_quality_preset else 0,
+                disabled=not quality_preset_names,
+                key="quality_preset_name",
+            )
+            if quality_preset_names
+            else None
+        )
+        selected_quality_preset = quality_presets.get(selected_quality_preset_name or "", {})
+
+        quality_col_a, quality_col_b, quality_col_c, quality_col_d = st.columns(4)
+        with quality_col_a:
+            quality_initial_cash = st.number_input(
+                "初始资金",
+                min_value=10_000,
+                value=100_000,
+                step=10_000,
+                key="quality_initial_cash",
+            )
+        with quality_col_b:
+            include_quality_stability = st.checkbox("纳入稳定性评分", value=True, key="include_quality_stability")
+        with quality_col_c:
+            include_quality_oos = st.checkbox("纳入样本外评分", value=True, key="include_quality_oos")
+        with quality_col_d:
+            include_quality_stress = st.checkbox("纳入压力测试评分", value=True, key="include_quality_stress")
+
+        if st.button("生成质量评分报告"):
+            if not symbols:
+                st.info("当前 watchlist 为空，无法生成质量评分报告。")
+            elif not selected_quality_preset:
+                st.warning("暂无可用策略预设。")
+            else:
+                try:
+                    price_data, failed_symbols = load_price_data_for_symbols(market, symbols, use_cache=cache_enabled)
+                    if failed_symbols:
+                        st.warning(f"以下股票数据源失败或不可用，已跳过：{', '.join(failed_symbols)}")
+                    if not price_data:
+                        st.error("没有可用于质量评分的数据。")
+                    else:
+                        if any(is_sample_data(data) for data in price_data.values()):
+                            st.warning(SAMPLE_WARNING)
+
+                        quality_parameters = {
+                            "max_position_pct": float(selected_quality_preset.get("max_position_pct", 0.15)),
+                            "rebalance_frequency": str(selected_quality_preset.get("rebalance_frequency", "monthly")),
+                            "min_score_to_buy": int(selected_quality_preset.get("min_score_to_buy", 80)),
+                            "min_score_to_hold": int(selected_quality_preset.get("min_score_to_hold", 60)),
+                        }
+
+                        module_warnings = []
+                        try:
+                            base_backtest = run_portfolio_backtest(
+                                price_data,
+                                initial_cash=float(quality_initial_cash),
+                                max_position_pct=quality_parameters["max_position_pct"],
+                                rebalance_frequency=quality_parameters["rebalance_frequency"],
+                                min_score_to_buy=quality_parameters["min_score_to_buy"],
+                                min_score_to_hold=quality_parameters["min_score_to_hold"],
+                            )
+                            backtest_summary = {
+                                **base_backtest.get("summary", {}),
+                                "status": "success",
+                            }
+                        except Exception as error:
+                            module_warnings.append(f"组合回测失败：{error}")
+                            backtest_summary = {
+                                "total_return": 0.0,
+                                "annualized_return": 0.0,
+                                "max_drawdown": 0.0,
+                                "number_of_trades": 0,
+                                "final_portfolio_value": 0.0,
+                                "status": "failed",
+                            }
+
+                        stability_summary = None
+                        if include_quality_stability:
+                            try:
+                                windows = split_backtest_windows(price_data, window_size=120, step_size=60)
+                                window_results = []
+                                for window in windows:
+                                    try:
+                                        result = run_portfolio_backtest(
+                                            window.get("data", {}),
+                                            initial_cash=float(quality_initial_cash),
+                                            max_position_pct=quality_parameters["max_position_pct"],
+                                            rebalance_frequency=quality_parameters["rebalance_frequency"],
+                                            min_score_to_buy=quality_parameters["min_score_to_buy"],
+                                            min_score_to_hold=quality_parameters["min_score_to_hold"],
+                                        )
+                                        summary = result["summary"]
+                                        window_results.append(
+                                            {
+                                                "window_name": window.get("window_name", "Window"),
+                                                "total_return": summary.get("total_return"),
+                                                "annualized_return": summary.get("annualized_return"),
+                                                "max_drawdown": summary.get("max_drawdown"),
+                                                "number_of_trades": summary.get("number_of_trades"),
+                                                "final_portfolio_value": summary.get("final_portfolio_value"),
+                                                "status": "success",
+                                            }
+                                        )
+                                    except Exception as error:
+                                        window_results.append(
+                                            {
+                                                "window_name": window.get("window_name", "Window"),
+                                                "total_return": 0.0,
+                                                "annualized_return": 0.0,
+                                                "max_drawdown": 0.0,
+                                                "number_of_trades": 0,
+                                                "final_portfolio_value": 0.0,
+                                                "status": "failed",
+                                                "error": str(error),
+                                            }
+                                        )
+                                stability_report = build_strategy_stability_report(window_results, min_windows=3)
+                                stability_summary = stability_report.get("summary", {})
+                            except Exception as error:
+                                module_warnings.append(f"稳定性评分失败：{error}")
+
+                        out_of_sample_summary = None
+                        if include_quality_oos:
+                            try:
+                                split_result = split_train_test_data(price_data, train_ratio=0.7)
+
+                                def run_quality_period(period_name: str, period_data: dict[str, pd.DataFrame]) -> dict:
+                                    try:
+                                        result = run_portfolio_backtest(
+                                            period_data,
+                                            initial_cash=float(quality_initial_cash),
+                                            max_position_pct=quality_parameters["max_position_pct"],
+                                            rebalance_frequency=quality_parameters["rebalance_frequency"],
+                                            min_score_to_buy=quality_parameters["min_score_to_buy"],
+                                            min_score_to_hold=quality_parameters["min_score_to_hold"],
+                                        )
+                                        summary = result["summary"]
+                                        return {
+                                            "period_name": period_name,
+                                            "total_return": summary.get("total_return"),
+                                            "annualized_return": summary.get("annualized_return"),
+                                            "max_drawdown": summary.get("max_drawdown"),
+                                            "number_of_trades": summary.get("number_of_trades"),
+                                            "final_portfolio_value": summary.get("final_portfolio_value"),
+                                            "status": "success",
+                                        }
+                                    except Exception as error:
+                                        return {
+                                            "period_name": period_name,
+                                            "total_return": 0.0,
+                                            "annualized_return": 0.0,
+                                            "max_drawdown": 0.0,
+                                            "number_of_trades": 0,
+                                            "final_portfolio_value": 0.0,
+                                            "status": "failed",
+                                            "error": str(error),
+                                        }
+
+                                oos_report = build_out_of_sample_report(
+                                    run_quality_period("Train", split_result.get("train", {})),
+                                    run_quality_period("Out-of-sample", split_result.get("test", {})),
+                                    min_test_trades=3,
+                                )
+                                out_of_sample_summary = oos_report.get("summary", {})
+                            except Exception as error:
+                                module_warnings.append(f"样本外评分失败：{error}")
+
+                        stress_summary = None
+                        if include_quality_stress:
+                            try:
+                                stress_report = build_strategy_stress_report(
+                                    {
+                                        "period_name": "Base",
+                                        "total_return": backtest_summary.get("total_return"),
+                                        "annualized_return": backtest_summary.get("annualized_return"),
+                                        "max_drawdown": backtest_summary.get("max_drawdown"),
+                                        "number_of_trades": backtest_summary.get("number_of_trades"),
+                                        "final_portfolio_value": backtest_summary.get("final_portfolio_value"),
+                                        "initial_cash": float(quality_initial_cash),
+                                        "status": backtest_summary.get("status", "success"),
+                                    },
+                                    max_acceptable_drawdown=-0.25,
+                                )
+                                stress_summary = stress_report.get("summary", {})
+                            except Exception as error:
+                                module_warnings.append(f"压力测试评分失败：{error}")
+
+                        quality_report = build_backtest_quality_score(
+                            backtest_summary,
+                            stability_summary=stability_summary,
+                            out_of_sample_summary=out_of_sample_summary,
+                            stress_summary=stress_summary,
+                        )
+                        quality_report["warnings"].extend(module_warnings)
+                        quality_report["input"] = {
+                            "market": market,
+                            "watchlist_name": selected_watchlist,
+                            "strategy_preset": selected_quality_preset_name,
+                            "initial_cash": float(quality_initial_cash),
+                            "include_stability": bool(include_quality_stability),
+                            "include_out_of_sample": bool(include_quality_oos),
+                            "include_stress": bool(include_quality_stress),
+                            "parameters": quality_parameters,
+                            "failed_symbols": failed_symbols,
+                        }
+                        quality_report["source_summaries"] = {
+                            "backtest_summary": backtest_summary,
+                            "stability_summary": stability_summary,
+                            "out_of_sample_summary": out_of_sample_summary,
+                            "stress_summary": stress_summary,
+                        }
+                        st.session_state["latest_quality_score_report"] = quality_report
+                except Exception as error:
+                    st.error(f"质量评分失败：{error}")
+
+        quality_report = st.session_state.get("latest_quality_score_report")
+        if quality_report:
+            quality_summary = quality_report.get("summary", {})
+            quality_level = quality_summary.get("quality_level", "N/A")
+            total_quality_score = quality_summary.get("total_quality_score", 0)
+            if quality_level in {"Excellent", "Good"}:
+                st.success(f"综合质量等级：{quality_level}")
+            elif quality_level == "Watch":
+                st.warning(f"综合质量等级：{quality_level}")
+            else:
+                st.error(f"综合质量等级：{quality_level}")
+
+            render_metric_row(
+                [
+                    {"label": "综合质量分", "value": total_quality_score},
+                    {"label": "质量等级", "value": quality_level},
+                    {"label": "收益质量分", "value": quality_summary.get("return_score", 0)},
+                    {"label": "回撤质量分", "value": quality_summary.get("drawdown_score", 0)},
+                ]
+            )
+            render_metric_row(
+                [
+                    {"label": "稳定性质量分", "value": quality_summary.get("stability_score", 0)},
+                    {"label": "样本外质量分", "value": quality_summary.get("out_of_sample_score", 0)},
+                    {"label": "压力测试质量分", "value": quality_summary.get("stress_score", 0)},
+                    {"label": "数据质量分", "value": quality_summary.get("data_quality_score", 0)},
+                ]
+            )
+
+            quality_warnings = quality_report.get("warnings", [])
+            if quality_warnings:
+                render_section_header("质量风险提示", "按输入完整性、收益、回撤和压力表现查看。")
+                for warning in quality_warnings:
+                    st.warning(warning)
+
+            quality_breakdown_table = pd.DataFrame(quality_report.get("score_breakdown", []))
+            render_section_header("分项评分表", "逐项查看收益、回撤、稳定性、样本外、压力和数据质量。")
+            if quality_breakdown_table.empty:
+                render_empty_state("暂无质量评分结果。")
+            else:
+                st.dataframe(
+                    quality_breakdown_table[["category", "score", "message"]],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+                st.bar_chart(quality_breakdown_table[["category", "score"]].set_index("category"))
+
+            quality_checks_table = pd.DataFrame(quality_report.get("checks", []))
+            render_section_header("质量检查表", "逐项查看 pass / warn / fail。")
+            if quality_checks_table.empty:
+                render_empty_state("暂无质量检查结果。")
+            else:
+                st.dataframe(
+                    quality_checks_table[["name", "status", "message"]],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            st.download_button(
+                label="下载 backtest_quality_score_report.json",
+                data=report_to_json_bytes(quality_report),
+                file_name="backtest_quality_score_report.json",
+                mime="application/json",
+            )
+            st.download_button(
+                label="下载 quality_score_breakdown.csv",
+                data=dataframe_to_csv(quality_breakdown_table),
+                file_name="quality_score_breakdown.csv",
+                mime="text/csv",
+            )
+            st.download_button(
+                label="下载 quality_score_checks.csv",
+                data=dataframe_to_csv(quality_checks_table),
+                file_name="quality_score_checks.csv",
                 mime="text/csv",
             )
 
