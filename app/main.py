@@ -38,6 +38,7 @@ from src.reports.daily_research_report import (
     load_daily_research_report,
     save_daily_research_report,
 )
+from src.reports.strategy_research_report import build_strategy_research_report, strategy_report_to_markdown
 from src.risk.control import build_risk_control_report
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
 from src.strategies.presets import (
@@ -92,6 +93,7 @@ STRATEGY_STABILITY_WARNING = "策略稳定性用于检查同一策略在不同�
 OUT_OF_SAMPLE_WARNING = "样本外测试用于比较策略在训练区间和未知测试区间的表现，帮助识别过拟合风险。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 STRATEGY_STRESS_WARNING = "压力测试用于估算策略在不利情景下的收益下修和回撤放大风险。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 QUALITY_SCORE_WARNING = "回测质量评分用于综合观察策略的收益、回撤、稳定性、样本外表现和压力测试表现。结果仅供投资研究，不构成投资建议，不代表未来收益。"
+STRATEGY_RESEARCH_REPORT_WARNING = "策略研究报告用于汇总回测、稳定性、样本外、压力测试和质量评分结果，帮助复盘策略研究过程。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
@@ -536,6 +538,7 @@ def main() -> None:
         out_of_sample_tab,
         strategy_stress_tab,
         quality_score_tab,
+        strategy_research_report_tab,
         chart_tab,
         backtest_tab,
         portfolio_tab,
@@ -560,6 +563,7 @@ def main() -> None:
             "样本外测试",
             "压力测试",
             "质量评分",
+            "研究报告",
             "单股分析",
             "单股回测",
             "组合回测",
@@ -2506,6 +2510,318 @@ def main() -> None:
                 label="下载 quality_score_checks.csv",
                 data=dataframe_to_csv(quality_checks_table),
                 file_name="quality_score_checks.csv",
+                mime="text/csv",
+            )
+
+    with strategy_research_report_tab:
+        render_section_header(
+            "研究报告",
+            "汇总策略研究过程中的回测、稳定性、样本外、压力测试、质量评分和风险提示。",
+        )
+        st.info(STRATEGY_RESEARCH_REPORT_WARNING)
+        st.caption("仅供投资研究，不构成投资建议，不代表未来收益。")
+        st.caption(f"当前市场：{market}；当前 watchlist：{selected_watchlist}；股票数量：{len(symbols)}")
+
+        try:
+            report_presets = load_strategy_presets()
+        except Exception as error:
+            report_presets = {}
+            st.warning(f"策略预设暂不可用：{error}")
+
+        report_preset_names = sorted(report_presets)
+        default_report_preset = "trend_default" if "trend_default" in report_presets else None
+        selected_report_preset_name = (
+            st.selectbox(
+                "策略预设",
+                report_preset_names,
+                index=report_preset_names.index(default_report_preset) if default_report_preset else 0,
+                disabled=not report_preset_names,
+                key="research_report_preset_name",
+            )
+            if report_preset_names
+            else None
+        )
+        selected_report_preset = report_presets.get(selected_report_preset_name or "", {})
+
+        report_col_a, report_col_b, report_col_c, report_col_d, report_col_e = st.columns(5)
+        with report_col_a:
+            report_initial_cash = st.number_input(
+                "初始资金",
+                min_value=10_000,
+                value=100_000,
+                step=10_000,
+                key="research_report_initial_cash",
+            )
+        with report_col_b:
+            include_report_stability = st.checkbox("纳入稳定性", value=True, key="include_report_stability")
+        with report_col_c:
+            include_report_oos = st.checkbox("纳入样本外", value=True, key="include_report_oos")
+        with report_col_d:
+            include_report_stress = st.checkbox("纳入压力测试", value=True, key="include_report_stress")
+        with report_col_e:
+            include_report_risk = st.checkbox("纳入风险控制", value=True, key="include_report_risk")
+
+        if st.button("生成策略研究报告"):
+            if not symbols:
+                st.info("当前 watchlist 为空，无法生成策略研究报告。")
+            elif not selected_report_preset:
+                st.warning("暂无可用策略预设。")
+            else:
+                try:
+                    price_data, failed_symbols = load_price_data_for_symbols(market, symbols, use_cache=cache_enabled)
+                    if failed_symbols:
+                        st.warning(f"以下股票数据源失败或不可用，已跳过：{', '.join(failed_symbols)}")
+                    if not price_data:
+                        st.error("没有可用于策略研究报告的数据。")
+                    else:
+                        if any(is_sample_data(data) for data in price_data.values()):
+                            st.warning(SAMPLE_WARNING)
+
+                        report_parameters = {
+                            "max_position_pct": float(selected_report_preset.get("max_position_pct", 0.15)),
+                            "rebalance_frequency": str(selected_report_preset.get("rebalance_frequency", "monthly")),
+                            "min_score_to_buy": int(selected_report_preset.get("min_score_to_buy", 80)),
+                            "min_score_to_hold": int(selected_report_preset.get("min_score_to_hold", 60)),
+                        }
+                        module_warnings = []
+
+                        try:
+                            base_backtest = run_portfolio_backtest(
+                                price_data,
+                                initial_cash=float(report_initial_cash),
+                                max_position_pct=report_parameters["max_position_pct"],
+                                rebalance_frequency=report_parameters["rebalance_frequency"],
+                                min_score_to_buy=report_parameters["min_score_to_buy"],
+                                min_score_to_hold=report_parameters["min_score_to_hold"],
+                            )
+                            backtest_summary = {**base_backtest.get("summary", {}), "status": "success"}
+                        except Exception as error:
+                            module_warnings.append(f"组合回测失败：{error}")
+                            backtest_summary = {
+                                "total_return": 0.0,
+                                "annualized_return": 0.0,
+                                "max_drawdown": 0.0,
+                                "number_of_trades": 0,
+                                "final_portfolio_value": 0.0,
+                                "status": "failed",
+                            }
+
+                        stability_summary = None
+                        if include_report_stability:
+                            try:
+                                window_results = []
+                                for window in split_backtest_windows(price_data, window_size=120, step_size=60):
+                                    try:
+                                        result = run_portfolio_backtest(
+                                            window.get("data", {}),
+                                            initial_cash=float(report_initial_cash),
+                                            max_position_pct=report_parameters["max_position_pct"],
+                                            rebalance_frequency=report_parameters["rebalance_frequency"],
+                                            min_score_to_buy=report_parameters["min_score_to_buy"],
+                                            min_score_to_hold=report_parameters["min_score_to_hold"],
+                                        )
+                                        summary = result["summary"]
+                                        window_results.append(
+                                            {
+                                                "window_name": window.get("window_name", "Window"),
+                                                "total_return": summary.get("total_return"),
+                                                "annualized_return": summary.get("annualized_return"),
+                                                "max_drawdown": summary.get("max_drawdown"),
+                                                "number_of_trades": summary.get("number_of_trades"),
+                                                "final_portfolio_value": summary.get("final_portfolio_value"),
+                                                "status": "success",
+                                            }
+                                        )
+                                    except Exception as error:
+                                        window_results.append(
+                                            {
+                                                "window_name": window.get("window_name", "Window"),
+                                                "total_return": 0.0,
+                                                "annualized_return": 0.0,
+                                                "max_drawdown": 0.0,
+                                                "number_of_trades": 0,
+                                                "final_portfolio_value": 0.0,
+                                                "status": "failed",
+                                                "error": str(error),
+                                            }
+                                        )
+                                stability_summary = build_strategy_stability_report(window_results, min_windows=3).get(
+                                    "summary",
+                                    {},
+                                )
+                            except Exception as error:
+                                module_warnings.append(f"稳定性汇总失败：{error}")
+
+                        out_of_sample_summary = None
+                        if include_report_oos:
+                            try:
+                                split_result = split_train_test_data(price_data, train_ratio=0.7)
+
+                                def run_report_period(period_name: str, period_data: dict[str, pd.DataFrame]) -> dict:
+                                    try:
+                                        result = run_portfolio_backtest(
+                                            period_data,
+                                            initial_cash=float(report_initial_cash),
+                                            max_position_pct=report_parameters["max_position_pct"],
+                                            rebalance_frequency=report_parameters["rebalance_frequency"],
+                                            min_score_to_buy=report_parameters["min_score_to_buy"],
+                                            min_score_to_hold=report_parameters["min_score_to_hold"],
+                                        )
+                                        summary = result["summary"]
+                                        return {
+                                            "period_name": period_name,
+                                            "total_return": summary.get("total_return"),
+                                            "annualized_return": summary.get("annualized_return"),
+                                            "max_drawdown": summary.get("max_drawdown"),
+                                            "number_of_trades": summary.get("number_of_trades"),
+                                            "final_portfolio_value": summary.get("final_portfolio_value"),
+                                            "status": "success",
+                                        }
+                                    except Exception as error:
+                                        return {
+                                            "period_name": period_name,
+                                            "total_return": 0.0,
+                                            "annualized_return": 0.0,
+                                            "max_drawdown": 0.0,
+                                            "number_of_trades": 0,
+                                            "final_portfolio_value": 0.0,
+                                            "status": "failed",
+                                            "error": str(error),
+                                        }
+
+                                out_of_sample_summary = build_out_of_sample_report(
+                                    run_report_period("Train", split_result.get("train", {})),
+                                    run_report_period("Out-of-sample", split_result.get("test", {})),
+                                    min_test_trades=3,
+                                ).get("summary", {})
+                            except Exception as error:
+                                module_warnings.append(f"样本外汇总失败：{error}")
+
+                        stress_summary = None
+                        if include_report_stress:
+                            try:
+                                stress_summary = build_strategy_stress_report(
+                                    {
+                                        "period_name": "Base",
+                                        "total_return": backtest_summary.get("total_return"),
+                                        "annualized_return": backtest_summary.get("annualized_return"),
+                                        "max_drawdown": backtest_summary.get("max_drawdown"),
+                                        "number_of_trades": backtest_summary.get("number_of_trades"),
+                                        "final_portfolio_value": backtest_summary.get("final_portfolio_value"),
+                                        "initial_cash": float(report_initial_cash),
+                                        "status": backtest_summary.get("status", "success"),
+                                    },
+                                    max_acceptable_drawdown=-0.25,
+                                ).get("summary", {})
+                            except Exception as error:
+                                module_warnings.append(f"压力测试汇总失败：{error}")
+
+                        risk_summary = None
+                        if include_report_risk:
+                            try:
+                                active_symbols = list(price_data) or symbols
+                                target_weight = min(0.9 / max(len(active_symbols), 1), 0.2)
+                                allocation_rows = [
+                                    {
+                                        "symbol": symbol,
+                                        "target_weight": target_weight,
+                                        "target_value": float(report_initial_cash) * target_weight,
+                                    }
+                                    for symbol in active_symbols
+                                ]
+                                risk_summary = build_risk_control_report(
+                                    allocation_rows,
+                                    portfolio_value=float(report_initial_cash),
+                                    cash_buffer_pct=0.1,
+                                    max_position_pct=0.2,
+                                    max_top3_pct=0.5,
+                                    min_positions=5,
+                                ).get("summary", {})
+                            except Exception as error:
+                                module_warnings.append(f"风险控制汇总失败：{error}")
+
+                        quality_report = build_backtest_quality_score(
+                            backtest_summary,
+                            stability_summary=stability_summary,
+                            out_of_sample_summary=out_of_sample_summary,
+                            stress_summary=stress_summary,
+                        )
+                        quality_summary = quality_report.get("summary", {})
+                        report = build_strategy_research_report(
+                            str(selected_report_preset_name or "trend_default"),
+                            symbols,
+                            backtest_summary,
+                            quality_summary,
+                            stability_summary=stability_summary,
+                            out_of_sample_summary=out_of_sample_summary,
+                            stress_summary=stress_summary,
+                            risk_summary=risk_summary,
+                            warnings=module_warnings + quality_report.get("warnings", []) + failed_symbols,
+                        )
+                        markdown_report = strategy_report_to_markdown(report)
+                        st.session_state["latest_strategy_research_report"] = report
+                        st.session_state["latest_strategy_research_markdown"] = markdown_report
+                except Exception as error:
+                    st.error(f"策略研究报告生成失败：{error}")
+
+        research_report = st.session_state.get("latest_strategy_research_report")
+        markdown_report = st.session_state.get("latest_strategy_research_markdown", "")
+        if research_report:
+            key_metrics = research_report.get("key_metrics", {})
+            quality_summary = research_report.get("quality_summary", {})
+            out_of_sample_summary = research_report.get("module_summaries", {}).get("out_of_sample", {})
+            stress_summary = research_report.get("module_summaries", {}).get("stress", {})
+            research_view = research_report.get("research_view", "Neutral")
+            if research_view == "Positive":
+                st.success(f"研究结论：{research_view}")
+            elif research_view == "Neutral":
+                st.warning(f"研究结论：{research_view}")
+            else:
+                st.error(f"研究结论：{research_view}")
+
+            render_metric_row(
+                [
+                    {"label": "研究结论", "value": research_view},
+                    {"label": "综合质量分", "value": key_metrics.get("quality_score", 0)},
+                    {"label": "质量等级", "value": key_metrics.get("quality_level", "N/A")},
+                    {"label": "总收益", "value": format_return_pct(key_metrics.get("total_return"))},
+                ]
+            )
+            render_metric_row(
+                [
+                    {"label": "最大回撤", "value": format_return_pct(key_metrics.get("max_drawdown"))},
+                    {"label": "样本外风险", "value": out_of_sample_summary.get("overfit_risk_level", "N/A")},
+                    {"label": "压力等级", "value": stress_summary.get("overall_stress_level", "N/A")},
+                    {"label": "数据质量分", "value": quality_summary.get("data_quality_score", 0)},
+                ]
+            )
+
+            risk_highlights = research_report.get("risk_highlights", [])
+            if risk_highlights:
+                render_section_header("主要风险", "汇总高优先级风险提示和输入缺口。")
+                for item in risk_highlights:
+                    st.warning(item)
+
+            warnings_table = pd.DataFrame({"warning": research_report.get("warnings", [])})
+            render_section_header("报告预览", "Markdown 报告可直接下载用于复盘。")
+            st.markdown(markdown_report)
+
+            st.download_button(
+                label="下载 strategy_research_report.json",
+                data=report_to_json_bytes(research_report),
+                file_name="strategy_research_report.json",
+                mime="application/json",
+            )
+            st.download_button(
+                label="下载 strategy_research_report.md",
+                data=text_to_download(markdown_report),
+                file_name="strategy_research_report.md",
+                mime="text/markdown",
+            )
+            st.download_button(
+                label="下载 strategy_research_warnings.csv",
+                data=dataframe_to_csv(warnings_table),
+                file_name="strategy_research_warnings.csv",
                 mime="text/csv",
             )
 
