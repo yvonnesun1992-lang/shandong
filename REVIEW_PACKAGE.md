@@ -244,6 +244,68 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.20: strategy stability center
+
+V1.20 目标：
+
+- 增加“策略稳定性评估中心”页面。
+- 支持把当前 watchlist 的历史数据拆成多个时间窗口。
+- 对每个窗口调用已有组合回测逻辑，并汇总多窗口表现。
+- 检查收益稳定性、回撤稳定性、胜率稳定性、样本数量风险和数据质量风险。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/strategies/stability.py
+tests/test_strategy_stability.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+策略稳定性评估中心功能说明：
+
+- `split_backtest_windows` 支持按行数切分 DataFrame 或组合 price_data dict。
+- `build_strategy_stability_report` 只分析已有多窗口回测结果，不重新实现核心回测逻辑。
+- 支持部分窗口失败，不让整体页面崩溃。
+- 输出窗口数量、成功窗口、失败窗口、正收益窗口、平均收益、最差收益、最差回撤、收益一致性分数、回撤一致性分数和稳定性等级。
+- 支持 Low / Medium / High 稳定性等级。
+- dashboard 新增“策略稳定性”tab，位于“风险控制中心”之后。
+- 支持选择 market、watchlist、strategy preset、initial_cash、window_size、step_size 和 min_windows。
+- 展示稳定性指标、窗口结果表、稳定性检查表、收益柱状图、回撤柱状图和最终资产折线图。
+- 支持下载 strategy_stability_report.json、stability_windows.csv 和 stability_checks.csv。
+- 所有输出均标注“仅供投资研究，不构成投资建议，不代表未来收益。”
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 247 passed
+system_doctor: passed
+dashboard: passed
+hidden/bidi scan: passed, risk_count=0
+```
+
+安全边界：
+
+```text
+是否改变核心策略逻辑：否
+UI 是否保持简约、美观、大方、实用：是
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：
