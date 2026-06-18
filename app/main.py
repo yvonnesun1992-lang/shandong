@@ -47,6 +47,7 @@ from src.strategies.presets import (
     save_strategy_preset,
 )
 from src.strategies.comparison import compare_strategy_presets
+from src.strategies.stability import build_strategy_stability_report, split_backtest_windows
 from src.system.health_check import health_check_to_dataframe, run_system_health_check
 from src.ui.layout import (
     dataframe_to_csv_bytes,
@@ -84,6 +85,7 @@ PORTFOLIO_BACKTEST_WARNING = "组合回测仅用于历史研究和功能演示�
 STRATEGY_COMPARISON_WARNING = "策略对比仅用于历史研究和功能演示。历史回测不代表未来收益，不构成投资建议。"
 ALLOCATION_LAB_WARNING = "组合配置实验室仅供投资研究，不构成投资建议，不代表未来收益，不会生成真实交易指令。"
 RISK_CONTROL_WARNING = "风险控制中心用于检查研究组合的仓位集中度、现金缓冲和基础风险暴露。结果仅供投资研究，不构成投资建议，不代表未来收益。"
+STRATEGY_STABILITY_WARNING = "策略稳定性用于检查同一策略在不同时间窗口中的表现是否稳定。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
@@ -524,6 +526,7 @@ def main() -> None:
         strategy_comparison_tab,
         allocation_lab_tab,
         risk_control_tab,
+        strategy_stability_tab,
         chart_tab,
         backtest_tab,
         portfolio_tab,
@@ -544,6 +547,7 @@ def main() -> None:
             "策略对比",
             "组合配置实验室",
             "风险控制中心",
+            "策略稳定性",
             "单股分析",
             "单股回测",
             "组合回测",
@@ -1410,6 +1414,251 @@ def main() -> None:
                 label="下载 risk_checks.csv",
                 data=dataframe_to_csv(checks_table),
                 file_name="risk_checks.csv",
+                mime="text/csv",
+            )
+
+    with strategy_stability_tab:
+        render_section_header(
+            "策略稳定性",
+            "检查同一策略在不同时间窗口里的表现是否稳定，避免只看单次回测结果。",
+        )
+        st.info(STRATEGY_STABILITY_WARNING)
+        st.caption("仅供投资研究，不构成投资建议，不代表未来收益。")
+        st.caption(f"当前市场：{market}；当前 watchlist：{selected_watchlist}；股票数量：{len(symbols)}")
+
+        try:
+            stability_presets = load_strategy_presets()
+        except Exception as error:
+            stability_presets = {}
+            st.warning(f"策略预设暂不可用：{error}")
+
+        stability_preset_names = sorted(stability_presets)
+        default_stability_preset = "trend_default" if "trend_default" in stability_presets else None
+        selected_stability_preset_name = (
+            st.selectbox(
+                "策略预设",
+                stability_preset_names,
+                index=stability_preset_names.index(default_stability_preset) if default_stability_preset else 0,
+                disabled=not stability_preset_names,
+                key="stability_preset_name",
+            )
+            if stability_preset_names
+            else None
+        )
+        selected_stability_preset = stability_presets.get(selected_stability_preset_name or "", {})
+
+        stability_col_a, stability_col_b, stability_col_c, stability_col_d = st.columns(4)
+        with stability_col_a:
+            stability_initial_cash = st.number_input(
+                "初始资金",
+                min_value=10_000,
+                value=100_000,
+                step=10_000,
+                key="stability_initial_cash",
+            )
+        with stability_col_b:
+            stability_window_size = st.number_input(
+                "窗口长度（行）",
+                min_value=60,
+                max_value=1000,
+                value=120,
+                step=20,
+                key="stability_window_size",
+            )
+        with stability_col_c:
+            stability_step_size = st.number_input(
+                "窗口步长（行）",
+                min_value=20,
+                max_value=1000,
+                value=60,
+                step=20,
+                key="stability_step_size",
+            )
+        with stability_col_d:
+            stability_min_windows = st.number_input(
+                "最低成功窗口数",
+                min_value=1,
+                max_value=20,
+                value=3,
+                step=1,
+                key="stability_min_windows",
+            )
+
+        if st.button("生成策略稳定性报告"):
+            if not symbols:
+                st.info("当前 watchlist 为空，无法生成策略稳定性报告。")
+            elif not selected_stability_preset:
+                st.warning("暂无可用策略预设。")
+            else:
+                try:
+                    price_data, failed_symbols = load_price_data_for_symbols(market, symbols, use_cache=cache_enabled)
+                    if failed_symbols:
+                        st.warning(f"以下股票数据源失败或不可用，已跳过：{', '.join(failed_symbols)}")
+                    if not price_data:
+                        st.error("没有可用于策略稳定性评估的数据。")
+                    else:
+                        if any(is_sample_data(data) for data in price_data.values()):
+                            st.warning(SAMPLE_WARNING)
+                        windows = split_backtest_windows(
+                            price_data,
+                            window_size=int(stability_window_size),
+                            step_size=int(stability_step_size),
+                        )
+                        if not windows:
+                            st.warning("可用历史数据不足，无法切出稳定性评估窗口。")
+
+                        backtest_results = []
+                        parameters = {
+                            "max_position_pct": float(selected_stability_preset.get("max_position_pct", 0.15)),
+                            "rebalance_frequency": str(selected_stability_preset.get("rebalance_frequency", "monthly")),
+                            "min_score_to_buy": int(selected_stability_preset.get("min_score_to_buy", 80)),
+                            "min_score_to_hold": int(selected_stability_preset.get("min_score_to_hold", 60)),
+                        }
+                        for window in windows:
+                            window_name = str(window.get("window_name", "Window"))
+                            try:
+                                result = run_portfolio_backtest(
+                                    window.get("data", {}),
+                                    initial_cash=float(stability_initial_cash),
+                                    max_position_pct=parameters["max_position_pct"],
+                                    rebalance_frequency=parameters["rebalance_frequency"],
+                                    min_score_to_buy=parameters["min_score_to_buy"],
+                                    min_score_to_hold=parameters["min_score_to_hold"],
+                                )
+                                summary = result["summary"]
+                                backtest_results.append(
+                                    {
+                                        "window_name": window_name,
+                                        "start_date": window.get("start_date"),
+                                        "end_date": window.get("end_date"),
+                                        "total_return": summary.get("total_return"),
+                                        "annualized_return": summary.get("annualized_return"),
+                                        "max_drawdown": summary.get("max_drawdown"),
+                                        "number_of_trades": summary.get("number_of_trades"),
+                                        "final_portfolio_value": summary.get("final_portfolio_value"),
+                                        "status": "success",
+                                    }
+                                )
+                            except Exception as error:
+                                backtest_results.append(
+                                    {
+                                        "window_name": window_name,
+                                        "start_date": window.get("start_date"),
+                                        "end_date": window.get("end_date"),
+                                        "total_return": 0.0,
+                                        "annualized_return": 0.0,
+                                        "max_drawdown": 0.0,
+                                        "number_of_trades": 0,
+                                        "final_portfolio_value": 0.0,
+                                        "status": "failed",
+                                        "error": str(error),
+                                    }
+                                )
+
+                        stability_report = build_strategy_stability_report(
+                            backtest_results,
+                            min_windows=int(stability_min_windows),
+                        )
+                        stability_report["input"] = {
+                            "market": market,
+                            "watchlist_name": selected_watchlist,
+                            "strategy_preset": selected_stability_preset_name,
+                            "initial_cash": float(stability_initial_cash),
+                            "window_size": int(stability_window_size),
+                            "step_size": int(stability_step_size),
+                            "min_windows": int(stability_min_windows),
+                            "parameters": parameters,
+                            "failed_symbols": failed_symbols,
+                        }
+                        st.session_state["latest_strategy_stability_report"] = stability_report
+                except Exception as error:
+                    st.error(f"策略稳定性评估失败：{error}")
+
+        stability_report = st.session_state.get("latest_strategy_stability_report")
+        if stability_report:
+            stability_summary = stability_report.get("summary", {})
+            stability_level = stability_summary.get("stability_level", "N/A")
+            if stability_level == "High":
+                st.success(f"稳定性等级：{stability_level}")
+            elif stability_level == "Medium":
+                st.warning(f"稳定性等级：{stability_level}")
+            else:
+                st.error(f"稳定性等级：{stability_level}")
+
+            render_metric_row(
+                [
+                    {"label": "成功窗口数", "value": stability_summary.get("success_windows", 0)},
+                    {"label": "失败窗口数", "value": stability_summary.get("failed_windows", 0)},
+                    {"label": "正收益窗口数", "value": stability_summary.get("positive_return_windows", 0)},
+                    {"label": "平均收益", "value": format_return_pct(stability_summary.get("average_total_return"))},
+                ]
+            )
+            render_metric_row(
+                [
+                    {"label": "最差收益", "value": format_return_pct(stability_summary.get("worst_total_return"))},
+                    {"label": "最差回撤", "value": format_return_pct(stability_summary.get("worst_max_drawdown"))},
+                    {"label": "收益一致性分数", "value": f"{stability_summary.get('return_consistency_score', 0):.2f}"},
+                    {"label": "回撤一致性分数", "value": f"{stability_summary.get('drawdown_consistency_score', 0):.2f}"},
+                ]
+            )
+
+            stability_warnings = stability_report.get("warnings", [])
+            if stability_warnings:
+                render_section_header("稳定性提示", "按收益、回撤、胜率、样本数量和数据质量查看。")
+                for warning in stability_warnings:
+                    st.warning(warning)
+
+            stability_windows_table = pd.DataFrame(stability_report.get("window_results", []))
+            render_section_header("窗口结果表", "逐个时间窗口查看组合回测表现。")
+            if stability_windows_table.empty:
+                render_empty_state("暂无窗口结果。")
+            else:
+                window_columns = [
+                    "window_name",
+                    "total_return",
+                    "annualized_return",
+                    "max_drawdown",
+                    "number_of_trades",
+                    "final_portfolio_value",
+                    "status",
+                ]
+                st.dataframe(stability_windows_table[window_columns], use_container_width=True, hide_index=True)
+                successful_windows = stability_windows_table[stability_windows_table["status"] == "success"].copy()
+                if not successful_windows.empty:
+                    render_section_header("窗口图表", "观察不同时间窗口的收益、回撤和最终资产变化。")
+                    st.bar_chart(successful_windows[["window_name", "total_return"]].set_index("window_name"))
+                    st.bar_chart(successful_windows[["window_name", "max_drawdown"]].set_index("window_name"))
+                    st.line_chart(successful_windows[["window_name", "final_portfolio_value"]].set_index("window_name"))
+                if (stability_windows_table["status"] != "success").any():
+                    st.warning("部分窗口失败，已记录在窗口结果表中。")
+
+            stability_checks_table = pd.DataFrame(stability_report.get("checks", []))
+            render_section_header("稳定性检查表", "逐项查看 pass / warn / fail。")
+            if stability_checks_table.empty:
+                render_empty_state("暂无稳定性检查结果。")
+            else:
+                st.dataframe(
+                    stability_checks_table[["name", "status", "message"]],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            st.download_button(
+                label="下载 strategy_stability_report.json",
+                data=report_to_json_bytes(stability_report),
+                file_name="strategy_stability_report.json",
+                mime="application/json",
+            )
+            st.download_button(
+                label="下载 stability_windows.csv",
+                data=dataframe_to_csv(stability_windows_table),
+                file_name="stability_windows.csv",
+                mime="text/csv",
+            )
+            st.download_button(
+                label="下载 stability_checks.csv",
+                data=dataframe_to_csv(stability_checks_table),
+                file_name="stability_checks.csv",
                 mime="text/csv",
             )
 
