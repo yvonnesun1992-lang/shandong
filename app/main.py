@@ -49,6 +49,7 @@ from src.strategies.presets import (
 from src.strategies.comparison import compare_strategy_presets
 from src.strategies.out_of_sample import build_out_of_sample_report, split_train_test_data
 from src.strategies.stability import build_strategy_stability_report, split_backtest_windows
+from src.strategies.stress_test import build_strategy_stress_report
 from src.system.health_check import health_check_to_dataframe, run_system_health_check
 from src.ui.layout import (
     dataframe_to_csv_bytes,
@@ -88,6 +89,7 @@ ALLOCATION_LAB_WARNING = "组合配置实验室仅供投资研究，不构成投
 RISK_CONTROL_WARNING = "风险控制中心用于检查研究组合的仓位集中度、现金缓冲和基础风险暴露。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 STRATEGY_STABILITY_WARNING = "策略稳定性用于检查同一策略在不同时间窗口中的表现是否稳定。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 OUT_OF_SAMPLE_WARNING = "样本外测试用于比较策略在训练区间和未知测试区间的表现，帮助识别过拟合风险。结果仅供投资研究，不构成投资建议，不代表未来收益。"
+STRATEGY_STRESS_WARNING = "压力测试用于估算策略在不利情景下的收益下修和回撤放大风险。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
@@ -530,6 +532,7 @@ def main() -> None:
         risk_control_tab,
         strategy_stability_tab,
         out_of_sample_tab,
+        strategy_stress_tab,
         chart_tab,
         backtest_tab,
         portfolio_tab,
@@ -552,6 +555,7 @@ def main() -> None:
             "风险控制中心",
             "策略稳定性",
             "样本外测试",
+            "压力测试",
             "单股分析",
             "单股回测",
             "组合回测",
@@ -1901,6 +1905,293 @@ def main() -> None:
                 label="下载 out_of_sample_checks.csv",
                 data=dataframe_to_csv(out_of_sample_checks_table),
                 file_name="out_of_sample_checks.csv",
+                mime="text/csv",
+            )
+
+    with strategy_stress_tab:
+        render_section_header(
+            "压力测试",
+            "估算策略在不利情景下的收益下修、回撤放大和资金损失风险。",
+        )
+        st.info(STRATEGY_STRESS_WARNING)
+        st.caption("仅供投资研究，不构成投资建议，不代表未来收益。")
+        st.caption(f"当前市场：{market}；当前 watchlist：{selected_watchlist}；股票数量：{len(symbols)}")
+
+        try:
+            stress_presets = load_strategy_presets()
+        except Exception as error:
+            stress_presets = {}
+            st.warning(f"策略预设暂不可用：{error}")
+
+        stress_preset_names = sorted(stress_presets)
+        default_stress_preset = "trend_default" if "trend_default" in stress_presets else None
+        selected_stress_preset_name = (
+            st.selectbox(
+                "策略预设",
+                stress_preset_names,
+                index=stress_preset_names.index(default_stress_preset) if default_stress_preset else 0,
+                disabled=not stress_preset_names,
+                key="stress_preset_name",
+            )
+            if stress_preset_names
+            else None
+        )
+        selected_stress_preset = stress_presets.get(selected_stress_preset_name or "", {})
+
+        stress_col_a, stress_col_b = st.columns(2)
+        with stress_col_a:
+            stress_initial_cash = st.number_input(
+                "初始资金",
+                min_value=10_000,
+                value=100_000,
+                step=10_000,
+                key="stress_initial_cash",
+            )
+        with stress_col_b:
+            stress_max_drawdown_pct = st.slider(
+                "最大可接受回撤",
+                min_value=5,
+                max_value=80,
+                value=25,
+                step=5,
+                key="stress_max_drawdown_pct",
+            )
+
+        shock_col_a, shock_col_b, shock_col_c = st.columns(3)
+        with shock_col_a:
+            mild_return_shock_pct = st.number_input(
+                "轻度压力收益下修",
+                min_value=-100,
+                max_value=0,
+                value=-10,
+                step=5,
+                key="mild_return_shock_pct",
+            )
+        with shock_col_b:
+            moderate_return_shock_pct = st.number_input(
+                "中度压力收益下修",
+                min_value=-100,
+                max_value=0,
+                value=-20,
+                step=5,
+                key="moderate_return_shock_pct",
+            )
+        with shock_col_c:
+            severe_return_shock_pct = st.number_input(
+                "重度压力收益下修",
+                min_value=-100,
+                max_value=0,
+                value=-35,
+                step=5,
+                key="severe_return_shock_pct",
+            )
+
+        multiplier_col_a, multiplier_col_b, multiplier_col_c = st.columns(3)
+        with multiplier_col_a:
+            mild_drawdown_multiplier = st.number_input(
+                "轻度压力回撤倍数",
+                min_value=0.10,
+                max_value=10.0,
+                value=1.25,
+                step=0.05,
+                key="mild_drawdown_multiplier",
+            )
+        with multiplier_col_b:
+            moderate_drawdown_multiplier = st.number_input(
+                "中度压力回撤倍数",
+                min_value=0.10,
+                max_value=10.0,
+                value=1.75,
+                step=0.05,
+                key="moderate_drawdown_multiplier",
+            )
+        with multiplier_col_c:
+            severe_drawdown_multiplier = st.number_input(
+                "重度压力回撤倍数",
+                min_value=0.10,
+                max_value=10.0,
+                value=2.50,
+                step=0.05,
+                key="severe_drawdown_multiplier",
+            )
+
+        if st.button("生成压力测试报告"):
+            if not symbols:
+                st.info("当前 watchlist 为空，无法生成压力测试报告。")
+            elif not selected_stress_preset:
+                st.warning("暂无可用策略预设。")
+            else:
+                try:
+                    price_data, failed_symbols = load_price_data_for_symbols(market, symbols, use_cache=cache_enabled)
+                    if failed_symbols:
+                        st.warning(f"以下股票数据源失败或不可用，已跳过：{', '.join(failed_symbols)}")
+                    if not price_data:
+                        st.error("没有可用于压力测试的数据。")
+                    else:
+                        if any(is_sample_data(data) for data in price_data.values()):
+                            st.warning(SAMPLE_WARNING)
+
+                        stress_parameters = {
+                            "max_position_pct": float(selected_stress_preset.get("max_position_pct", 0.15)),
+                            "rebalance_frequency": str(selected_stress_preset.get("rebalance_frequency", "monthly")),
+                            "min_score_to_buy": int(selected_stress_preset.get("min_score_to_buy", 80)),
+                            "min_score_to_hold": int(selected_stress_preset.get("min_score_to_hold", 60)),
+                        }
+                        try:
+                            stress_backtest_result = run_portfolio_backtest(
+                                price_data,
+                                initial_cash=float(stress_initial_cash),
+                                max_position_pct=stress_parameters["max_position_pct"],
+                                rebalance_frequency=stress_parameters["rebalance_frequency"],
+                                min_score_to_buy=stress_parameters["min_score_to_buy"],
+                                min_score_to_hold=stress_parameters["min_score_to_hold"],
+                            )
+                            stress_summary = stress_backtest_result["summary"]
+                            base_result = {
+                                "period_name": "Base",
+                                "total_return": stress_summary.get("total_return"),
+                                "annualized_return": stress_summary.get("annualized_return"),
+                                "max_drawdown": stress_summary.get("max_drawdown"),
+                                "number_of_trades": stress_summary.get("number_of_trades"),
+                                "final_portfolio_value": stress_summary.get("final_portfolio_value"),
+                                "initial_cash": float(stress_initial_cash),
+                                "status": "success",
+                            }
+                        except Exception as error:
+                            st.warning(f"基准组合回测失败，仍会生成失败状态压力报告：{error}")
+                            base_result = {
+                                "period_name": "Base",
+                                "total_return": 0.0,
+                                "annualized_return": 0.0,
+                                "max_drawdown": 0.0,
+                                "number_of_trades": 0,
+                                "final_portfolio_value": 0.0,
+                                "initial_cash": float(stress_initial_cash),
+                                "status": "failed",
+                                "error": str(error),
+                            }
+
+                        stress_scenarios = [
+                            {
+                                "scenario_name": "轻度压力",
+                                "return_shock": float(mild_return_shock_pct) / 100.0,
+                                "drawdown_multiplier": float(mild_drawdown_multiplier),
+                            },
+                            {
+                                "scenario_name": "中度压力",
+                                "return_shock": float(moderate_return_shock_pct) / 100.0,
+                                "drawdown_multiplier": float(moderate_drawdown_multiplier),
+                            },
+                            {
+                                "scenario_name": "重度压力",
+                                "return_shock": float(severe_return_shock_pct) / 100.0,
+                                "drawdown_multiplier": float(severe_drawdown_multiplier),
+                            },
+                        ]
+                        stress_report = build_strategy_stress_report(
+                            base_result,
+                            scenarios=stress_scenarios,
+                            max_acceptable_drawdown=-float(stress_max_drawdown_pct) / 100.0,
+                        )
+                        stress_report["input"] = {
+                            "market": market,
+                            "watchlist_name": selected_watchlist,
+                            "strategy_preset": selected_stress_preset_name,
+                            "initial_cash": float(stress_initial_cash),
+                            "max_acceptable_drawdown": -float(stress_max_drawdown_pct) / 100.0,
+                            "parameters": stress_parameters,
+                            "scenarios": stress_scenarios,
+                            "failed_symbols": failed_symbols,
+                        }
+                        st.session_state["latest_strategy_stress_report"] = stress_report
+                except Exception as error:
+                    st.error(f"压力测试失败：{error}")
+
+        stress_report = st.session_state.get("latest_strategy_stress_report")
+        if stress_report:
+            stress_summary = stress_report.get("summary", {})
+            overall_stress_level = stress_summary.get("overall_stress_level", "N/A")
+            if overall_stress_level == "Low":
+                st.success(f"总体压力等级：{overall_stress_level}")
+            elif overall_stress_level == "Medium":
+                st.warning(f"总体压力等级：{overall_stress_level}")
+            else:
+                st.error(f"总体压力等级：{overall_stress_level}")
+
+            render_metric_row(
+                [
+                    {"label": "总体压力等级", "value": overall_stress_level},
+                    {"label": "基准收益", "value": format_return_pct(stress_summary.get("base_total_return"))},
+                    {"label": "基准最大回撤", "value": format_return_pct(stress_summary.get("base_max_drawdown"))},
+                    {"label": "最差情景", "value": stress_summary.get("worst_scenario_name", "N/A")},
+                ]
+            )
+            render_metric_row(
+                [
+                    {"label": "最差压力收益", "value": format_return_pct(stress_summary.get("worst_stressed_return"))},
+                    {"label": "最差压力回撤", "value": format_return_pct(stress_summary.get("worst_stressed_drawdown"))},
+                    {"label": "最大估算损失", "value": f"{stress_summary.get('worst_estimated_loss', 0):,.2f}"},
+                    {"label": "最大可接受回撤", "value": format_return_pct(stress_summary.get("max_acceptable_drawdown"))},
+                ]
+            )
+
+            stress_warnings = stress_report.get("warnings", [])
+            if stress_warnings:
+                render_section_header("压力风险提示", "按收益下修、回撤放大、资金损失和数据质量查看。")
+                for warning in stress_warnings:
+                    st.warning(warning)
+
+            stress_scenarios_table = pd.DataFrame(stress_report.get("scenario_results", []))
+            render_section_header("情景结果表", "查看轻度、中度、重度压力下的估算表现。")
+            if stress_scenarios_table.empty:
+                render_empty_state("暂无压力测试情景结果。")
+            else:
+                stress_scenario_columns = [
+                    "scenario_name",
+                    "stressed_total_return",
+                    "stressed_max_drawdown",
+                    "stressed_final_value",
+                    "estimated_loss_value",
+                    "drawdown_breach",
+                    "scenario_risk_level",
+                ]
+                st.dataframe(
+                    stress_scenarios_table[stress_scenario_columns],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+                render_section_header("压力测试图表", "观察各情景收益、回撤和最终资产变化。")
+                st.bar_chart(stress_scenarios_table[["scenario_name", "stressed_total_return"]].set_index("scenario_name"))
+                st.bar_chart(stress_scenarios_table[["scenario_name", "stressed_max_drawdown"]].set_index("scenario_name"))
+                st.bar_chart(stress_scenarios_table[["scenario_name", "stressed_final_value"]].set_index("scenario_name"))
+
+            stress_checks_table = pd.DataFrame(stress_report.get("checks", []))
+            render_section_header("压力检查表", "逐项查看 pass / warn / fail。")
+            if stress_checks_table.empty:
+                render_empty_state("暂无压力检查结果。")
+            else:
+                st.dataframe(
+                    stress_checks_table[["name", "status", "message"]],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            st.download_button(
+                label="下载 strategy_stress_report.json",
+                data=report_to_json_bytes(stress_report),
+                file_name="strategy_stress_report.json",
+                mime="application/json",
+            )
+            st.download_button(
+                label="下载 stress_scenarios.csv",
+                data=dataframe_to_csv(stress_scenarios_table),
+                file_name="stress_scenarios.csv",
+                mime="text/csv",
+            )
+            st.download_button(
+                label="下载 stress_checks.csv",
+                data=dataframe_to_csv(stress_checks_table),
+                file_name="stress_checks.csv",
                 mime="text/csv",
             )
 
