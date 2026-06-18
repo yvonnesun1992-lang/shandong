@@ -306,6 +306,72 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.21: out-of-sample test center
+
+V1.21 目标：
+
+- 增加“样本外测试中心”页面。
+- 支持把当前 watchlist 的历史数据按行数切分为训练区间和未知测试区间。
+- 对训练区间和样本外测试区间调用已有组合回测逻辑。
+- 汇总训练收益、样本外收益、收益衰减、最大回撤、回撤恶化和交易次数。
+- 输出 Low / Medium / High 过拟合风险等级。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/strategies/out_of_sample.py
+tests/test_out_of_sample.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+样本外测试中心功能说明：
+
+- `split_train_test_data` 支持 DataFrame 和组合 price_data dict，按 train_ratio 切分训练和测试数据。
+- `split_train_test_data` 会把 train_ratio 限制在 0.5 到 0.9 之间，并对数据不足情况返回 warnings。
+- `build_out_of_sample_report` 只分析训练和样本外回测摘要，不重新实现核心回测。
+- 支持训练区间或测试区间失败，不让页面崩溃。
+- 支持训练为正收益、样本外为负收益时标记 High 风险。
+- 支持收益明显衰减、样本外回撤恶化、样本外交易次数不足提示。
+- dashboard 新增“样本外测试”tab，位于“策略稳定性”之后、“单股分析”之前。
+- 支持选择 market、watchlist、strategy preset、initial_cash、train_ratio 和 min_test_trades。
+- 展示过拟合风险、训练/样本外收益、收益衰减、训练/样本外最大回撤、回撤恶化和样本外交易数。
+- 展示训练/样本外对比表、检查表、收益柱状图、回撤柱状图和最终资产柱状图。
+- 支持下载 out_of_sample_report.json、out_of_sample_periods.csv 和 out_of_sample_checks.csv。
+- 所有输出均标注“仅供投资研究，不构成投资建议，不代表未来收益。”
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 258 passed
+system_doctor: passed
+dashboard: returned 200
+hidden/bidi scan: passed, risk_count=0
+```
+
+安全边界：
+
+```text
+是否改变核心策略逻辑：否
+是否改变 allocation/risk 逻辑：否
+UI 是否保持简约、美观、大方、实用：是
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：
