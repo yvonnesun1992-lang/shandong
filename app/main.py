@@ -47,6 +47,7 @@ from src.strategies.presets import (
     save_strategy_preset,
 )
 from src.strategies.comparison import compare_strategy_presets
+from src.strategies.out_of_sample import build_out_of_sample_report, split_train_test_data
 from src.strategies.stability import build_strategy_stability_report, split_backtest_windows
 from src.system.health_check import health_check_to_dataframe, run_system_health_check
 from src.ui.layout import (
@@ -86,6 +87,7 @@ STRATEGY_COMPARISON_WARNING = "策略对比仅用于历史研究和功能演示�
 ALLOCATION_LAB_WARNING = "组合配置实验室仅供投资研究，不构成投资建议，不代表未来收益，不会生成真实交易指令。"
 RISK_CONTROL_WARNING = "风险控制中心用于检查研究组合的仓位集中度、现金缓冲和基础风险暴露。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 STRATEGY_STABILITY_WARNING = "策略稳定性用于检查同一策略在不同时间窗口中的表现是否稳定。结果仅供投资研究，不构成投资建议，不代表未来收益。"
+OUT_OF_SAMPLE_WARNING = "样本外测试用于比较策略在训练区间和未知测试区间的表现，帮助识别过拟合风险。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
@@ -527,6 +529,7 @@ def main() -> None:
         allocation_lab_tab,
         risk_control_tab,
         strategy_stability_tab,
+        out_of_sample_tab,
         chart_tab,
         backtest_tab,
         portfolio_tab,
@@ -548,6 +551,7 @@ def main() -> None:
             "组合配置实验室",
             "风险控制中心",
             "策略稳定性",
+            "样本外测试",
             "单股分析",
             "单股回测",
             "组合回测",
@@ -1659,6 +1663,244 @@ def main() -> None:
                 label="下载 stability_checks.csv",
                 data=dataframe_to_csv(stability_checks_table),
                 file_name="stability_checks.csv",
+                mime="text/csv",
+            )
+
+    with out_of_sample_tab:
+        render_section_header(
+            "样本外测试",
+            "比较训练区间和未知测试区间表现，用于识别策略过拟合风险。",
+        )
+        st.info(OUT_OF_SAMPLE_WARNING)
+        st.caption("仅供投资研究，不构成投资建议，不代表未来收益。")
+        st.caption(f"当前市场：{market}；当前 watchlist：{selected_watchlist}；股票数量：{len(symbols)}")
+
+        try:
+            out_of_sample_presets = load_strategy_presets()
+        except Exception as error:
+            out_of_sample_presets = {}
+            st.warning(f"策略预设暂不可用：{error}")
+
+        out_of_sample_preset_names = sorted(out_of_sample_presets)
+        default_out_of_sample_preset = "trend_default" if "trend_default" in out_of_sample_presets else None
+        selected_out_of_sample_preset_name = (
+            st.selectbox(
+                "策略预设",
+                out_of_sample_preset_names,
+                index=out_of_sample_preset_names.index(default_out_of_sample_preset)
+                if default_out_of_sample_preset
+                else 0,
+                disabled=not out_of_sample_preset_names,
+                key="out_of_sample_preset_name",
+            )
+            if out_of_sample_preset_names
+            else None
+        )
+        selected_out_of_sample_preset = out_of_sample_presets.get(selected_out_of_sample_preset_name or "", {})
+
+        sample_col_a, sample_col_b, sample_col_c = st.columns(3)
+        with sample_col_a:
+            out_of_sample_initial_cash = st.number_input(
+                "初始资金",
+                min_value=10_000,
+                value=100_000,
+                step=10_000,
+                key="out_of_sample_initial_cash",
+            )
+        with sample_col_b:
+            out_of_sample_train_ratio_pct = st.slider(
+                "训练区间比例",
+                min_value=50,
+                max_value=90,
+                value=70,
+                step=5,
+                key="out_of_sample_train_ratio_pct",
+            )
+        with sample_col_c:
+            out_of_sample_min_test_trades = st.number_input(
+                "最低样本外交易数",
+                min_value=0,
+                max_value=100,
+                value=3,
+                step=1,
+                key="out_of_sample_min_test_trades",
+            )
+
+        if st.button("生成样本外测试报告"):
+            if not symbols:
+                st.info("当前 watchlist 为空，无法生成样本外测试报告。")
+            elif not selected_out_of_sample_preset:
+                st.warning("暂无可用策略预设。")
+            else:
+                try:
+                    price_data, failed_symbols = load_price_data_for_symbols(market, symbols, use_cache=cache_enabled)
+                    if failed_symbols:
+                        st.warning(f"以下股票数据源失败或不可用，已跳过：{', '.join(failed_symbols)}")
+                    if not price_data:
+                        st.error("没有可用于样本外测试的数据。")
+                    else:
+                        if any(is_sample_data(data) for data in price_data.values()):
+                            st.warning(SAMPLE_WARNING)
+
+                        split_result = split_train_test_data(
+                            price_data,
+                            train_ratio=float(out_of_sample_train_ratio_pct) / 100.0,
+                        )
+                        for warning in split_result.get("warnings", []):
+                            st.warning(warning)
+
+                        parameters = {
+                            "max_position_pct": float(selected_out_of_sample_preset.get("max_position_pct", 0.15)),
+                            "rebalance_frequency": str(
+                                selected_out_of_sample_preset.get("rebalance_frequency", "monthly")
+                            ),
+                            "min_score_to_buy": int(selected_out_of_sample_preset.get("min_score_to_buy", 80)),
+                            "min_score_to_hold": int(selected_out_of_sample_preset.get("min_score_to_hold", 60)),
+                        }
+
+                        def run_out_of_sample_period(period_name: str, period_data: dict[str, pd.DataFrame]) -> dict:
+                            try:
+                                result = run_portfolio_backtest(
+                                    period_data,
+                                    initial_cash=float(out_of_sample_initial_cash),
+                                    max_position_pct=parameters["max_position_pct"],
+                                    rebalance_frequency=parameters["rebalance_frequency"],
+                                    min_score_to_buy=parameters["min_score_to_buy"],
+                                    min_score_to_hold=parameters["min_score_to_hold"],
+                                )
+                                summary = result["summary"]
+                                return {
+                                    "period_name": period_name,
+                                    "total_return": summary.get("total_return"),
+                                    "annualized_return": summary.get("annualized_return"),
+                                    "max_drawdown": summary.get("max_drawdown"),
+                                    "number_of_trades": summary.get("number_of_trades"),
+                                    "final_portfolio_value": summary.get("final_portfolio_value"),
+                                    "status": "success",
+                                }
+                            except Exception as error:
+                                return {
+                                    "period_name": period_name,
+                                    "total_return": 0.0,
+                                    "annualized_return": 0.0,
+                                    "max_drawdown": 0.0,
+                                    "number_of_trades": 0,
+                                    "final_portfolio_value": 0.0,
+                                    "status": "failed",
+                                    "error": str(error),
+                                }
+
+                        train_result = run_out_of_sample_period("Train", split_result.get("train", {}))
+                        test_result = run_out_of_sample_period("Out-of-sample", split_result.get("test", {}))
+                        out_of_sample_report = build_out_of_sample_report(
+                            train_result,
+                            test_result,
+                            min_test_trades=int(out_of_sample_min_test_trades),
+                        )
+                        out_of_sample_report["input"] = {
+                            "market": market,
+                            "watchlist_name": selected_watchlist,
+                            "strategy_preset": selected_out_of_sample_preset_name,
+                            "initial_cash": float(out_of_sample_initial_cash),
+                            "train_ratio": float(out_of_sample_train_ratio_pct) / 100.0,
+                            "min_test_trades": int(out_of_sample_min_test_trades),
+                            "train_rows": split_result.get("train_rows", 0),
+                            "test_rows": split_result.get("test_rows", 0),
+                            "parameters": parameters,
+                            "failed_symbols": failed_symbols,
+                            "split_warnings": split_result.get("warnings", []),
+                        }
+                        st.session_state["latest_out_of_sample_report"] = out_of_sample_report
+                except Exception as error:
+                    st.error(f"样本外测试失败：{error}")
+
+        out_of_sample_report = st.session_state.get("latest_out_of_sample_report")
+        if out_of_sample_report:
+            out_of_sample_summary = out_of_sample_report.get("summary", {})
+            overfit_risk_level = out_of_sample_summary.get("overfit_risk_level", "N/A")
+            if overfit_risk_level == "Low":
+                st.success(f"过拟合风险：{overfit_risk_level}")
+            elif overfit_risk_level == "Medium":
+                st.warning(f"过拟合风险：{overfit_risk_level}")
+            else:
+                st.error(f"过拟合风险：{overfit_risk_level}")
+
+            render_metric_row(
+                [
+                    {"label": "过拟合风险", "value": overfit_risk_level},
+                    {"label": "训练收益", "value": format_return_pct(out_of_sample_summary.get("train_total_return"))},
+                    {"label": "样本外收益", "value": format_return_pct(out_of_sample_summary.get("test_total_return"))},
+                    {"label": "收益衰减", "value": format_return_pct(out_of_sample_summary.get("return_decay"))},
+                ]
+            )
+            render_metric_row(
+                [
+                    {"label": "训练最大回撤", "value": format_return_pct(out_of_sample_summary.get("train_max_drawdown"))},
+                    {"label": "样本外最大回撤", "value": format_return_pct(out_of_sample_summary.get("test_max_drawdown"))},
+                    {"label": "回撤恶化", "value": format_return_pct(out_of_sample_summary.get("drawdown_worsening"))},
+                    {"label": "样本外交易数", "value": out_of_sample_summary.get("test_trades", 0)},
+                ]
+            )
+
+            out_of_sample_warnings = out_of_sample_report.get("warnings", [])
+            if out_of_sample_warnings:
+                render_section_header("样本外提示", "按收益衰减、回撤恶化、样本数量和数据质量查看。")
+                for warning in out_of_sample_warnings:
+                    st.warning(warning)
+
+            period_results_table = pd.DataFrame(out_of_sample_report.get("period_results", []))
+            render_section_header("训练 / 样本外对比表", "查看训练区间和未知测试区间的组合回测表现。")
+            if period_results_table.empty:
+                render_empty_state("暂无样本外测试结果。")
+            else:
+                period_columns = [
+                    "period_name",
+                    "total_return",
+                    "annualized_return",
+                    "max_drawdown",
+                    "number_of_trades",
+                    "final_portfolio_value",
+                    "status",
+                ]
+                st.dataframe(period_results_table[period_columns], use_container_width=True, hide_index=True)
+                successful_periods = period_results_table[period_results_table["status"] == "success"].copy()
+                if not successful_periods.empty:
+                    render_section_header("样本外图表", "观察训练区间和样本外区间的收益、回撤和最终资产差异。")
+                    st.bar_chart(successful_periods[["period_name", "total_return"]].set_index("period_name"))
+                    st.bar_chart(successful_periods[["period_name", "max_drawdown"]].set_index("period_name"))
+                    st.bar_chart(
+                        successful_periods[["period_name", "final_portfolio_value"]].set_index("period_name")
+                    )
+                if (period_results_table["status"] != "success").any():
+                    st.warning("训练区间或样本外区间回测失败，已记录在对比表中。")
+
+            out_of_sample_checks_table = pd.DataFrame(out_of_sample_report.get("checks", []))
+            render_section_header("样本外检查表", "逐项查看 pass / warn / fail。")
+            if out_of_sample_checks_table.empty:
+                render_empty_state("暂无样本外检查结果。")
+            else:
+                st.dataframe(
+                    out_of_sample_checks_table[["name", "status", "message"]],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            st.download_button(
+                label="下载 out_of_sample_report.json",
+                data=report_to_json_bytes(out_of_sample_report),
+                file_name="out_of_sample_report.json",
+                mime="application/json",
+            )
+            st.download_button(
+                label="下载 out_of_sample_periods.csv",
+                data=dataframe_to_csv(period_results_table),
+                file_name="out_of_sample_periods.csv",
+                mime="text/csv",
+            )
+            st.download_button(
+                label="下载 out_of_sample_checks.csv",
+                data=dataframe_to_csv(out_of_sample_checks_table),
+                file_name="out_of_sample_checks.csv",
                 mime="text/csv",
             )
 
