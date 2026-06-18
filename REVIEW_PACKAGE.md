@@ -437,6 +437,70 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.23: backtest quality score center
+
+V1.23 目标：
+
+- 增加“回测质量评分中心”页面。
+- 基于当前 watchlist 和策略预设运行已有组合回测。
+- 可选纳入策略稳定性、样本外测试和压力测试结果。
+- 汇总收益质量、回撤质量、稳定性质量、样本外质量、压力测试质量和数据质量风险。
+- 输出 0-100 综合质量分和 Excellent / Good / Watch / Weak 质量等级。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/strategies/quality_score.py
+tests/test_quality_score.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+回测质量评分中心功能说明：
+
+- `build_backtest_quality_score` 只汇总已有研究 summary，不重新实现核心回测逻辑。
+- 支持缺少 stability / out_of_sample / stress 输入时继续生成报告。
+- 缺少可选输入会降低 data_quality_score 并输出 warnings。
+- 支持 total_return 为负、max_drawdown 较大、overfit_risk_level High、overall_stress_level High 时降低对应分项。
+- dashboard 新增“质量评分”tab，位于“压力测试”之后、“单股分析”之前。
+- 支持选择 market、watchlist、strategy preset、initial_cash 和是否纳入稳定性 / 样本外 / 压力测试评分。
+- 展示综合质量分、质量等级、收益质量分、回撤质量分、稳定性质量分、样本外质量分、压力测试质量分和数据质量分。
+- 展示分项评分表、质量检查表和分项评分柱状图。
+- 支持下载 backtest_quality_score_report.json、quality_score_breakdown.csv 和 quality_score_checks.csv。
+- 所有输出均标注“仅供投资研究，不构成投资建议，不代表未来收益。”
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 279 passed
+system_doctor: passed
+dashboard: returned 200
+hidden/bidi scan: passed, risk_count=0
+```
+
+安全边界：
+
+```text
+是否改变核心策略逻辑：否
+是否改变 allocation/risk 逻辑：否
+UI 是否保持简约、美观、大方、实用：是
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：
