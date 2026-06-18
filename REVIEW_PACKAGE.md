@@ -372,6 +372,71 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.22: strategy stress test center
+
+V1.22 目标：
+
+- 增加“策略压力测试中心”页面。
+- 基于当前 watchlist 和策略预设运行已有组合回测，生成基准情景。
+- 对基准回测 summary 做轻度 / 中度 / 重度压力情景估算。
+- 汇总收益下修、回撤放大、最终资产、估算损失和回撤超限情况。
+- 输出 Low / Medium / High 总体压力等级。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/strategies/stress_test.py
+tests/test_strategy_stress.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+策略压力测试中心功能说明：
+
+- `build_strategy_stress_report` 只分析已有组合回测 summary，不重新实现核心回测逻辑。
+- 默认支持轻度压力、中度压力、重度压力三种情景。
+- 支持自定义 return_shock 和 drawdown_multiplier。
+- 支持基准回测失败，不让页面崩溃，并标记 High 压力等级。
+- 支持收益为负、回撤超过最大可接受回撤、交易次数不足等风险提示。
+- dashboard 新增“压力测试”tab，位于“样本外测试”之后、“单股分析”之前。
+- 支持选择 market、watchlist、strategy preset、initial_cash、max_acceptable_drawdown 和三档压力参数。
+- 展示总体压力等级、基准收益、基准最大回撤、最差情景、最差压力收益、最差压力回撤和最大估算损失。
+- 展示情景结果表、压力检查表、收益柱状图、回撤柱状图和最终资产柱状图。
+- 支持下载 strategy_stress_report.json、stress_scenarios.csv 和 stress_checks.csv。
+- 所有输出均标注“仅供投资研究，不构成投资建议，不代表未来收益。”
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 269 passed
+system_doctor: passed
+dashboard: returned 200
+hidden/bidi scan: passed, risk_count=0
+```
+
+安全边界：
+
+```text
+是否改变核心策略逻辑：否
+是否改变 allocation/risk 逻辑：否
+UI 是否保持简约、美观、大方、实用：是
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：
