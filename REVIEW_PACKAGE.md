@@ -769,6 +769,74 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.28: strategy research dashboard
+
+V1.28 目标：
+
+- 增强“研究报告”页面，增加策略研究看板。
+- 支持按 strategy_name 汇总历史归档报告。
+- 支持查看每个策略最新质量分、研究结论、趋势视图和风险状态。
+- 支持 High / Medium / Watch / Low 研究优先级。
+- 支持识别高风险策略。
+- 只读取历史归档报告，不重新计算回测。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/reports/strategy_research_dashboard.py
+tests/test_strategy_research_dashboard.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+策略研究看板功能说明：
+
+- `build_strategy_research_dashboard` 接收已归档策略研究报告列表，按 strategy_name 分组。
+- 每个策略使用最新报告作为 latest report。
+- 复用 `build_strategy_report_trend` 生成每个策略的趋势视图。
+- `build_strategy_research_dashboard` 输出 dashboard_summary、strategy_rows、priority_rows、risk_rows、warnings 和 disclaimer。
+- research_priority 支持 High / Medium / Watch / Low。
+- `export_strategy_dashboard_csv` 导出 UTF-8-SIG CSV bytes，空输入也保留表头。
+- dashboard “研究报告”tab 新增策略研究看板区。
+- dashboard 展示策略数量、报告总数、高优先级策略数量、Cautious 策略数量、Improving / Deteriorating 策略数量和最高质量分策略。
+- dashboard 展示策略研究状态表、策略优先级区、风险策略区和 latest_quality_score / latest_total_return / latest_max_drawdown 柱状图。
+- dashboard 支持下载 strategy_research_dashboard.csv 和 strategy_research_dashboard.json。
+- 所有输出均标注“仅供投资研究，不构成投资建议，不代表未来收益。”
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 339 passed
+system_doctor: passed
+dashboard: returned 200
+hidden/bidi scan: passed, risk_count=0
+```
+
+安全边界：
+
+```text
+是否改变核心策略逻辑：否
+是否只读取已归档报告：是
+是否保持研究用途：是
+UI 是否保持简约、美观、大方、实用：是
+是否遵守项目 skill / AGENTS 规范：是
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：

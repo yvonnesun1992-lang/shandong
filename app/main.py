@@ -40,6 +40,10 @@ from src.reports.daily_research_report import (
     save_daily_research_report,
 )
 from src.reports.strategy_research_report import build_strategy_research_report, strategy_report_to_markdown
+from src.reports.strategy_research_dashboard import (
+    build_strategy_research_dashboard,
+    export_strategy_dashboard_csv,
+)
 from src.reports.strategy_report_archive import (
     delete_strategy_research_report,
     export_strategy_report_summary_csv,
@@ -110,6 +114,7 @@ OUT_OF_SAMPLE_WARNING = "样本外测试用于比较策略在训练区间和未�
 STRATEGY_STRESS_WARNING = "压力测试用于估算策略在不利情景下的收益下修和回撤放大风险。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 QUALITY_SCORE_WARNING = "回测质量评分用于综合观察策略的收益、回撤、稳定性、样本外表现和压力测试表现。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 STRATEGY_RESEARCH_REPORT_WARNING = "策略研究报告用于汇总回测、稳定性、样本外、压力测试和质量评分结果，帮助复盘策略研究过程。结果仅供投资研究，不构成投资建议，不代表未来收益。"
+STRATEGY_RESEARCH_DASHBOARD_WARNING = "策略研究看板只读取已归档研究报告，用于汇总各策略的最新状态、趋势视图和风险状态。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 STRATEGY_REPORT_COMPARE_WARNING = "策略报告对比中心只读取已归档研究报告，帮助复盘不同策略、股票池和生成时间下的质量、收益、回撤和风险差异。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 STRATEGY_REPORT_TREND_WARNING = "策略研究趋势中心只读取已归档研究报告，按策略名称观察质量分、收益、回撤和风险等级的时间变化。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
@@ -2958,6 +2963,131 @@ def main() -> None:
                 file_name="strategy_research_report_archive.csv",
                 mime="text/csv",
             )
+
+            render_section_header("策略研究看板区", "汇总每个策略的最新研究状态、趋势视图、风险状态和研究优先级。")
+            st.info(STRATEGY_RESEARCH_DASHBOARD_WARNING)
+            st.caption("仅供投资研究，不构成投资建议，不代表未来收益。")
+            if st.button("刷新策略研究看板"):
+                dashboard_reports = []
+                dashboard_warnings = []
+                for report_id in archive_report_ids:
+                    try:
+                        dashboard_reports.append(load_strategy_research_report(report_id))
+                    except Exception as error:
+                        dashboard_warnings.append(f"{report_id} 加载失败：{error}")
+                research_dashboard = build_strategy_research_dashboard(dashboard_reports)
+                if dashboard_warnings:
+                    research_dashboard["warnings"].extend(dashboard_warnings)
+                st.session_state["latest_strategy_research_dashboard"] = research_dashboard
+                st.success("策略研究看板已刷新。")
+
+            research_dashboard = st.session_state.get("latest_strategy_research_dashboard")
+            if research_dashboard:
+                dashboard_summary = research_dashboard.get("dashboard_summary", {})
+                strategy_rows = research_dashboard.get("strategy_rows", [])
+                priority_rows = research_dashboard.get("priority_rows", [])
+                dashboard_risk_rows = research_dashboard.get("risk_rows", [])
+
+                render_metric_row(
+                    [
+                        {"label": "策略数量", "value": dashboard_summary.get("strategy_count", 0)},
+                        {"label": "报告总数", "value": dashboard_summary.get("total_report_count", 0)},
+                        {"label": "高优先级策略数量", "value": sum(1 for row in strategy_rows if row.get("research_priority") == "High")},
+                        {"label": "Cautious 策略数量", "value": dashboard_summary.get("cautious_strategy_count", 0)},
+                    ]
+                )
+                render_metric_row(
+                    [
+                        {"label": "Improving 策略数量", "value": dashboard_summary.get("improving_strategy_count", 0)},
+                        {"label": "Deteriorating 策略数量", "value": dashboard_summary.get("deteriorating_strategy_count", 0)},
+                        {"label": "高风险策略数量", "value": dashboard_summary.get("high_risk_strategy_count", 0)},
+                        {"label": "最高质量分策略", "value": dashboard_summary.get("best_strategy_name", "N/A")},
+                    ]
+                )
+
+                for warning in research_dashboard.get("warnings", []):
+                    st.warning(warning)
+
+                strategy_table = pd.DataFrame(strategy_rows)
+                if not strategy_table.empty:
+                    dashboard_columns = [
+                        "strategy_name",
+                        "report_count",
+                        "latest_generated_at",
+                        "latest_research_view",
+                        "latest_quality_score",
+                        "latest_quality_level",
+                        "trend_view",
+                        "latest_total_return",
+                        "latest_max_drawdown",
+                        "latest_overfit_risk_level",
+                        "latest_overall_stress_level",
+                        "risk_count",
+                        "research_priority",
+                    ]
+                    render_section_header("策略研究状态表", "快速比较各策略最新研究状态和风险状态。")
+                    st.dataframe(strategy_table[dashboard_columns], use_container_width=True, hide_index=True)
+
+                    render_section_header("策略优先级区", "按 High / Medium / Watch / Low 分组查看研究优先级。")
+                    priority_table = pd.DataFrame(priority_rows)
+                    for priority_name in ["High", "Medium", "Watch", "Low"]:
+                        group = priority_table[priority_table["research_priority"] == priority_name]
+                        if not group.empty:
+                            st.markdown(f"**{priority_name}**")
+                            st.dataframe(
+                                group[
+                                    [
+                                        "strategy_name",
+                                        "latest_quality_score",
+                                        "trend_view",
+                                        "latest_research_view",
+                                        "research_priority_label",
+                                    ]
+                                ],
+                                use_container_width=True,
+                                hide_index=True,
+                            )
+
+                    risk_dashboard_table = pd.DataFrame(dashboard_risk_rows)
+                    render_section_header("风险策略区", "展示 Cautious、Deteriorating、高样本外风险、高压力等级或风险数量较高的策略。")
+                    if risk_dashboard_table.empty:
+                        st.info("暂无高风险策略。")
+                    else:
+                        st.dataframe(
+                            risk_dashboard_table[
+                                [
+                                    "strategy_name",
+                                    "latest_research_view",
+                                    "trend_view",
+                                    "latest_overfit_risk_level",
+                                    "latest_overall_stress_level",
+                                    "risk_count",
+                                    "risk_highlights",
+                                ]
+                            ],
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+
+                    chart_dashboard_table = strategy_table.set_index("strategy_name")
+                    render_section_header("图表区", "观察各策略最新质量分、收益和最大回撤。")
+                    st.bar_chart(chart_dashboard_table[["latest_quality_score"]])
+                    st.bar_chart(chart_dashboard_table[["latest_total_return"]])
+                    st.bar_chart(chart_dashboard_table[["latest_max_drawdown"]])
+
+                render_section_header("下载区", "下载策略研究看板结果。")
+                st.download_button(
+                    label="下载 strategy_research_dashboard.csv",
+                    data=export_strategy_dashboard_csv(strategy_rows),
+                    file_name="strategy_research_dashboard.csv",
+                    mime="text/csv",
+                )
+                st.download_button(
+                    label="下载 strategy_research_dashboard.json",
+                    data=report_to_json_bytes(research_dashboard),
+                    file_name="strategy_research_dashboard.json",
+                    mime="application/json",
+                )
 
             render_section_header("策略报告对比区", "从历史归档报告中选择 2-5 份报告，比较质量、收益、回撤和风险。")
             st.info(STRATEGY_REPORT_COMPARE_WARNING)
