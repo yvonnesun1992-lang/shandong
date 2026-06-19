@@ -565,6 +565,77 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.25: strategy report archive center
+
+V1.25 目标：
+
+- 增强“研究报告”页面，增加本地策略研究报告归档能力。
+- 支持保存策略研究报告 JSON。
+- 支持保存 Markdown 报告。
+- 支持历史报告列表、加载历史报告、删除历史报告和导出报告列表 CSV。
+- 所有文件操作限定在 `reports/strategy_research_reports/`。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+reports/strategy_research_reports/.gitkeep
+src/reports/strategy_report_archive.py
+tests/test_strategy_report_archive.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+策略研究报告归档中心功能说明：
+
+- `save_strategy_research_report` 保存 JSON 报告，可选保存 Markdown 报告。
+- `list_strategy_research_reports` 返回历史报告摘要列表，并跳过损坏 JSON。
+- `load_strategy_research_report` 只能通过安全 report_id 加载归档目录内 JSON。
+- `delete_strategy_research_report` 只能删除归档目录内对应 JSON / Markdown 文件。
+- `export_strategy_report_summary_csv` 导出报告摘要 CSV bytes。
+- dashboard “研究报告”tab 新增保存当前报告、历史报告列表、加载历史报告、删除历史报告和报告列表 CSV 下载。
+- 历史报告列表展示 report_id、saved_at、strategy_name、research_view、quality_score、quality_level 和 symbol_count。
+- 加载历史报告后展示研究结论、策略名称、质量分、质量等级、主要风险和 Markdown 预览。
+- 所有输出均标注“仅供投资研究，不构成投资建议，不代表未来收益。”
+
+文件保存目录：
+
+```text
+reports/strategy_research_reports/
+```
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 299 passed
+system_doctor: passed
+dashboard: returned 200
+hidden/bidi scan: passed, risk_count=0
+```
+
+安全边界：
+
+```text
+是否防路径穿越：是
+是否改变核心策略逻辑：否
+是否改变 allocation/risk 逻辑：否
+UI 是否保持简约、美观、大方、实用：是
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：

@@ -480,6 +480,24 @@ V1.24 增加“研究报告”页面：
 
 本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
 
+## V1.25 研究报告归档中心
+
+V1.25 增强“研究报告”页面：
+
+- 支持保存策略研究报告 JSON 到 reports/strategy_research_reports/。
+- 支持同时保存 Markdown 报告。
+- 支持查看历史报告列表。
+- 支持加载历史报告并预览 Markdown。
+- 支持删除历史报告。
+- 支持导出 strategy_research_report_archive.csv。
+- 所有文件操作限定在 reports/strategy_research_reports/。
+- 支持 report_id 路径穿越防护。
+- 页面继续保持简约、美观、大方、实用。
+
+研究报告归档中心只保存本地研究报告，不改变核心策略逻辑。
+
+本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
+
 ## 运行测试
 
 ```bash

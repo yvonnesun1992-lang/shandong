@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -39,6 +40,13 @@ from src.reports.daily_research_report import (
     save_daily_research_report,
 )
 from src.reports.strategy_research_report import build_strategy_research_report, strategy_report_to_markdown
+from src.reports.strategy_report_archive import (
+    delete_strategy_research_report,
+    export_strategy_report_summary_csv,
+    list_strategy_research_reports,
+    load_strategy_research_report,
+    save_strategy_research_report,
+)
 from src.risk.control import build_risk_control_report
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
 from src.strategies.presets import (
@@ -2822,6 +2830,122 @@ def main() -> None:
                 label="下载 strategy_research_warnings.csv",
                 data=dataframe_to_csv(warnings_table),
                 file_name="strategy_research_warnings.csv",
+                mime="text/csv",
+            )
+
+        render_section_header("报告保存区", "保存当前策略研究报告，便于后续复盘。")
+        if research_report:
+            if st.button("保存当前策略研究报告"):
+                try:
+                    saved_report = save_strategy_research_report(research_report, markdown_report)
+                    st.success(f"策略研究报告已保存：{saved_report['report_id']}")
+                except Exception as error:
+                    st.error(f"保存策略研究报告失败：{error}")
+        else:
+            st.info("暂无当前策略研究报告。请先点击“生成策略研究报告”。")
+
+        render_section_header("历史报告列表", "查看本地已保存的策略研究报告。")
+        try:
+            archived_reports = list_strategy_research_reports()
+        except Exception as error:
+            archived_reports = []
+            st.error(f"读取历史策略研究报告失败：{error}")
+
+        archived_reports_table = pd.DataFrame(archived_reports)
+        if archived_reports_table.empty:
+            render_empty_state("暂无已保存的策略研究报告。")
+        else:
+            archive_columns = [
+                "report_id",
+                "saved_at",
+                "strategy_name",
+                "research_view",
+                "quality_score",
+                "quality_level",
+                "symbol_count",
+            ]
+            st.dataframe(archived_reports_table[archive_columns], use_container_width=True, hide_index=True)
+            render_metric_row(
+                [
+                    {"label": "历史报告数", "value": len(archived_reports)},
+                    {"label": "最新报告", "value": archived_reports[0].get("report_id", "N/A")},
+                    {"label": "最新研究结论", "value": archived_reports[0].get("research_view", "N/A")},
+                    {"label": "最新质量分", "value": archived_reports[0].get("quality_score", "N/A")},
+                ]
+            )
+
+            archive_report_ids = [str(row.get("report_id")) for row in archived_reports if row.get("report_id")]
+            archive_col_a, archive_col_b = st.columns(2)
+            with archive_col_a:
+                selected_load_report_id = st.selectbox(
+                    "选择要加载的历史报告",
+                    archive_report_ids,
+                    key="selected_load_strategy_report_id",
+                )
+                if st.button("加载历史报告"):
+                    try:
+                        loaded_report = load_strategy_research_report(selected_load_report_id)
+                        archive_row = next(
+                            (row for row in archived_reports if row.get("report_id") == selected_load_report_id),
+                            {},
+                        )
+                        loaded_markdown = ""
+                        markdown_path = str(archive_row.get("markdown_path", ""))
+                        if markdown_path:
+                            path = Path(markdown_path)
+                            if path.exists():
+                                loaded_markdown = path.read_text(encoding="utf-8")
+                        if not loaded_markdown:
+                            loaded_markdown = strategy_report_to_markdown(loaded_report)
+                        st.session_state["loaded_strategy_research_report"] = loaded_report
+                        st.session_state["loaded_strategy_research_markdown"] = loaded_markdown
+                        st.success(f"已加载历史报告：{selected_load_report_id}")
+                    except Exception as error:
+                        st.error(f"加载历史报告失败：{error}")
+
+            with archive_col_b:
+                selected_delete_report_id = st.selectbox(
+                    "选择要删除的历史报告",
+                    archive_report_ids,
+                    key="selected_delete_strategy_report_id",
+                )
+                st.warning("删除历史报告会移除本地 JSON / Markdown 文件。")
+                confirm_delete_archive = st.checkbox("确认删除所选历史报告", key="confirm_delete_strategy_report")
+                if st.button("删除历史报告"):
+                    if not confirm_delete_archive:
+                        st.warning("请先勾选确认删除。")
+                    else:
+                        try:
+                            delete_result = delete_strategy_research_report(selected_delete_report_id)
+                            st.success(f"已删除历史报告：{delete_result['report_id']}")
+                        except Exception as error:
+                            st.error(f"删除历史报告失败：{error}")
+
+            loaded_report = st.session_state.get("loaded_strategy_research_report")
+            loaded_markdown = st.session_state.get("loaded_strategy_research_markdown", "")
+            if loaded_report:
+                render_section_header("报告详情预览", "查看已加载历史报告的核心结论和 Markdown 内容。")
+                loaded_metrics = loaded_report.get("key_metrics", {})
+                loaded_quality = loaded_report.get("quality_summary", {})
+                render_metric_row(
+                    [
+                        {"label": "研究结论", "value": loaded_report.get("research_view", "N/A")},
+                        {"label": "策略名称", "value": loaded_report.get("strategy_name", "N/A")},
+                        {"label": "质量分", "value": loaded_metrics.get("quality_score", 0)},
+                        {"label": "质量等级", "value": loaded_quality.get("quality_level", loaded_metrics.get("quality_level", "N/A"))},
+                    ]
+                )
+                loaded_risks = loaded_report.get("risk_highlights", [])
+                if loaded_risks:
+                    render_section_header("历史报告风险提示", "来自已加载历史报告。")
+                    for item in loaded_risks:
+                        st.warning(item)
+                st.markdown(loaded_markdown)
+
+            st.download_button(
+                label="下载 strategy_research_report_archive.csv",
+                data=export_strategy_report_summary_csv(archived_reports),
+                file_name="strategy_research_report_archive.csv",
                 mime="text/csv",
             )
 
