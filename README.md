@@ -548,6 +548,22 @@ V1.28 增强“研究报告”页面：
 
 本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
 
+## V1.29 策略系统产品化收口版本
+
+V1.29 增强首页和核心结构：
+
+- 新增 Strategy Control Center，作为默认统一入口。
+- 支持首页总览、报告生成入口、历史报告管理、策略对比分析、策略趋势分析、策略研究看板、风险总览和系统健康面板。
+- 新增本地 TTL 缓存管理，用于缓存报告、看板、对比和趋势类结果。
+- 新增 StandardReportV1 标准报告结构。
+- 新增轻量目录结构：src/core、src/dashboard、src/cache、src/utils。
+- 系统健康面板展示 cache hit rate、report generation time、system_doctor status、pytest status 和 last error logs。
+- 页面继续保持简约、美观、大方、实用。
+
+V1.29 是产品化体验层，不改变核心策略逻辑，不重新定义交易规则。
+
+本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
+
 ## 运行测试
 
 ```bash

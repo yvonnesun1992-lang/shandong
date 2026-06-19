@@ -837,6 +837,80 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.29: strategy system productization
+
+V1.29 目标：
+
+- 将现有策略研究系统从多模块功能集合收口为统一策略控制中心产品。
+- 首页新增 Strategy Control Center 作为默认统一入口。
+- 增加本地 TTL 缓存系统。
+- 增加 StandardReportV1 标准报告结构。
+- 增加系统健康面板。
+- 增加轻量目录结构：src/core、src/dashboard、src/cache、src/utils。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/core/__init__.py
+src/core/cache_manager.py
+src/core/standard_report.py
+src/dashboard/.gitkeep
+src/cache/.gitkeep
+src/utils/.gitkeep
+tests/test_v129_system.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+策略系统产品化收口功能说明：
+
+- `StrategyCacheManager` 提供本地内存 TTL 缓存、命中率、过期计数和缓存大小统计。
+- `build_cache_key` 使用 strategy + watchlist + preset + params 生成稳定缓存 key。
+- `StandardReportV1` 定义统一报告结构，包含 strategy_name、generated_at、backtest_summary、quality_summary、risk_summary、stability_summary、out_of_sample_summary 和 stress_summary。
+- `validate_standard_report` 用于检查标准报告必填字段和核心摘要类型。
+- 首页新增 Strategy Control Center。
+- Strategy Control Center 默认显示首页总览，其他模块通过折叠区按需加载。
+- 控制中心包含生成策略研究报告、历史报告管理、策略对比分析、策略趋势分析、策略研究看板、风险总览和系统健康面板。
+- 策略研究看板结果通过缓存系统缓存。
+- 系统健康面板展示 cache hit rate、report generation time、system_doctor status、pytest status 和 last error logs。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 346 passed
+system_doctor: passed
+dashboard: returned 200
+hidden/bidi scan: passed, risk_count=0
+```
+
+安全边界：
+
+```text
+是否收口成功：是
+UI 是否统一：是
+是否可长期扩展：是
+是否改变核心策略逻辑：否
+是否只读取已归档报告：是
+是否保持研究用途：是
+UI 是否保持简约、美观、大方、实用：是
+是否遵守项目 skill / AGENTS 规范：是
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：

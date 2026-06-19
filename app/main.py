@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -9,6 +10,8 @@ import streamlit as st
 from src.backtest.portfolio_backtest import run_portfolio_backtest
 from src.backtest.simple_backtest import run_simple_backtest
 from src.config.settings import load_settings, reset_settings, save_settings
+from src.core.cache_manager import StrategyCacheManager, build_cache_key
+from src.core.standard_report import StandardReportV1, validate_standard_report
 from src.data.cn_data import get_cn_ohlcv
 from src.data.data_quality import build_data_quality_report
 from src.data.price_cache import delete_cached_price_data, list_cached_symbols
@@ -188,6 +191,166 @@ def trades_to_csv(trades: list[dict]) -> bytes:
 
 def dataframe_to_csv(data: pd.DataFrame) -> bytes:
     return dataframe_to_csv_bytes(data)
+
+
+def get_strategy_cache_manager() -> StrategyCacheManager:
+    if "strategy_cache_manager" not in st.session_state:
+        st.session_state["strategy_cache_manager"] = StrategyCacheManager(default_ttl_seconds=900)
+    return st.session_state["strategy_cache_manager"]
+
+
+def load_archived_strategy_reports_for_control_center() -> tuple[list[dict], list[str]]:
+    reports = []
+    warnings = []
+    for row in list_strategy_research_reports():
+        report_id = str(row.get("report_id") or "")
+        if not report_id:
+            continue
+        try:
+            reports.append(load_strategy_research_report(report_id))
+        except Exception as error:
+            warnings.append(f"{report_id} 加载失败：{error}")
+    return reports, warnings
+
+
+def render_strategy_control_center(
+    market: str,
+    selected_watchlist: str,
+    symbols: list[str],
+    home_summary: dict,
+    home_health_summary: dict,
+) -> None:
+    render_section_header(
+        "Strategy Control Center",
+        "单入口策略研究产品控制台：从总览进入报告、归档、对比、趋势、看板、风险和健康检查。",
+    )
+    st.caption("仅供投资研究，不构成投资建议，不代表未来收益。")
+
+    cache_manager = get_strategy_cache_manager()
+    cache_stats = cache_manager.stats()
+    archived_summary = list_strategy_research_reports()
+    latest_report_count = len(archived_summary)
+    latest_report = archived_summary[0] if archived_summary else {}
+
+    render_section_header("首页总览", "默认只展示关键状态，其他模块按需展开。")
+    overview_cols = st.columns(4)
+    overview_cols[0].metric("当前市场", market)
+    overview_cols[1].metric("当前 watchlist", selected_watchlist)
+    overview_cols[2].metric("股票数量", len(symbols))
+    overview_cols[3].metric("历史研究报告", latest_report_count)
+    render_metric_row(
+        [
+            {"label": "系统健康", "value": format_health_status(home_summary.get("health_status"))},
+            {"label": "最新报告策略", "value": latest_report.get("strategy_name", "N/A")},
+            {"label": "缓存命中率", "value": f"{cache_stats['hit_rate']:.0%}"},
+            {"label": "缓存条目", "value": cache_stats["cache_size"]},
+        ]
+    )
+
+    with st.expander("生成策略研究报告", expanded=False):
+        st.info("报告生成仍在“研究报告”模块执行。这里作为统一入口，展示当前上下文和标准报告结构。")
+        standard_preview = StandardReportV1(
+            strategy_name="trend_default",
+            generated_at="pending",
+            backtest_summary={},
+            quality_summary={},
+            risk_summary={},
+        ).to_dict()
+        validation = validate_standard_report(standard_preview)
+        st.json(
+            {
+                "market": market,
+                "watchlist": selected_watchlist,
+                "symbols": symbols,
+                "standard_report_valid": validation["valid"],
+                "schema_version": standard_preview["schema_version"],
+            }
+        )
+
+    with st.expander("历史报告管理", expanded=False):
+        if archived_summary:
+            st.dataframe(
+                pd.DataFrame(archived_summary)[
+                    ["report_id", "saved_at", "strategy_name", "research_view", "quality_score", "quality_level"]
+                ],
+                use_container_width=True,
+                hide_index=True,
+            )
+        else:
+            render_empty_state("暂无已归档策略研究报告。")
+
+    with st.expander("策略研究看板", expanded=False):
+        if st.button("刷新控制中心策略研究看板"):
+            started_at = time.perf_counter()
+            cache_key = build_cache_key("dashboard", selected_watchlist, "strategy_research_dashboard", {"count": latest_report_count})
+            cached_dashboard = cache_manager.get(cache_key)
+            if cached_dashboard is None:
+                reports, warnings = load_archived_strategy_reports_for_control_center()
+                cached_dashboard = build_strategy_research_dashboard(reports)
+                cached_dashboard["warnings"].extend(warnings)
+                cache_manager.set(cache_key, cached_dashboard)
+            st.session_state["control_center_dashboard"] = cached_dashboard
+            st.session_state["control_center_report_generation_time"] = round(time.perf_counter() - started_at, 4)
+        dashboard = st.session_state.get("control_center_dashboard")
+        if dashboard:
+            summary = dashboard.get("dashboard_summary", {})
+            render_metric_row(
+                [
+                    {"label": "策略数量", "value": summary.get("strategy_count", 0)},
+                    {"label": "报告总数", "value": summary.get("total_report_count", 0)},
+                    {"label": "高风险策略", "value": summary.get("high_risk_strategy_count", 0)},
+                    {"label": "最高质量分策略", "value": summary.get("best_strategy_name", "N/A")},
+                ]
+            )
+            rows = pd.DataFrame(dashboard.get("strategy_rows", []))
+            if not rows.empty:
+                st.dataframe(rows, use_container_width=True, hide_index=True)
+        else:
+            st.info("点击按钮后加载历史报告并生成看板。")
+
+    with st.expander("策略对比分析", expanded=False):
+        st.info("选择历史报告并生成对比请进入“研究报告”页面的策略报告对比区。控制中心保持轻量入口。")
+
+    with st.expander("策略趋势分析", expanded=False):
+        st.info("按 strategy_name 观察质量、收益和回撤趋势请进入“研究报告”页面的策略研究趋势区。")
+
+    with st.expander("风险总览", expanded=False):
+        dashboard = st.session_state.get("control_center_dashboard")
+        if dashboard and dashboard.get("risk_rows"):
+            risk_rows = pd.DataFrame(dashboard["risk_rows"])
+            st.dataframe(
+                risk_rows[
+                    [
+                        "strategy_name",
+                        "latest_research_view",
+                        "trend_view",
+                        "latest_overfit_risk_level",
+                        "latest_overall_stress_level",
+                        "risk_count",
+                    ]
+                ],
+                use_container_width=True,
+                hide_index=True,
+            )
+        else:
+            st.info("刷新策略研究看板后可查看风险策略。")
+
+    with st.expander("系统健康面板", expanded=False):
+        cache_stats = cache_manager.stats()
+        generation_time = st.session_state.get("control_center_report_generation_time", "N/A")
+        render_metric_row(
+            [
+                {"label": "cache hit rate", "value": f"{cache_stats['hit_rate']:.0%}"},
+                {"label": "report generation time", "value": generation_time},
+                {"label": "system_doctor status", "value": home_health_summary.get("overall_status", "unknown")},
+                {"label": "pytest status", "value": "见 REVIEW_PACKAGE.md"},
+            ]
+        )
+        last_errors = st.session_state.get("control_center_errors", [])
+        if last_errors:
+            st.dataframe(pd.DataFrame({"last_error_logs": last_errors}), use_container_width=True, hide_index=True)
+        else:
+            st.info("last error logs：暂无。")
 
 
 def report_to_json_bytes(report: dict) -> bytes:
@@ -645,6 +808,14 @@ def main() -> None:
             health_summary=home_health_summary,
             latest_workflow_runs=home_workflow_runs,
             latest_reports=home_reports,
+        )
+
+        render_strategy_control_center(
+            market=market,
+            selected_watchlist=selected_watchlist,
+            symbols=symbols,
+            home_summary=home_summary,
+            home_health_summary=home_health_summary,
         )
 
         render_metric_row(
