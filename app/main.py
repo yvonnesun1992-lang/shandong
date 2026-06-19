@@ -47,6 +47,10 @@ from src.reports.strategy_report_archive import (
     load_strategy_research_report,
     save_strategy_research_report,
 )
+from src.reports.strategy_report_compare import (
+    compare_strategy_research_reports,
+    export_strategy_report_comparison_csv,
+)
 from src.risk.control import build_risk_control_report
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
 from src.strategies.presets import (
@@ -102,6 +106,7 @@ OUT_OF_SAMPLE_WARNING = "样本外测试用于比较策略在训练区间和未�
 STRATEGY_STRESS_WARNING = "压力测试用于估算策略在不利情景下的收益下修和回撤放大风险。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 QUALITY_SCORE_WARNING = "回测质量评分用于综合观察策略的收益、回撤、稳定性、样本外表现和压力测试表现。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 STRATEGY_RESEARCH_REPORT_WARNING = "策略研究报告用于汇总回测、稳定性、样本外、压力测试和质量评分结果，帮助复盘策略研究过程。结果仅供投资研究，不构成投资建议，不代表未来收益。"
+STRATEGY_REPORT_COMPARE_WARNING = "策略报告对比中心只读取已归档研究报告，帮助复盘不同策略、股票池和生成时间下的质量、收益、回撤和风险差异。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
@@ -2948,6 +2953,98 @@ def main() -> None:
                 file_name="strategy_research_report_archive.csv",
                 mime="text/csv",
             )
+
+            render_section_header("策略报告对比区", "从历史归档报告中选择 2-5 份报告，比较质量、收益、回撤和风险。")
+            st.info(STRATEGY_REPORT_COMPARE_WARNING)
+            st.caption("仅供投资研究，不构成投资建议，不代表未来收益。")
+            if len(archive_report_ids) < 2:
+                st.info("至少保存 2 份历史策略研究报告后才能对比。")
+            else:
+                default_compare_report_ids = archive_report_ids[:2]
+                selected_compare_report_ids = st.multiselect(
+                    "选择要对比的历史报告",
+                    archive_report_ids,
+                    default=default_compare_report_ids,
+                    key="selected_strategy_report_compare_ids",
+                )
+                if len(selected_compare_report_ids) > 5:
+                    st.warning("最多选择 5 份报告进行对比，请减少选择数量。")
+
+                if st.button("生成策略报告对比"):
+                    loaded_compare_reports = []
+                    compare_warnings = []
+                    for report_id in selected_compare_report_ids[:5]:
+                        try:
+                            loaded_compare_reports.append(load_strategy_research_report(report_id))
+                        except Exception as error:
+                            compare_warnings.append(f"{report_id} 加载失败：{error}")
+
+                    if len(loaded_compare_reports) < 2:
+                        st.warning("有效报告少于 2 份，暂无法生成对比。")
+                    else:
+                        comparison = compare_strategy_research_reports(loaded_compare_reports)
+                        if compare_warnings:
+                            comparison["warnings"].extend(compare_warnings)
+                        st.session_state["latest_strategy_report_comparison"] = comparison
+                        st.success("策略报告对比已生成。")
+
+                comparison = st.session_state.get("latest_strategy_report_comparison")
+                if comparison:
+                    summary = comparison.get("comparison_summary", {})
+                    comparison_rows = comparison.get("comparison_rows", [])
+                    risk_rows = comparison.get("risk_rows", [])
+
+                    render_metric_row(
+                        [
+                            {"label": "最值得进一步研究的报告", "value": summary.get("best_report_id", "N/A")},
+                            {"label": "最值得进一步研究的策略", "value": summary.get("best_strategy_name", "N/A")},
+                            {"label": "最高质量分", "value": summary.get("best_quality_score", 0)},
+                            {"label": "Cautious 报告数量", "value": summary.get("cautious_report_count", 0)},
+                        ]
+                    )
+                    render_metric_row(
+                        [
+                            {"label": "最高收益报告", "value": summary.get("highest_return_report_id", "N/A")},
+                            {"label": "最高收益", "value": format_return_pct(summary.get("highest_total_return"))},
+                            {"label": "最低回撤报告", "value": summary.get("lowest_drawdown_report_id", "N/A")},
+                            {"label": "最低回撤", "value": format_return_pct(summary.get("lowest_max_drawdown"))},
+                        ]
+                    )
+                    st.caption(str(summary.get("research_priority", "")))
+
+                    for warning in comparison.get("warnings", []):
+                        st.warning(warning)
+
+                    comparison_table = pd.DataFrame(comparison_rows)
+                    risk_table = pd.DataFrame(risk_rows)
+                    if not comparison_table.empty:
+                        render_section_header("核心指标对比表", "比较研究结论、质量分、收益、回撤、样本外风险和压力等级。")
+                        st.dataframe(comparison_table, use_container_width=True, hide_index=True)
+
+                    if not risk_table.empty:
+                        render_section_header("风险对比表", "逐份报告查看主要风险数量和风险摘要。")
+                        st.dataframe(risk_table, use_container_width=True, hide_index=True)
+
+                    if not comparison_table.empty:
+                        chart_table = comparison_table.set_index("report_id")
+                        render_section_header("图表区", "用柱状图快速查看质量、收益和回撤差异。")
+                        st.bar_chart(chart_table[["quality_score"]])
+                        st.bar_chart(chart_table[["total_return"]])
+                        st.bar_chart(chart_table[["max_drawdown"]])
+
+                    render_section_header("下载区", "下载本次策略报告对比结果。")
+                    st.download_button(
+                        label="下载 strategy_report_comparison.csv",
+                        data=export_strategy_report_comparison_csv(comparison_rows),
+                        file_name="strategy_report_comparison.csv",
+                        mime="text/csv",
+                    )
+                    st.download_button(
+                        label="下载 strategy_report_comparison.json",
+                        data=report_to_json_bytes(comparison),
+                        file_name="strategy_report_comparison.json",
+                        mime="application/json",
+                    )
 
     with chart_tab:
         render_section_header("单股分析", "查看单只股票的收盘价、均线和 RSI，用于研究趋势状态。")
