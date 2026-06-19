@@ -564,6 +564,21 @@ V1.29 是产品化体验层，不改变核心策略逻辑，不重新定义交�
 
 本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
 
+## V1.30 产品稳定化与 UI 高级优化
+
+V1.30 是产品级优化版本，不新增策略功能：
+
+- 统一 Strategy Control Center 的 card-based UI 和 lazy load 模块入口。
+- 增强 Cache 2.0，支持上下文变化自动失效，以及 report / dashboard / compare / trend 缓存入口。
+- 新增 report pipeline，固化策略研究报告生成、质量评分、压力评分、标准报告和归档保存流程。
+- 增强 StandardReportV1，增加 confidence_level、data_freshness_score 和 stability_index。
+- 增强 safe_render，用于缺失报告、空数据和渲染异常时的 fallback。
+- 保持极简金融产品风格和统一 empty state。
+
+V1.30 只做稳定化、UI 统一、缓存和 pipeline 优化，不改变核心策略逻辑。
+
+本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
+
 ## 运行测试
 
 ```bash

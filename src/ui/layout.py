@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+from typing import Any
+
 import pandas as pd
 import streamlit as st
 
@@ -21,6 +24,25 @@ def render_section_header(title: str, description: str | None = None) -> None:
     st.subheader(title)
     if description:
         st.caption(description)
+
+
+def render_card(title: str, description: str | None = None):
+    container = st.container(border=True)
+    with container:
+        st.markdown(f"**{title}**")
+        if description:
+            st.caption(description)
+    return container
+
+
+def safe_render(renderer: Callable[..., Any], fallback: Any = None, *args, **kwargs) -> dict:
+    try:
+        value = renderer(*args, **kwargs)
+        return {"ok": True, "value": value, "fallback": fallback, "error": ""}
+    except Exception as error:
+        if fallback is not None:
+            st.info(str(fallback))
+        return {"ok": False, "value": None, "fallback": fallback, "error": str(error)}
 
 
 def render_status_message(status: str, message: str) -> None:

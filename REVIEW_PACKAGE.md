@@ -911,6 +911,76 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.30: product stability and polish
+
+V1.30 目标：
+
+- 本版本不新增策略功能，只做产品级优化。
+- 统一 Strategy Control Center 的 card-based UI 和 lazy load 模块入口。
+- 增强 Cache 2.0。
+- 固化 report pipeline。
+- 增强 StandardReportV1。
+- 增强 safe_render 错误处理。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/core/report_pipeline.py
+tests/test_v130_stability.py
+```
+
+修改文件：
+
+```text
+app/main.py
+src/core/cache_manager.py
+src/core/standard_report.py
+src/ui/layout.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+产品稳定化说明：
+
+- 是否功能新增：否。
+- 是否优化版本：是。
+- UI 是否统一：是，Strategy Control Center 使用 card-based overview 和折叠 lazy load 模块。
+- 是否稳定性提升：是，safe_render 可对 report missing、invalid data、empty data 和 field missing 提供 fallback。
+- Cache 2.0 支持 strategy / watchlist / preset 上下文变化自动失效。
+- Cache 2.0 支持 report / dashboard / compare / trend 命名缓存入口。
+- `generate_full_strategy_report` 固化 report generation、quality scoring、stress scoring、StandardReportV1 和 archive save 流程。
+- StandardReportV1 新增 confidence_level、data_freshness_score 和 stability_index。
+- 不改变核心策略逻辑，不重新定义交易规则。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 353 passed
+system_doctor: passed
+dashboard: returned 200
+hidden/bidi scan: passed, risk_count=0
+```
+
+安全边界：
+
+```text
+是否功能新增：否
+是否优化版本：是
+UI 是否统一：是
+是否稳定性提升：是
+是否改变核心策略逻辑：否
+是否保持研究用途：是
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：
