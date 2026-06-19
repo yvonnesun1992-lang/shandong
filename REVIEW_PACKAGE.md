@@ -256,6 +256,77 @@ source boundary scan findings: 0
 是否 merge PR：否
 ```
 
+## V1.33: SaaS product final architecture
+
+V1.33 目标：
+
+- 增加 mock 用户系统。
+- 增加 RBAC 权限系统。
+- 增加 mock API key 系统。
+- 增加 Web 前端页面结构。
+- 增加模拟 SaaS 计费结构。
+- 增加 SaaS 平台文档。
+
+新增文件：
+
+```text
+SAAS_PLATFORM.md
+src/auth/__init__.py
+src/auth/api_keys.py
+src/billing/__init__.py
+src/core/rbac.py
+tests/test_v133_saas.py
+web/api-docs.html
+web/dashboard.html
+web/login.html
+web/report-viewer.html
+web/strategy-center.html
+web/trend.html
+```
+
+修改文件：
+
+```text
+README.md
+REVIEW_PACKAGE.md
+```
+
+SaaS 层说明：
+
+- Auth 仅为 mock login/logout 和内存 session，不是真实认证系统。
+- RBAC 支持 admin、user、viewer 和 report/dashboard/api 权限控制。
+- API Key 系统为 mock 本地 key，支持 revoke、rate limit 和 usage tracking。
+- Billing 仅提供 free/pro/team plan 结构，不做真实支付。
+- Web 目录提供静态页面结构，不包含真实登录或支付逻辑。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 375 passed
+system_doctor: passed
+dashboard: returned 200
+changed files: real UTF-8 + LF multiline files
+local Unicode scan risk_count: 0
+source boundary scan findings: 0
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否调用 AI API：否
+是否调用 OpenAI API：否
+是否预测股价：否
+是否真实支付：否
+是否真实认证系统：否
+是否保存敏感信息：否
+是否改变核心策略逻辑：否
+是否 merge PR：否
+```
+
 V1.18 raw 文件已再次强制刷新，用于确认远程 raw 是真实多行文本。
 V1.18 文件格式已再次验证 6，用于确认 GitHub 远程分支刷新。
 
