@@ -701,6 +701,74 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.27: strategy research trend center
+
+V1.27 目标：
+
+- 增强“研究报告”页面，增加策略研究趋势中心。
+- 支持按 strategy_name 聚合历史归档报告。
+- 支持观察同一策略在不同生成时间下的质量分、收益、回撤、研究结论、样本外风险和压力等级变化。
+- 支持 Improving / Stable / Deteriorating / Insufficient 趋势视图。
+- 只读取历史归档报告，不重新计算回测。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/reports/strategy_report_trend.py
+tests/test_strategy_report_trend.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+策略研究趋势中心功能说明：
+
+- `build_strategy_report_trend` 接收已归档策略研究报告列表，可按 strategy_name 过滤。
+- `build_strategy_report_trend` 支持字段缺失，不让整体崩溃。
+- `build_strategy_report_trend` 按 generated_at 或 saved_at 正序排列报告。
+- `build_strategy_report_trend` 输出 trend_summary、trend_rows、risk_trend_rows、warnings 和 disclaimer。
+- trend_view 根据质量分变化和最大回撤变化输出 Improving / Stable / Deteriorating / Insufficient。
+- `export_strategy_report_trend_csv` 导出 UTF-8-SIG CSV bytes，空输入也保留表头。
+- dashboard “研究报告”tab 新增策略研究趋势区。
+- dashboard 支持从历史报告中选择 strategy_name，默认选择最新报告对应策略。
+- dashboard 展示趋势视图、报告数量、最新质量分、质量分变化、最新收益、收益变化、最新回撤和回撤变化。
+- dashboard 展示趋势明细表、风险变化表、quality_score / total_return / max_drawdown 时间趋势图。
+- dashboard 支持下载 strategy_report_trend.csv 和 strategy_report_trend.json。
+- 所有输出均标注“仅供投资研究，不构成投资建议，不代表未来收益。”
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 324 passed
+system_doctor: passed
+dashboard: returned 200
+hidden/bidi scan: passed, risk_count=0
+```
+
+安全边界：
+
+```text
+是否改变核心策略逻辑：否
+是否只读取已归档报告：是
+是否保持研究用途：是
+UI 是否保持简约、美观、大方、实用：是
+是否遵守项目 skill / AGENTS 规范：是
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：
