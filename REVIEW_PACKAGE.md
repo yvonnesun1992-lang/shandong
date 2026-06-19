@@ -186,6 +186,76 @@ source boundary scan findings: 0
 是否 merge PR：否
 ```
 
+## V1.32: release and SaaS-ready layer
+
+V1.32 目标：
+
+- 增加 Docker 部署结构。
+- 增加 API v2 产品化返回格式。
+- 增加 account 级逻辑多用户隔离。
+- 增加 System Admin Panel 数据层。
+- 增加平台配置中心。
+- 增加 release notes。
+
+新增文件：
+
+```text
+RELEASE_NOTES_V1.32.md
+deploy/.env.example
+deploy/Dockerfile
+deploy/docker-compose.yml
+src/api/v2/__init__.py
+src/api/v2/server.py
+src/config/platform_config.py
+src/core/account/__init__.py
+src/dashboard/system_admin.py
+tests/test_v132_release.py
+```
+
+修改文件：
+
+```text
+README.md
+REVIEW_PACKAGE.md
+```
+
+发布层说明：
+
+- Docker Compose 可启动 UI 和 API 两个服务。
+- API v2 返回 `success/data/meta/warning`，meta 包含 V1.32 和 latency_ms。
+- AccountContext 使用 `data/users/{user_id}/` 隔离 report、cache 和 dashboard。
+- System Admin Panel 汇总 API latency、cache hit rate、system health score、plugin status 和 error logs。
+- Platform config 集中管理 CACHE_ENABLED、API_ENABLED、MULTI_USER 和 LOG_LEVEL。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 368 passed
+system_doctor: passed
+dashboard: returned 200
+api_v2: smoke endpoints returned 200 / success / V1.32
+docker_sanity: deploy files tested; docker CLI unavailable in local environment
+changed files: real UTF-8 + LF multiline files
+local Unicode scan risk_count: 0
+source boundary scan findings: 0
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否调用 AI API：否
+是否调用 OpenAI API：否
+是否预测股价：否
+是否保存 API key/secret/password/token：否
+是否新增支付或真实登录系统：否
+是否改变核心策略逻辑：否
+是否 merge PR：否
+```
+
 V1.18 raw 文件已再次强制刷新，用于确认远程 raw 是真实多行文本。
 V1.18 文件格式已再次验证 6，用于确认 GitHub 远程分支刷新。
 

@@ -593,6 +593,21 @@ V1.31 只增加平台边界和服务入口，不改变核心策略逻辑。
 
 本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不保存密钥，不新增真实登录或支付系统，不构成投资建议。
 
+## V1.32 商业化发布准备层
+
+V1.32 将系统升级为可部署的商业级平台雏形：
+
+- 新增 `deploy/`，支持 Docker 和 Docker Compose 启动 UI + API。
+- 新增 API v2，提供 V1.32 统一返回结构、版本信息和 latency metadata。
+- 新增 `src/core/account/`，按 `data/users/{user_id}/` 隔离 report、cache 和 dashboard 路径。
+- 新增 System Admin Panel 数据层，展示 API latency、cache hit rate、system health score、plugin status 和 error logs。
+- 新增 `src/config/platform_config.py`，集中配置 CACHE_ENABLED、API_ENABLED、MULTI_USER 和 LOG_LEVEL。
+- 新增 `RELEASE_NOTES_V1.32.md`，说明 SaaS-ready、API、Docker、多用户结构、插件架构和安全边界。
+
+V1.32 只增加发布准备和 SaaS-ready 架构，不改变核心策略逻辑。
+
+本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不保存密钥，不新增真实登录或支付系统，不构成投资建议。
+
 ## 运行测试
 
 ```bash
