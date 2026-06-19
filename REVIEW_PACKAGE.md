@@ -636,6 +636,71 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V1.26: strategy report comparison center
+
+V1.26 目标：
+
+- 增强“研究报告”页面，增加策略报告对比中心。
+- 支持从已归档策略研究报告中选择 2-5 份报告。
+- 支持对比综合质量分、收益、回撤、样本外风险、压力等级和主要风险。
+- 支持识别更值得进一步研究的报告。
+- 只读取历史归档报告，不重新计算回测。
+- 继续禁止真实券商连接、自动下单、实盘交易、密钥保存和 AI API 调用。
+
+新增文件：
+
+```text
+src/reports/strategy_report_compare.py
+tests/test_strategy_report_compare.py
+```
+
+修改文件：
+
+```text
+app/main.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+策略报告对比中心功能说明：
+
+- `compare_strategy_research_reports` 接收 2-5 份策略研究报告，字段缺失时不让整体崩溃。
+- `compare_strategy_research_reports` 输出 comparison_summary、comparison_rows、risk_rows、best_report_id、best_strategy_name、best_quality_score、lowest_drawdown_report_id、highest_return_report_id、warnings 和 disclaimer。
+- best_report_id 优先选择 quality_score 最高的报告；quality_score 相同时优先选择 max_drawdown 更小的报告。
+- `export_strategy_report_comparison_csv` 导出 UTF-8-SIG CSV bytes，空输入也保留表头。
+- dashboard “研究报告”tab 新增策略报告对比区。
+- dashboard 支持选择 2-5 份历史报告，默认选择最新 2 份。
+- dashboard 展示最值得进一步研究的报告、策略、最高质量分、最高收益报告、最低回撤报告和 Cautious 报告数量。
+- dashboard 展示核心指标对比表、风险对比表、quality_score / total_return / max_drawdown 柱状图。
+- dashboard 支持下载 strategy_report_comparison.csv 和 strategy_report_comparison.json。
+- 所有输出均标注“仅供投资研究，不构成投资建议，不代表未来收益。”
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 311 passed
+system_doctor: passed
+dashboard: returned 200
+hidden/bidi scan: passed, risk_count=0
+```
+
+安全边界：
+
+```text
+是否改变核心策略逻辑：否
+是否只读取已归档报告：是
+是否保持研究用途：是
+UI 是否保持简约、美观、大方、实用：是
+是否连接真实券商：否
+是否自动下单：否
+是否生成真实交易指令：否
+是否包含 API key/secret/password/token：否
+是否调用 AI API：否
+是否使用 AI 预测股价：否
+是否建议创建 PR：是
+```
+
 ## V1.17: strategy comparison center
 
 V1.17 目标：
