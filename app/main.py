@@ -51,6 +51,10 @@ from src.reports.strategy_report_compare import (
     compare_strategy_research_reports,
     export_strategy_report_comparison_csv,
 )
+from src.reports.strategy_report_trend import (
+    build_strategy_report_trend,
+    export_strategy_report_trend_csv,
+)
 from src.risk.control import build_risk_control_report
 from src.strategies.trend_score import CN_WATCHLIST, US_WATCHLIST, add_trend_scores, latest_trend_score
 from src.strategies.presets import (
@@ -107,6 +111,7 @@ STRATEGY_STRESS_WARNING = "压力测试用于估算策略在不利情景下的�
 QUALITY_SCORE_WARNING = "回测质量评分用于综合观察策略的收益、回撤、稳定性、样本外表现和压力测试表现。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 STRATEGY_RESEARCH_REPORT_WARNING = "策略研究报告用于汇总回测、稳定性、样本外、压力测试和质量评分结果，帮助复盘策略研究过程。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 STRATEGY_REPORT_COMPARE_WARNING = "策略报告对比中心只读取已归档研究报告，帮助复盘不同策略、股票池和生成时间下的质量、收益、回撤和风险差异。结果仅供投资研究，不构成投资建议，不代表未来收益。"
+STRATEGY_REPORT_TREND_WARNING = "策略研究趋势中心只读取已归档研究报告，按策略名称观察质量分、收益、回撤和风险等级的时间变化。结果仅供投资研究，不构成投资建议，不代表未来收益。"
 REPORT_CENTER_WARNING = "历史回测报告仅用于研究和复盘，不代表未来收益，不构成投资建议。"
 DAILY_REPORT_WARNING = "本报告仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。"
 DAILY_WORKFLOW_WARNING = "每日流程仅用于学习、研究和模拟交易演示，不构成投资建议。数据源可能失败或延迟，历史评分不代表未来收益。"
@@ -3043,6 +3048,124 @@ def main() -> None:
                         label="下载 strategy_report_comparison.json",
                         data=report_to_json_bytes(comparison),
                         file_name="strategy_report_comparison.json",
+                        mime="application/json",
+                    )
+
+            render_section_header("策略研究趋势区", "按 strategy_name 聚合历史报告，观察同一策略的研究质量变化。")
+            st.info(STRATEGY_REPORT_TREND_WARNING)
+            st.caption("仅供投资研究，不构成投资建议，不代表未来收益。")
+            strategy_names = sorted(
+                {
+                    str(row.get("strategy_name"))
+                    for row in archived_reports
+                    if str(row.get("strategy_name") or "").strip()
+                }
+            )
+            if not strategy_names:
+                st.info("暂无可用于趋势分析的策略名称。")
+            else:
+                latest_strategy_name = str(archived_reports[0].get("strategy_name") or strategy_names[0])
+                default_strategy_index = (
+                    strategy_names.index(latest_strategy_name) if latest_strategy_name in strategy_names else 0
+                )
+                selected_trend_strategy_name = st.selectbox(
+                    "选择要分析趋势的策略",
+                    strategy_names,
+                    index=default_strategy_index,
+                    key="selected_strategy_report_trend_name",
+                )
+                matching_report_ids = [
+                    str(row.get("report_id"))
+                    for row in archived_reports
+                    if row.get("report_id") and row.get("strategy_name") == selected_trend_strategy_name
+                ]
+                if len(matching_report_ids) < 2:
+                    st.info("至少保存 2 份同策略历史报告后才能分析趋势。")
+
+                if st.button("生成策略研究趋势"):
+                    loaded_trend_reports = []
+                    trend_warnings = []
+                    for report_id in matching_report_ids:
+                        try:
+                            loaded_trend_reports.append(load_strategy_research_report(report_id))
+                        except Exception as error:
+                            trend_warnings.append(f"{report_id} 加载失败：{error}")
+
+                    if len(loaded_trend_reports) < 2:
+                        st.warning("有效同策略报告少于 2 份，趋势视图会标记为 Insufficient。")
+                    trend_report = build_strategy_report_trend(loaded_trend_reports, selected_trend_strategy_name)
+                    if trend_warnings:
+                        trend_report["warnings"].extend(trend_warnings)
+                    st.session_state["latest_strategy_report_trend"] = trend_report
+                    st.success("策略研究趋势已生成。")
+
+                trend_report = st.session_state.get("latest_strategy_report_trend")
+                if trend_report:
+                    trend_summary = trend_report.get("trend_summary", {})
+                    trend_rows = trend_report.get("trend_rows", [])
+                    risk_trend_rows = trend_report.get("risk_trend_rows", [])
+                    render_metric_row(
+                        [
+                            {"label": "趋势视图", "value": trend_summary.get("trend_view", "N/A")},
+                            {"label": "报告数量", "value": trend_summary.get("report_count", 0)},
+                            {"label": "最新质量分", "value": trend_summary.get("latest_quality_score", 0)},
+                            {"label": "质量分变化", "value": trend_summary.get("quality_score_change", 0)},
+                        ]
+                    )
+                    render_metric_row(
+                        [
+                            {"label": "最新总收益", "value": format_return_pct(trend_summary.get("latest_total_return"))},
+                            {"label": "总收益变化", "value": format_return_pct(trend_summary.get("total_return_change"))},
+                            {"label": "最新最大回撤", "value": format_return_pct(trend_summary.get("latest_max_drawdown"))},
+                            {"label": "最大回撤变化", "value": format_return_pct(trend_summary.get("max_drawdown_change"))},
+                        ]
+                    )
+                    render_metric_row(
+                        [
+                            {"label": "策略名称", "value": trend_summary.get("strategy_name", "N/A")},
+                            {"label": "最新研究结论", "value": trend_summary.get("latest_research_view", "N/A")},
+                            {"label": "最新样本外风险", "value": trend_summary.get("latest_overfit_risk_level", "N/A")},
+                            {"label": "最新压力等级", "value": trend_summary.get("latest_overall_stress_level", "N/A")},
+                        ]
+                    )
+                    st.caption(str(trend_summary.get("trend_note", "")))
+
+                    for warning in trend_report.get("warnings", []):
+                        st.warning(warning)
+
+                    trend_table = pd.DataFrame(trend_rows)
+                    risk_trend_table = pd.DataFrame(risk_trend_rows)
+                    if not trend_table.empty:
+                        render_section_header("趋势明细表", "按时间查看质量、收益、回撤、样本外风险和压力等级变化。")
+                        st.dataframe(trend_table, use_container_width=True, hide_index=True)
+
+                    if not risk_trend_table.empty:
+                        render_section_header("风险变化表", "逐份报告查看主要风险数量和风险摘要。")
+                        st.dataframe(risk_trend_table, use_container_width=True, hide_index=True)
+
+                    if not trend_table.empty:
+                        chart_table = trend_table.copy()
+                        chart_table["report_time"] = chart_table["generated_at"].where(
+                            chart_table["generated_at"].astype(str).str.len() > 0,
+                            chart_table["saved_at"],
+                        )
+                        chart_table = chart_table.set_index("report_time")
+                        render_section_header("图表区", "观察 quality_score、total_return 和 max_drawdown 的时间趋势。")
+                        st.line_chart(chart_table[["quality_score"]])
+                        st.line_chart(chart_table[["total_return"]])
+                        st.line_chart(chart_table[["max_drawdown"]])
+
+                    render_section_header("下载区", "下载本次策略研究趋势结果。")
+                    st.download_button(
+                        label="下载 strategy_report_trend.csv",
+                        data=export_strategy_report_trend_csv(trend_rows),
+                        file_name="strategy_report_trend.csv",
+                        mime="text/csv",
+                    )
+                    st.download_button(
+                        label="下载 strategy_report_trend.json",
+                        data=report_to_json_bytes(trend_report),
+                        file_name="strategy_report_trend.json",
                         mime="application/json",
                     )
 
