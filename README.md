@@ -579,6 +579,20 @@ V1.30 只做稳定化、UI 统一、缓存和 pipeline 优化，不改变核心�
 
 本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
 
+## V1.31 平台化架构
+
+V1.31 将系统升级为平台架构雏形：
+
+- 新增插件系统，支持 report、strategy、risk、dashboard 插件动态注册和独立运行。
+- 新增 FastAPI API 层，提供 report、trend、compare、risk 和 dashboard summary 接口。
+- 新增逻辑用户上下文，用于 report、cache 和 dashboard namespace 隔离。
+- 新增 Platform Launcher，统一 INIT -> CONFIG -> CACHE -> PLUGINS -> API -> UI 启动流程。
+- 新增 `PLATFORM_PACKAGE.md`，说明平台架构、API、多用户隔离和安全边界。
+
+V1.31 只增加平台边界和服务入口，不改变核心策略逻辑。
+
+本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不保存密钥，不新增真实登录或支付系统，不构成投资建议。
+
 ## 运行测试
 
 ```bash
