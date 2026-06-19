@@ -86,9 +86,11 @@ from src.ui.layout import (
     render_metric_row,
     render_parameter_summary,
     render_page_header,
+    render_card,
     render_risk_disclaimer,
     render_section_header,
     render_status_message,
+    safe_render,
 )
 from src.ui.home import build_home_summary
 from src.workflows.daily_workflow import run_daily_research_workflow
@@ -228,16 +230,25 @@ def render_strategy_control_center(
 
     cache_manager = get_strategy_cache_manager()
     cache_stats = cache_manager.stats()
-    archived_summary = list_strategy_research_reports()
+    archived_result = safe_render(list_strategy_research_reports, fallback="历史报告暂不可用。")
+    archived_summary = archived_result.get("value") or []
     latest_report_count = len(archived_summary)
     latest_report = archived_summary[0] if archived_summary else {}
 
     render_section_header("首页总览", "默认只展示关键状态，其他模块按需展开。")
     overview_cols = st.columns(4)
-    overview_cols[0].metric("当前市场", market)
-    overview_cols[1].metric("当前 watchlist", selected_watchlist)
-    overview_cols[2].metric("股票数量", len(symbols))
-    overview_cols[3].metric("历史研究报告", latest_report_count)
+    with overview_cols[0].container(border=True):
+        st.caption("当前市场")
+        st.metric("Market", market)
+    with overview_cols[1].container(border=True):
+        st.caption("当前 watchlist")
+        st.metric("Watchlist", selected_watchlist)
+    with overview_cols[2].container(border=True):
+        st.caption("股票数量")
+        st.metric("Symbols", len(symbols))
+    with overview_cols[3].container(border=True):
+        st.caption("历史研究报告")
+        st.metric("Reports", latest_report_count)
     render_metric_row(
         [
             {"label": "系统健康", "value": format_health_status(home_summary.get("health_status"))},
@@ -246,6 +257,16 @@ def render_strategy_control_center(
             {"label": "缓存条目", "value": cache_stats["cache_size"]},
         ]
     )
+
+    module_cols = st.columns(4)
+    with module_cols[0]:
+        render_card("生成策略研究报告", "标准化报告入口")
+    with module_cols[1]:
+        render_card("策略研究看板", "缓存化总览")
+    with module_cols[2]:
+        render_card("风险总览", "高风险策略聚合")
+    with module_cols[3]:
+        render_card("系统健康面板", "运行状态和缓存")
 
     with st.expander("生成策略研究报告", expanded=False):
         st.info("报告生成仍在“研究报告”模块执行。这里作为统一入口，展示当前上下文和标准报告结构。")

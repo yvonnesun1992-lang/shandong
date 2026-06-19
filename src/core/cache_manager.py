@@ -33,9 +33,37 @@ class StrategyCacheManager:
     def __init__(self, default_ttl_seconds: int = 900) -> None:
         self.default_ttl_seconds = max(int(default_ttl_seconds), 1)
         self._store: dict[str, CacheEntry] = {}
+        self._context: dict[str, str] = {}
         self._hit_count = 0
         self._miss_count = 0
         self._expired_count = 0
+
+    def update_context(self, strategy: str, watchlist: str, preset: str) -> None:
+        next_context = {
+            "strategy": str(strategy or "").strip(),
+            "watchlist": str(watchlist or "").strip(),
+            "preset": str(preset or "").strip(),
+        }
+        if self._context and self._context != next_context:
+            self.invalidate()
+        self._context = next_context
+
+    def invalidate(self) -> None:
+        self._store.clear()
+
+    def invalidate_for_context(self, strategy: str | None = None, watchlist: str | None = None, preset: str | None = None) -> None:
+        checks = {
+            "strategy": strategy,
+            "watchlist": watchlist,
+            "preset": preset,
+        }
+        for key, value in checks.items():
+            if value is not None and self._context.get(key) != str(value).strip():
+                self.invalidate()
+                return
+
+    def _typed_key(self, kind: str, key: str) -> str:
+        return f"{kind}:{key}"
 
     def set(self, key: str, value: Any, ttl_seconds: int | None = None) -> None:
         ttl = self.default_ttl_seconds if ttl_seconds is None else max(int(ttl_seconds), 1)
@@ -56,8 +84,33 @@ class StrategyCacheManager:
         self._hit_count += 1
         return entry.value
 
+    def set_report(self, key: str, value: Any, ttl_seconds: int | None = None) -> None:
+        self.set(self._typed_key("report", key), value, ttl_seconds)
+
+    def get_report(self, key: str) -> Any | None:
+        return self.get(self._typed_key("report", key))
+
+    def set_dashboard(self, key: str, value: Any, ttl_seconds: int | None = None) -> None:
+        self.set(self._typed_key("dashboard", key), value, ttl_seconds)
+
+    def get_dashboard(self, key: str) -> Any | None:
+        return self.get(self._typed_key("dashboard", key))
+
+    def set_compare(self, key: str, value: Any, ttl_seconds: int | None = None) -> None:
+        self.set(self._typed_key("compare", key), value, ttl_seconds)
+
+    def get_compare(self, key: str) -> Any | None:
+        return self.get(self._typed_key("compare", key))
+
+    def set_trend(self, key: str, value: Any, ttl_seconds: int | None = None) -> None:
+        self.set(self._typed_key("trend", key), value, ttl_seconds)
+
+    def get_trend(self, key: str) -> Any | None:
+        return self.get(self._typed_key("trend", key))
+
     def clear(self) -> None:
         self._store.clear()
+        self._context = {}
         self._hit_count = 0
         self._miss_count = 0
         self._expired_count = 0
