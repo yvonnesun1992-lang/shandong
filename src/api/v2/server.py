@@ -4,10 +4,13 @@ from time import perf_counter
 
 from fastapi import FastAPI
 
+from src.config import database_config
 from src.config.platform_config import PLATFORM_VERSION
 from src.core.account import create_account_context
 from src.core.cache_manager import StrategyCacheManager
 from src.dashboard.system_admin import build_system_admin_panel
+from src.db.migrations import initialize_database
+from src.db.repository import StrategyReportRepository, UserRepository
 from src.plugins import create_default_registry
 from src.reports.strategy_research_dashboard import build_strategy_research_dashboard
 from src.reports.strategy_report_compare import compare_strategy_research_reports
@@ -53,6 +56,47 @@ def create_v2_api_app() -> FastAPI:
         started = perf_counter()
         account = create_account_context(user_id)
         return v132_response({"user": account.as_dict(), "reports": []}, started_at=started)
+
+    @api.get("/api/v2/reports/db-list")
+    def list_database_reports(user_id: str = "default") -> dict:
+        started = perf_counter()
+        account = create_account_context(user_id)
+        try:
+            reports = StrategyReportRepository(database_config.DATABASE_URL).list_reports_by_user(account.user_id)
+            warning: list[str] = []
+        except Exception as exc:
+            reports = []
+            warning = [f"database unavailable: {exc}"]
+        return v132_response({"user": account.as_dict(), "reports": reports}, started_at=started, warning=warning)
+
+    @api.get("/api/v2/users/default")
+    def default_database_user() -> dict:
+        started = perf_counter()
+        try:
+            users = UserRepository(database_config.DATABASE_URL)
+            user = users.get_user_by_user_id("default") or users.create_user("default", role="admin", plan="free")
+            warning: list[str] = []
+        except Exception as exc:
+            user = {"user_id": "default"}
+            warning = [f"database unavailable: {exc}"]
+        return v132_response({"user": user}, started_at=started, warning=warning)
+
+    @api.get("/api/v2/system/db-health")
+    def database_health() -> dict:
+        started = perf_counter()
+        try:
+            migration = initialize_database(database_config.DATABASE_URL)
+            database = {
+                "status": "ok",
+                "url": database_config.DATABASE_URL,
+                "storage_enabled": database_config.USE_DATABASE_STORAGE,
+                "tables_checked": migration["tables"],
+            }
+            warning: list[str] = []
+        except Exception as exc:
+            database = {"status": "warning", "storage_enabled": database_config.USE_DATABASE_STORAGE}
+            warning = [f"database unavailable: {exc}"]
+        return v132_response({"database": database}, started_at=started, warning=warning)
 
     @api.get("/api/v2/report/detail")
     def report_detail(report_id: str, user_id: str = "default") -> dict:

@@ -1,3 +1,67 @@
+# V2.0 Production Data Foundation
+
+V2.0 adds the production data foundation layer only. It does not change core strategy logic, trading behavior, or payment behavior.
+
+New files:
+
+```text
+src/config/database_config.py
+src/db/__init__.py
+src/db/base.py
+src/db/models.py
+src/db/session.py
+src/db/repository.py
+src/db/migrations.py
+src/db/archive_importer.py
+tests/test_v2_database_foundation.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+Database:
+
+- Default database location: `data/shandong_v2.db`
+- Default database URL: `sqlite:///data/shandong_v2.db`
+- SQLite is used for local development.
+- PostgreSQL is reserved through configuration shape, but not required.
+
+Compatibility:
+
+- Supports old report archive compatibility: yes
+- Existing `reports/strategy_research_reports/` files remain readable.
+- `import_archived_reports_to_db(user_id="default")` imports legacy JSON files into the database.
+- Broken archive files produce warnings instead of crashes.
+
+Safety boundaries:
+
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto orders: no
+- Real payment execution: no
+- Plaintext API key / token / password storage: no
+- AI API calls: no
+
+Validation:
+
+```text
+tests/test_v2_database_foundation.py: 9 passed
+pytest: 390 passed
+system_doctor: OK
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # REVIEW_PACKAGE.md
 
 请帮我审查这个 GitHub Pull Request：

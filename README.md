@@ -102,9 +102,23 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🗄️ V2.0 Production Data Foundation
+
+- SQLite local database foundation at `data/shandong_v2.db`
+- PostgreSQL-ready configuration structure without requiring PostgreSQL locally
+- User, StrategyReport, ApiKey, BillingPlan, and AuditLog data models
+- Repository layer for user, report, API key, billing, and audit data
+- Archive-to-database importer for V1 local report archives
+- Backward compatible with `reports/strategy_research_reports/`
+- API v2 database health and read-only data endpoints
+- API keys are stored as hashes only, never plaintext
+- No broker connection, no auto trading, no AI API, no real payment execution
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 380+ tests passed  
+- ✔ pytest: 390+ tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
