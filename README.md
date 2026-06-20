@@ -182,9 +182,27 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 📏 V2.5 Plan / Quota / Usage Limit
+
+- Local plan configuration for `free`, `pro`, and `team`
+- Workspace-level mock billing plan state
+- Usage event storage for API calls, report generation, and auth login activity
+- Daily usage counting by workspace and event type
+- Quota enforcement for report generation and API calls
+- Standard `QUOTA_EXCEEDED` API error when a workspace exceeds limits
+- `/api/v2/billing/plan` returns the active workspace plan and limits
+- `/api/v2/billing/quota` returns current usage and quota status
+- `/api/v2/system/billing-health` reports mock billing readiness
+- Usage metadata is sanitized before storage
+- Mock billing only: no real Stripe, no payment execution, no payment secrets
+- No broker connection, no auto trading, no AI API, no plaintext secrets
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 429+ tests passed  
+- ✔ pytest: 436+ tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

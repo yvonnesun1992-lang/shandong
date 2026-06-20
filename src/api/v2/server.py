@@ -16,6 +16,9 @@ from src.api.v2.schemas import ReportGenerateRequest, ReportListQuery, UserQuery
 from src.auth.permission_service import set_user_role
 from src.auth.session_service import create_session, get_session, revoke_session
 
+from src.billing.plan_service import get_workspace_plan
+from src.billing.quota_service import get_quota_status, require_quota
+from src.billing.usage_service import record_usage
 from src.config import database_config
 from src.core.account import create_account_context
 from src.core.cache_manager import StrategyCacheManager
@@ -76,12 +79,14 @@ def create_v2_api_app() -> FastAPI:
     def generate_report(request: Request, payload: dict | None = None) -> dict:
         started = perf_counter()
         auth_context = require_permission(request, "report:write")
+        require_quota(auth_context.workspace_id, "report_generate", database_url=database_config.DATABASE_URL)
         report_request = ReportGenerateRequest(**(payload or {}))
         has_explicit_auth = bool(request.headers.get("X-Session-ID") or request.headers.get("X-API-Key"))
         account_user_id = auth_context.user_id if has_explicit_auth else report_request.user_id
         account = create_account_context(account_user_id)
         strategy_name = report_request.strategy_name
         plugin_result = registry.run("report", {"user_id": account.user_id, "strategy_name": strategy_name})
+        record_usage(auth_context.workspace_id, account.user_id, "report_generate", metadata={"strategy_name": strategy_name})
         response = success_response({"user": account.as_dict(), "plugin": plugin_result}, started_at=started)
         log_api_event("/api/v2/report/generate", account.user_id, "ok", response["meta"]["latency_ms"])
         return response
@@ -102,14 +107,21 @@ def create_v2_api_app() -> FastAPI:
         auth_context = require_permission(request, "report:read")
         query = ReportListQuery(user_id=auth_context.user_id or user_id, page=page, page_size=page_size)
         account = create_account_context(auth_context.user_id)
+        warning: list[str] = []
         try:
+            require_quota(auth_context.workspace_id, "api_call", database_url=database_config.DATABASE_URL)
             workspace = auth_context.workspace_id or workspace_id
             report_items = StrategyReportRepository(database_config.DATABASE_URL).list_reports_by_user(account.user_id, workspace_id=workspace)
             reports = paginate_items(report_items, page=query.page, page_size=query.page_size)
-            warning: list[str] = []
         except Exception as exc:
+            if isinstance(exc, ApiError) and exc.code == "QUOTA_EXCEEDED":
+                raise
             reports = paginate_items([], page=query.page, page_size=query.page_size)
             warning = warning_from_exception("database unavailable", DatabaseApiError(str(exc)))
+        try:
+            record_usage(auth_context.workspace_id, account.user_id, "api_call", metadata={"endpoint": "/api/v2/reports/db-list"})
+        except Exception:
+            pass
         response = success_response(
             {"user": account.as_dict(), "workspace_id": auth_context.workspace_id, "reports": reports},
             started_at=started,
@@ -195,6 +207,21 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v2/system/workspace-health", "default", "ok", response["meta"]["latency_ms"], len(warning))
         return response
 
+    @api.get("/api/v2/system/billing-health")
+    def billing_health() -> dict:
+        started = perf_counter()
+        billing = {
+            "billing_mode": "mock",
+            "real_payment_enabled": False,
+            "plans_ready": True,
+            "usage_tracking_ready": True,
+            "quota_enforcement_ready": True,
+            "warnings": [],
+        }
+        response = success_response({"billing": billing}, started_at=started)
+        log_api_event("/api/v2/system/billing-health", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
     @api.post("/api/v2/auth/login")
     def auth_login(payload: dict | None = None) -> dict:
         started = perf_counter()
@@ -206,6 +233,7 @@ def create_v2_api_app() -> FastAPI:
         ensure_default_workspace(user["user_id"], database_url=database_config.DATABASE_URL)
         session = create_session(user["user_id"], metadata={"role": user["role"]})
         session["role"] = user["role"]
+        record_usage("default", user["user_id"], "auth_login", metadata={"auth_mode": policy.auth_mode})
         audit_auth_event(user["user_id"], "auth.login", {"role": user["role"]})
         warning = ["mock_auth_only"] if policy.auth_mode == "production" else []
         response = success_response(
@@ -225,6 +253,24 @@ def create_v2_api_app() -> FastAPI:
         workspaces = get_user_workspaces(account_user, database_url=database_config.DATABASE_URL)
         response = success_response({"user_id": account_user, "workspaces": workspaces}, started_at=started)
         log_api_event("/api/v2/workspaces", account_user, "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v2/billing/plan")
+    def billing_plan(request: Request) -> dict:
+        started = perf_counter()
+        auth_context = build_auth_context(request)
+        plan = get_workspace_plan(auth_context.workspace_id, database_url=database_config.DATABASE_URL)
+        response = success_response({"plan": plan}, started_at=started)
+        log_api_event("/api/v2/billing/plan", auth_context.user_id, "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v2/billing/quota")
+    def billing_quota(request: Request) -> dict:
+        started = perf_counter()
+        auth_context = build_auth_context(request)
+        quota = get_quota_status(auth_context.workspace_id, database_url=database_config.DATABASE_URL)
+        response = success_response({"quota": quota}, started_at=started)
+        log_api_event("/api/v2/billing/quota", auth_context.user_id, "ok", response["meta"]["latency_ms"])
         return response
 
     @api.post("/api/v2/workspaces")
@@ -318,9 +364,11 @@ def create_v2_api_app() -> FastAPI:
     def risk(request: Request, user_id: str = "default") -> dict:
         started = perf_counter()
         auth_context = require_permission(request, "risk:read")
+        require_quota(auth_context.workspace_id, "api_call", database_url=database_config.DATABASE_URL)
         query = UserQuery(user_id=auth_context.user_id or user_id)
         account = create_account_context(query.user_id)
         plugin_result = registry.run("risk", {"user_id": account.user_id, "workspace_id": auth_context.workspace_id})
+        record_usage(auth_context.workspace_id, account.user_id, "api_call", metadata={"endpoint": "/api/v2/risk"})
         response = success_response({"user": account.as_dict(), "workspace_id": auth_context.workspace_id, "risk": plugin_result}, started_at=started)
         log_api_event("/api/v2/risk", account.user_id, "ok", response["meta"]["latency_ms"])
         return response
@@ -329,10 +377,12 @@ def create_v2_api_app() -> FastAPI:
     def dashboard_summary(request: Request, user_id: str = "default") -> dict:
         started = perf_counter()
         auth_context = require_permission(request, "dashboard:read")
+        require_quota(auth_context.workspace_id, "api_call", database_url=database_config.DATABASE_URL)
         query = UserQuery(user_id=auth_context.user_id or user_id)
         account = create_account_context(query.user_id)
         dashboard = build_strategy_research_dashboard([])
         cache.set_dashboard(account.dashboard_path("summary").as_posix(), dashboard)
+        record_usage(auth_context.workspace_id, account.user_id, "api_call", metadata={"endpoint": "/api/v2/dashboard/summary"})
         response = success_response({"user": account.as_dict(), "workspace_id": auth_context.workspace_id, "dashboard": dashboard}, started_at=started)
         log_api_event("/api/v2/dashboard/summary", account.user_id, "ok", response["meta"]["latency_ms"])
         return response
@@ -341,9 +391,11 @@ def create_v2_api_app() -> FastAPI:
     def system_admin(request: Request, user_id: str = "default") -> dict:
         started = perf_counter()
         auth_context = require_permission(request, "admin:read")
+        require_quota(auth_context.workspace_id, "api_call", database_url=database_config.DATABASE_URL)
         query = UserQuery(user_id=auth_context.user_id or user_id)
         account = create_account_context(query.user_id)
         admin_panel = build_system_admin_panel(cache=cache, registry=registry)
+        record_usage(auth_context.workspace_id, account.user_id, "api_call", metadata={"endpoint": "/api/v2/admin/system"})
         response = success_response({"user": account.as_dict(), "workspace_id": auth_context.workspace_id, "admin": admin_panel}, started_at=started)
         log_api_event("/api/v2/admin/system", account.user_id, "ok", response["meta"]["latency_ms"])
         return response
