@@ -165,9 +165,26 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🏢 V2.4 Workspace / Tenant Isolation
+
+- Workspace / tenant data model with `workspaces` and `workspace_members`
+- Workspace-aware user, report, API key, billing, session, permission, and audit data columns
+- Default workspace fallback for local development and backward compatibility
+- Workspace repository and service layer for create, member management, access checks, and active context
+- AuthContext now includes `workspace_id`, `workspace_role`, and `workspace_permissions`
+- API v2 supports `X-Workspace-ID` and `workspace_id` query parameters on protected workspace-aware routes
+- `/api/v2/workspaces` lists and creates workspaces with standard API responses
+- `/api/v2/system/workspace-health` reports workspace isolation readiness
+- Production mode verifies workspace membership before protected workspace access
+- Workspace audit logs are sanitized and do not store raw credentials
+- No broker connection, no auto trading, no AI API, no real payment execution, no plaintext secrets
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 420+ tests passed  
+- ✔ pytest: 429+ tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

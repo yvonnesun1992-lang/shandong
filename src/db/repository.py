@@ -67,22 +67,25 @@ class UserRepository(BaseRepository):
         role: str = "user",
         plan: str = "free",
         is_active: bool = True,
+        workspace_id: str = "default",
     ) -> dict:
         now = utc_now_iso()
         safe_user_id = safe_identifier(user_id)
+        safe_workspace_id = safe_identifier(workspace_id)
         with get_connection(self.database_url) as connection:
             connection.execute(
                 """
-                insert into users(user_id, email, role, plan, created_at, updated_at, is_active)
-                values (?, ?, ?, ?, ?, ?, ?)
+                insert into users(user_id, workspace_id, email, role, plan, created_at, updated_at, is_active)
+                values (?, ?, ?, ?, ?, ?, ?, ?)
                 on conflict(user_id) do update set
+                    workspace_id = excluded.workspace_id,
                     email = excluded.email,
                     role = excluded.role,
                     plan = excluded.plan,
                     updated_at = excluded.updated_at,
                     is_active = excluded.is_active
                 """,
-                (safe_user_id, email, role or "user", plan or "free", now, now, 1 if is_active else 0),
+                (safe_user_id, safe_workspace_id, email, role or "user", plan or "free", now, now, 1 if is_active else 0),
             )
         user = self.get_user_by_user_id(safe_user_id)
         if user is None:
@@ -113,20 +116,23 @@ class StrategyReportRepository(BaseRepository):
         saved_at: str | None = None,
         report_json: dict | list | str | None = None,
         markdown: str | None = None,
+        workspace_id: str = "default",
     ) -> dict:
         now = utc_now_iso()
         safe_user_id = safe_identifier(user_id)
+        safe_workspace_id = safe_identifier(workspace_id)
         safe_report_id = safe_identifier(report_id or f"{safe_user_id}-{now}", fallback=f"{safe_user_id}-report")
         with get_connection(self.database_url) as connection:
             connection.execute(
                 """
                 insert into strategy_reports(
-                    report_id, user_id, strategy_name, research_view, quality_score, quality_level,
+                    report_id, user_id, workspace_id, strategy_name, research_view, quality_score, quality_level,
                     generated_at, saved_at, report_json, markdown, created_at
                 )
-                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 on conflict(report_id) do update set
                     user_id = excluded.user_id,
+                    workspace_id = excluded.workspace_id,
                     strategy_name = excluded.strategy_name,
                     research_view = excluded.research_view,
                     quality_score = excluded.quality_score,
@@ -139,6 +145,7 @@ class StrategyReportRepository(BaseRepository):
                 (
                     safe_report_id,
                     safe_user_id,
+                    safe_workspace_id,
                     strategy_name or "unknown_strategy",
                     research_view or "",
                     quality_score,
@@ -155,32 +162,43 @@ class StrategyReportRepository(BaseRepository):
             raise RuntimeError("report was not saved")
         return report
 
-    def get_report(self, report_id: str, user_id: str | None = None) -> dict | None:
+    def get_report(self, report_id: str, user_id: str | None = None, workspace_id: str | None = None) -> dict | None:
         safe_report_id = safe_identifier(report_id)
         params: tuple = (safe_report_id,)
         where = "report_id = ?"
         if user_id is not None:
             where += " and user_id = ?"
             params = (safe_report_id, safe_identifier(user_id))
+        if workspace_id is not None:
+            where += " and workspace_id = ?"
+            params = (*params, safe_identifier(workspace_id))
         with get_connection(self.database_url) as connection:
             row = connection.execute(f"select * from strategy_reports where {where}", params).fetchone()
         return report_row_to_dict(row)
 
-    def list_reports_by_user(self, user_id: str) -> list[dict]:
+    def list_reports_by_user(self, user_id: str, workspace_id: str | None = None) -> list[dict]:
+        where = "user_id = ?"
+        params: tuple = (safe_identifier(user_id),)
+        if workspace_id is not None:
+            where += " and workspace_id = ?"
+            params = (*params, safe_identifier(workspace_id))
         with get_connection(self.database_url) as connection:
             rows = connection.execute(
-                "select * from strategy_reports where user_id = ? order by saved_at desc, id desc",
-                (safe_identifier(user_id),),
+                f"select * from strategy_reports where {where} order by saved_at desc, id desc",
+                params,
             ).fetchall()
         return [report_row_to_dict(row) for row in rows if row is not None]
 
-    def delete_report(self, report_id: str, user_id: str | None = None) -> bool:
+    def delete_report(self, report_id: str, user_id: str | None = None, workspace_id: str | None = None) -> bool:
         safe_report_id = safe_identifier(report_id)
         params: tuple = (safe_report_id,)
         where = "report_id = ?"
         if user_id is not None:
             where += " and user_id = ?"
             params = (safe_report_id, safe_identifier(user_id))
+        if workspace_id is not None:
+            where += " and workspace_id = ?"
+            params = (*params, safe_identifier(workspace_id))
         with get_connection(self.database_url) as connection:
             cursor = connection.execute(f"delete from strategy_reports where {where}", params)
             return cursor.rowcount > 0
@@ -194,21 +212,24 @@ class ApiKeyRepository(BaseRepository):
         key_hash: str | None = None,
         key_value: str | None = None,
         status: str = "active",
+        workspace_id: str = "default",
     ) -> dict:
         if key_hash is None and key_value is None:
             raise ValueError("key_hash or key_value is required")
         stored_hash = key_hash or hash_access_key_value(str(key_value))
+        safe_workspace_id = safe_identifier(workspace_id)
         now = utc_now_iso()
         with get_connection(self.database_url) as connection:
             connection.execute(
                 """
-                insert into api_keys(user_id, key_id, key_hash, status, created_at, usage_count)
-                values (?, ?, ?, ?, ?, 0)
+                insert into api_keys(user_id, workspace_id, key_id, key_hash, status, created_at, usage_count)
+                values (?, ?, ?, ?, ?, ?, 0)
                 on conflict(key_id) do update set
+                    workspace_id = excluded.workspace_id,
                     status = excluded.status,
                     key_hash = excluded.key_hash
                 """,
-                (safe_identifier(user_id), safe_identifier(key_id, "key"), stored_hash, status or "active", now),
+                (safe_identifier(user_id), safe_workspace_id, safe_identifier(key_id, "key"), stored_hash, status or "active", now),
             )
         records = [record for record in self.list_api_keys_by_user(user_id) if record["key_id"] == safe_identifier(key_id, "key")]
         if not records:
@@ -227,19 +248,29 @@ class ApiKeyRepository(BaseRepository):
             cursor = connection.execute(f"update api_keys set status = 'revoked', revoked_at = ? where {where}", params)
             return cursor.rowcount > 0
 
-    def list_api_keys_by_user(self, user_id: str) -> list[dict]:
+    def list_api_keys_by_user(self, user_id: str, workspace_id: str | None = None) -> list[dict]:
+        where = "user_id = ?"
+        params: tuple = (safe_identifier(user_id),)
+        if workspace_id is not None:
+            where += " and workspace_id = ?"
+            params = (*params, safe_identifier(workspace_id))
         with get_connection(self.database_url) as connection:
             rows = connection.execute(
-                "select * from api_keys where user_id = ? order by created_at desc, id desc",
-                (safe_identifier(user_id),),
+                f"select * from api_keys where {where} order by created_at desc, id desc",
+                params,
             ).fetchall()
         return [dict(row) for row in rows]
 
 
 class BillingRepository(BaseRepository):
-    def get_user_plan(self, user_id: str) -> dict | None:
+    def get_user_plan(self, user_id: str, workspace_id: str | None = None) -> dict | None:
+        where = "user_id = ?"
+        params: tuple = (safe_identifier(user_id),)
+        if workspace_id is not None:
+            where += " and workspace_id = ?"
+            params = (*params, safe_identifier(workspace_id))
         with get_connection(self.database_url) as connection:
-            row = connection.execute("select * from billing_plans where user_id = ?", (safe_identifier(user_id),)).fetchone()
+            row = connection.execute(f"select * from billing_plans where {where}", params).fetchone()
         return row_to_dict(row)
 
     def set_user_plan(
@@ -249,23 +280,26 @@ class BillingRepository(BaseRepository):
         status: str = "mock_active",
         started_at: str | None = None,
         expires_at: str | None = None,
+        workspace_id: str = "default",
     ) -> dict:
         start = started_at or utc_now_iso()
         safe_user_id = safe_identifier(user_id)
+        safe_workspace_id = safe_identifier(workspace_id)
         with get_connection(self.database_url) as connection:
             connection.execute(
                 """
-                insert into billing_plans(user_id, plan_name, status, started_at, expires_at)
-                values (?, ?, ?, ?, ?)
+                insert into billing_plans(user_id, workspace_id, plan_name, status, started_at, expires_at)
+                values (?, ?, ?, ?, ?, ?)
                 on conflict(user_id) do update set
+                    workspace_id = excluded.workspace_id,
                     plan_name = excluded.plan_name,
                     status = excluded.status,
                     started_at = excluded.started_at,
                     expires_at = excluded.expires_at
                 """,
-                (safe_user_id, plan_name or "free", status or "mock_active", start, expires_at),
+                (safe_user_id, safe_workspace_id, plan_name or "free", status or "mock_active", start, expires_at),
             )
-        plan = self.get_user_plan(safe_user_id)
+        plan = self.get_user_plan(safe_user_id, workspace_id=safe_workspace_id)
         if plan is None:
             raise RuntimeError("billing plan was not saved")
         return plan
@@ -279,16 +313,19 @@ class AuditLogRepository(BaseRepository):
         resource_type: str | None = None,
         resource_id: str | None = None,
         metadata: dict | list | str | None = None,
+        workspace_id: str = "default",
     ) -> dict:
         now = utc_now_iso()
+        safe_workspace_id = safe_identifier(workspace_id)
         with get_connection(self.database_url) as connection:
             cursor = connection.execute(
                 """
-                insert into audit_logs(user_id, action, resource_type, resource_id, created_at, metadata_json)
-                values (?, ?, ?, ?, ?, ?)
+                insert into audit_logs(user_id, workspace_id, action, resource_type, resource_id, created_at, metadata_json)
+                values (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     safe_identifier(user_id),
+                    safe_workspace_id,
                     action or "unknown",
                     resource_type or "",
                     safe_identifier(resource_id, "resource") if resource_id else "",
@@ -303,11 +340,16 @@ class AuditLogRepository(BaseRepository):
             raise RuntimeError("audit log was not saved")
         return log
 
-    def list_logs_by_user(self, user_id: str) -> list[dict]:
+    def list_logs_by_user(self, user_id: str, workspace_id: str | None = None) -> list[dict]:
+        where = "user_id = ?"
+        params: tuple = (safe_identifier(user_id),)
+        if workspace_id is not None:
+            where += " and workspace_id = ?"
+            params = (*params, safe_identifier(workspace_id))
         with get_connection(self.database_url) as connection:
             rows = connection.execute(
-                "select * from audit_logs where user_id = ? order by created_at desc, id desc",
-                (safe_identifier(user_id),),
+                f"select * from audit_logs where {where} order by created_at desc, id desc",
+                params,
             ).fetchall()
         return [audit_row_to_dict(row) for row in rows if row is not None]
 
@@ -320,15 +362,18 @@ class UserSessionRepository(BaseRepository):
         expires_at: str,
         status: str = "active",
         metadata: dict | list | str | None = None,
+        workspace_id: str = "default",
     ) -> dict:
         now = utc_now_iso()
+        safe_workspace_id = safe_identifier(workspace_id)
         with get_connection(self.database_url) as connection:
             connection.execute(
                 """
-                insert into user_sessions(session_id, user_id, status, created_at, expires_at, last_seen_at, metadata_json)
-                values (?, ?, ?, ?, ?, ?, ?)
+                insert into user_sessions(session_id, user_id, workspace_id, status, created_at, expires_at, last_seen_at, metadata_json)
+                values (?, ?, ?, ?, ?, ?, ?, ?)
                 on conflict(session_id) do update set
                     user_id = excluded.user_id,
+                    workspace_id = excluded.workspace_id,
                     status = excluded.status,
                     expires_at = excluded.expires_at,
                     last_seen_at = excluded.last_seen_at,
@@ -337,6 +382,7 @@ class UserSessionRepository(BaseRepository):
                 (
                     str(session_id_hash),
                     safe_identifier(user_id),
+                    safe_workspace_id,
                     status or "active",
                     now,
                     expires_at,
@@ -370,27 +416,34 @@ class UserSessionRepository(BaseRepository):
 
 
 class UserPermissionRepository(BaseRepository):
-    def set_permissions(self, user_id: str, role: str, permissions: list[str], resource_type: str = "") -> list[dict]:
+    def set_permissions(self, user_id: str, role: str, permissions: list[str], resource_type: str = "", workspace_id: str = "default") -> list[dict]:
         safe_user_id = safe_identifier(user_id)
+        safe_workspace_id = safe_identifier(workspace_id)
         now = utc_now_iso()
         with get_connection(self.database_url) as connection:
-            connection.execute("delete from user_permissions where user_id = ?", (safe_user_id,))
+            connection.execute("delete from user_permissions where user_id = ? and workspace_id = ?", (safe_user_id, safe_workspace_id))
             for permission in permissions:
                 connection.execute(
                     """
-                    insert into user_permissions(user_id, role, permission, resource_type, created_at)
-                    values (?, ?, ?, ?, ?)
+                    insert into user_permissions(user_id, workspace_id, role, permission, resource_type, created_at)
+                    values (?, ?, ?, ?, ?, ?)
                     on conflict(user_id, permission, resource_type) do update set
+                        workspace_id = excluded.workspace_id,
                         role = excluded.role
                     """,
-                    (safe_user_id, role or "user", permission, resource_type or "", now),
+                    (safe_user_id, safe_workspace_id, role or "user", permission, resource_type or "", now),
                 )
-        return self.list_permissions(safe_user_id)
+        return self.list_permissions(safe_user_id, workspace_id=safe_workspace_id)
 
-    def list_permissions(self, user_id: str) -> list[dict]:
+    def list_permissions(self, user_id: str, workspace_id: str | None = None) -> list[dict]:
+        where = "user_id = ?"
+        params: tuple = (safe_identifier(user_id),)
+        if workspace_id is not None:
+            where += " and workspace_id = ?"
+            params = (*params, safe_identifier(workspace_id))
         with get_connection(self.database_url) as connection:
             rows = connection.execute(
-                "select * from user_permissions where user_id = ? order by permission asc",
-                (safe_identifier(user_id),),
+                f"select * from user_permissions where {where} order by permission asc",
+                params,
             ).fetchall()
         return [dict(row) for row in rows]

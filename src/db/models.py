@@ -3,9 +3,38 @@ from __future__ import annotations
 
 CREATE_TABLES_SQL = [
     """
+    create table if not exists workspaces (
+        id integer primary key autoincrement,
+        workspace_id text not null unique,
+        name text not null,
+        owner_user_id text not null,
+        status text not null default 'active',
+        created_at text not null,
+        updated_at text not null,
+        metadata_json text not null default '{}'
+    )
+    """,
+    """
+    create table if not exists workspace_members (
+        id integer primary key autoincrement,
+        workspace_id text not null,
+        user_id text not null,
+        role text not null default 'member',
+        status text not null default 'active',
+        created_at text not null,
+        updated_at text not null,
+        unique(workspace_id, user_id)
+    )
+    """,
+    """
+    create index if not exists idx_workspace_members_user
+    on workspace_members(user_id, status)
+    """,
+    """
     create table if not exists users (
         id integer primary key autoincrement,
         user_id text not null unique,
+        workspace_id text not null default 'default',
         email text,
         role text not null default 'user',
         plan text not null default 'free',
@@ -19,6 +48,7 @@ CREATE_TABLES_SQL = [
         id integer primary key autoincrement,
         report_id text not null unique,
         user_id text not null,
+        workspace_id text not null default 'default',
         strategy_name text not null,
         research_view text,
         quality_score real,
@@ -35,9 +65,14 @@ CREATE_TABLES_SQL = [
     on strategy_reports(user_id, saved_at)
     """,
     """
+    create index if not exists idx_strategy_reports_workspace_user_saved
+    on strategy_reports(workspace_id, user_id, saved_at)
+    """,
+    """
     create table if not exists api_keys (
         id integer primary key autoincrement,
         user_id text not null,
+        workspace_id text not null default 'default',
         key_id text not null unique,
         key_hash text not null,
         status text not null default 'active',
@@ -54,6 +89,7 @@ CREATE_TABLES_SQL = [
     create table if not exists billing_plans (
         id integer primary key autoincrement,
         user_id text not null unique,
+        workspace_id text not null default 'default',
         plan_name text not null default 'free',
         status text not null default 'mock_active',
         started_at text not null,
@@ -64,6 +100,7 @@ CREATE_TABLES_SQL = [
     create table if not exists audit_logs (
         id integer primary key autoincrement,
         user_id text not null,
+        workspace_id text not null default 'default',
         action text not null,
         resource_type text,
         resource_id text,
@@ -80,6 +117,7 @@ CREATE_TABLES_SQL = [
         id integer primary key autoincrement,
         session_id text not null unique,
         user_id text not null,
+        workspace_id text not null default 'default',
         status text not null default 'active',
         created_at text not null,
         expires_at text not null,
@@ -96,6 +134,7 @@ CREATE_TABLES_SQL = [
     create table if not exists user_permissions (
         id integer primary key autoincrement,
         user_id text not null,
+        workspace_id text not null default 'default',
         role text not null,
         permission text not null,
         resource_type text not null default '',

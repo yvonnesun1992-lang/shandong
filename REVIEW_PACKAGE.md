@@ -1,3 +1,73 @@
+# V2.4 Workspace / Tenant Isolation
+
+V2.4 adds workspace / tenant isolation only. It does not add real payments, broker connectivity, trading behavior, AI calls, or strategy logic changes.
+
+New files:
+
+```text
+src/db/workspace_repository.py
+src/workspace/__init__.py
+src/workspace/init.py
+src/workspace/workspace_context.py
+src/workspace/workspace_service.py
+tests/test_v24_workspace_tenant_isolation.py
+```
+
+Updated files:
+
+```text
+src/db/models.py
+src/db/migrations.py
+src/db/repository.py
+src/auth/auth_context.py
+src/api/v2/auth.py
+src/api/v2/server.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+Workspace isolation:
+
+- Added `workspaces` and `workspace_members` tables.
+- Added `workspace_id` compatibility columns to users, reports, API keys, billing plans, audit logs, sessions, and permissions.
+- Existing and missing workspace data defaults to `default`.
+- Added workspace repository methods for create, get, list, member add/remove/list, role lookup, and default workspace initialization.
+- Added workspace service methods for active context, access checks, and role checks.
+- AuthContext now includes workspace ID, workspace role, and workspace permissions.
+- API v2 accepts `X-Workspace-ID` and `workspace_id` query parameters.
+- Report listing is workspace-filtered.
+- Production mode requires workspace membership for protected workspace access.
+- Local mode keeps default workspace fallback for local development.
+- Added `/api/v2/workspaces`.
+- Added `/api/v2/system/workspace-health`.
+- Workspace audit events are sanitized.
+
+Safety boundaries:
+
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Plaintext password / session value / API key storage: no
+- AI API calls: no
+- Secrets stored in plaintext: no
+
+Validation:
+
+```text
+py_compile: passed
+tests/test_v24_workspace_tenant_isolation.py: 9 passed
+pytest: 429 passed
+system_doctor: OK
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, after checks pass per user instruction
+```
+
 # V2.3 Production Auth Mode & Security Policy
 
 V2.3 hardens production auth mode and security policy only. It does not add real payment execution, real identity provider integration, broker connectivity, trading behavior, AI calls, or strategy logic changes.
