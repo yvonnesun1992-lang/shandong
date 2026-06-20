@@ -74,6 +74,11 @@ IGNORED_SECURITY_CONTEXTS = [
     "不会连接",
     "不会产生",
     "只保存",
+    "api_keys",
+    "api_key_record",
+    "api_key_repository",
+    "revoke_api_key",
+    "list_api_keys_by_user",
     "import secrets",
     "secrets.token_hex",
 ]
