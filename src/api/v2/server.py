@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from time import perf_counter
 
 from fastapi import FastAPI, Request
@@ -169,6 +170,51 @@ def create_v2_api_app() -> FastAPI:
             }
         response = success_response({"database": database}, started_at=started, warning=warning)
         log_api_event("/api/v2/system/db-health", "default", "ok", response["meta"]["latency_ms"], len(warning))
+        return response
+
+    @api.get("/api/v2/system/liveness")
+    def liveness() -> dict:
+        started = perf_counter()
+        response = success_response(
+            {"status": "alive", "version": "V2.6", "timestamp": datetime.now(UTC).replace(microsecond=0).isoformat()},
+            started_at=started,
+        )
+        log_api_event("/api/v2/system/liveness", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v2/system/readiness")
+    def readiness() -> dict:
+        started = perf_counter()
+        checks = {
+            "database_ready": False,
+            "auth_policy_ready": False,
+            "workspace_ready": False,
+            "quota_ready": False,
+            "api_ready": True,
+        }
+        warning: list[str] = []
+        try:
+            initialize_database(database_config.DATABASE_URL)
+            checks["database_ready"] = True
+        except Exception as exc:
+            warning.extend(warning_from_exception("database unavailable", DatabaseApiError(str(exc))))
+        try:
+            policy = get_security_policy()
+            checks["auth_policy_ready"] = policy.auth_mode in {"local", "dev", "production"}
+        except Exception as exc:
+            warning.extend(warning_from_exception("auth policy unavailable", DatabaseApiError(str(exc))))
+        try:
+            WorkspaceRepository(database_config.DATABASE_URL).ensure_default_workspace("default")
+            checks["workspace_ready"] = True
+        except Exception as exc:
+            warning.extend(warning_from_exception("workspace unavailable", DatabaseApiError(str(exc))))
+        try:
+            get_quota_status("default", database_url=database_config.DATABASE_URL)
+            checks["quota_ready"] = True
+        except Exception as exc:
+            warning.extend(warning_from_exception("quota unavailable", DatabaseApiError(str(exc))))
+        response = success_response({"readiness": checks, "ready": all(checks.values())}, started_at=started, warning=warning)
+        log_api_event("/api/v2/system/readiness", "default", "ok", response["meta"]["latency_ms"], len(warning))
         return response
 
     @api.get("/api/v2/system/security-health")
