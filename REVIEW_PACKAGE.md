@@ -1,3 +1,76 @@
+# V2.2 Auth / User Session Hardening
+
+V2.2 hardens the auth, session, API key, and permission structure only. It does not add real payments, real identity provider integration, trading behavior, or strategy logic changes.
+
+New files:
+
+```text
+src/auth/init.py
+src/auth/session_service.py
+src/auth/permission_service.py
+src/auth/api_key_service.py
+src/auth/auth_context.py
+src/api/v2/auth.py
+tests/test_v22_auth_session_hardening.py
+```
+
+Updated files:
+
+```text
+src/db/models.py
+src/db/repository.py
+src/api/v2/server.py
+src/system/health_check.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+Auth hardening:
+
+- Auth context added.
+- Session service added.
+- Permission service added.
+- API key verification service added.
+- Auth middleware helpers added.
+- Mock login/logout/me endpoints added.
+- RBAC permission checks added.
+- Auth audit logs added.
+- Sensitive data sanitization added.
+- V2.0 database foundation preserved.
+- V2.1 API hardening layer preserved.
+
+Important limitation:
+
+- Current login is local mock login only, not a real production login system.
+- No real user passwords are stored.
+- No plaintext session values are stored.
+- No plaintext API keys are stored.
+
+Safety boundaries:
+
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Plaintext password / session value / API key storage: no
+- AI API calls: no
+
+Validation:
+
+```text
+py_compile: passed
+tests/test_v22_auth_session_hardening.py: 9 passed
+pytest: 409 passed
+system_doctor: OK
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V2.1 API Production Hardening
 
 V2.1 hardens the API layer only. It does not add business features, change core strategy logic, change trading behavior, or change payment behavior.
