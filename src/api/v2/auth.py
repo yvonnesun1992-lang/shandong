@@ -14,6 +14,8 @@ from src.config import database_config
 from src.db.repository import AuditLogRepository, UserRepository, safe_identifier
 from src.security.policy import can_use_local_admin_fallback, get_security_policy
 from src.security.sanitizer import sanitize_response_payload
+from src.workspace.workspace_context import permissions_for_workspace_role
+from src.workspace.workspace_service import get_active_workspace, require_workspace_access
 
 
 LOGGER = logging.getLogger("shandong.api.v2.auth")
@@ -27,6 +29,7 @@ def sanitize_auth_metadata(value: Any) -> Any:
 def audit_auth_event(user_id: str, action: str, metadata: dict | None = None) -> dict:
     safe_user = safe_identifier(user_id)
     clean_metadata = sanitize_auth_metadata(metadata or {})
+    workspace_id = clean_metadata.get("workspace_id", "default") if isinstance(clean_metadata, dict) else "default"
     try:
         AuditLogRepository(database_config.DATABASE_URL).add_log(
             user_id=safe_user,
@@ -34,6 +37,7 @@ def audit_auth_event(user_id: str, action: str, metadata: dict | None = None) ->
             resource_type="auth",
             resource_id=safe_user,
             metadata=clean_metadata,
+            workspace_id=str(workspace_id or "default"),
         )
         return {"logged": True}
     except Exception as exc:
@@ -53,6 +57,10 @@ def extract_api_key(request: Request) -> str | None:
     return request.headers.get("X-API-Key")
 
 
+def extract_workspace_id(request: Request) -> str:
+    return safe_identifier(request.headers.get("X-Workspace-ID") or request.query_params.get("workspace_id") or "default")
+
+
 def _user_role_plan(user_id: str) -> tuple[str, str]:
     try:
         user = UserRepository(database_config.DATABASE_URL).get_user_by_user_id(user_id)
@@ -65,7 +73,29 @@ def _user_role_plan(user_id: str) -> tuple[str, str]:
     return "user", "free"
 
 
-def _context_for_user(user_id: str, *, authenticated: bool, fallback_role: str | None = None, session_id: str | None = None) -> AuthContext:
+def _workspace_role_for_user(user_id: str, workspace_id: str, *, allow_default_fallback: bool) -> tuple[str, list[str]]:
+    try:
+        context = get_active_workspace(user_id=user_id, workspace_id=workspace_id, database_url=database_config.DATABASE_URL)
+        if allow_default_fallback and workspace_id == "default" and user_id == "default":
+            return "owner", permissions_for_workspace_role("owner")
+        return context.role, context.permissions
+    except Exception:
+        if allow_default_fallback and workspace_id == "default":
+            role = "owner" if user_id == "default" else "member"
+            return role, permissions_for_workspace_role(role)
+        return "viewer", permissions_for_workspace_role("viewer")
+
+
+def _context_for_user(
+    user_id: str,
+    *,
+    authenticated: bool,
+    fallback_role: str | None = None,
+    session_id: str | None = None,
+    workspace_id: str = "default",
+    enforce_workspace: bool = False,
+    allow_default_fallback: bool = False,
+) -> AuthContext:
     role, plan = _user_role_plan(user_id)
     if fallback_role and role == "user":
         role = fallback_role
@@ -74,6 +104,16 @@ def _context_for_user(user_id: str, *, authenticated: bool, fallback_role: str |
     permissions = get_default_permissions(role) if not authenticated and fallback_role else get_user_permissions(user_id)
     if fallback_role == "admin":
         permissions = get_default_permissions("admin")
+    if enforce_workspace:
+        workspace_context = require_workspace_access(user_id, workspace_id, database_url=database_config.DATABASE_URL)
+        workspace_role = workspace_context.role
+        workspace_permissions = workspace_context.permissions
+    else:
+        workspace_role, workspace_permissions = _workspace_role_for_user(
+            user_id,
+            workspace_id,
+            allow_default_fallback=allow_default_fallback,
+        )
     return AuthContext(
         user_id=user_id,
         role=role,
@@ -81,12 +121,16 @@ def _context_for_user(user_id: str, *, authenticated: bool, fallback_role: str |
         permissions=permissions,
         session_id=session_id,
         is_authenticated=authenticated,
+        workspace_id=safe_identifier(workspace_id),
+        workspace_role=workspace_role,
+        workspace_permissions=workspace_permissions,
     )
 
 
 def build_auth_context(request: Request) -> AuthContext:
     policy = get_security_policy()
     header_user = extract_user_id(request)
+    workspace_id = extract_workspace_id(request)
     session_value = extract_session_id(request)
     key_value = extract_api_key(request)
 
@@ -98,6 +142,7 @@ def build_auth_context(request: Request) -> AuthContext:
             "auth_mode": policy.auth_mode,
             "require_auth": policy.require_auth,
             "allow_local_admin_fallback": policy.allow_local_admin_fallback,
+            "workspace_id": workspace_id,
         },
     )
 
@@ -106,33 +151,50 @@ def build_auth_context(request: Request) -> AuthContext:
             session = get_session(session_value)
             if session:
                 user_id = safe_identifier(session.get("user_id"))
-                audit_auth_event(user_id, "security.policy_checked", policy.as_dict())
-                audit_auth_event(user_id, "auth.mode", {"auth_mode": policy.auth_mode, "require_auth": policy.require_auth})
-                return _context_for_user(user_id, authenticated=True, session_id=session.get("session_id"))
-        audit_auth_event(header_user, "auth.invalid_session", {"auth_mode": policy.auth_mode})
+                audit_auth_event(user_id, "security.policy_checked", {**policy.as_dict(), "workspace_id": workspace_id})
+                audit_auth_event(user_id, "auth.mode", {"auth_mode": policy.auth_mode, "require_auth": policy.require_auth, "workspace_id": workspace_id})
+                return _context_for_user(
+                    user_id,
+                    authenticated=True,
+                    session_id=session.get("session_id"),
+                    workspace_id=workspace_id,
+                    enforce_workspace=policy.auth_mode == "production",
+                )
+        audit_auth_event(header_user, "auth.invalid_session", {"auth_mode": policy.auth_mode, "workspace_id": workspace_id})
         raise ApiError("Invalid session", code="INVALID_SESSION", status_code=401)
 
     if key_value:
         if not verify_api_key(header_user, key_value):
-            audit_auth_event(header_user, "auth.invalid_api_key", {"auth_mode": policy.auth_mode})
+            audit_auth_event(header_user, "auth.invalid_api_key", {"auth_mode": policy.auth_mode, "workspace_id": workspace_id})
             raise ApiError("Invalid API key", code="INVALID_API_KEY", status_code=401)
         audit_auth_event(header_user, "api_key.verify", {"verified": True})
-        audit_auth_event(header_user, "security.policy_checked", policy.as_dict())
-        audit_auth_event(header_user, "auth.mode", {"auth_mode": policy.auth_mode, "require_auth": policy.require_auth})
-        return _context_for_user(header_user, authenticated=True)
+        audit_auth_event(header_user, "security.policy_checked", {**policy.as_dict(), "workspace_id": workspace_id})
+        audit_auth_event(header_user, "auth.mode", {"auth_mode": policy.auth_mode, "require_auth": policy.require_auth, "workspace_id": workspace_id})
+        return _context_for_user(
+            header_user,
+            authenticated=True,
+            workspace_id=workspace_id,
+            enforce_workspace=policy.auth_mode == "production",
+        )
 
     if policy.auth_mode == "production":
-        audit_auth_event(header_user, "auth.required", {"auth_mode": policy.auth_mode})
+        audit_auth_event(header_user, "auth.required", {"auth_mode": policy.auth_mode, "workspace_id": workspace_id})
         raise ApiError("Authentication required", code="AUTH_REQUIRED", status_code=401)
 
     if policy.require_auth and not can_use_local_admin_fallback():
-        audit_auth_event(header_user, "auth.required", {"auth_mode": policy.auth_mode})
+        audit_auth_event(header_user, "auth.required", {"auth_mode": policy.auth_mode, "workspace_id": workspace_id})
         raise ApiError("Authentication required", code="AUTH_REQUIRED", status_code=401)
 
     if can_use_local_admin_fallback():
-        return _context_for_user(header_user, authenticated=True, fallback_role="admin")
+        return _context_for_user(
+            header_user,
+            authenticated=True,
+            fallback_role="admin",
+            workspace_id=workspace_id,
+            allow_default_fallback=True,
+        )
 
-    return _context_for_user(header_user, authenticated=False, fallback_role="viewer")
+    return _context_for_user(header_user, authenticated=False, fallback_role="viewer", workspace_id=workspace_id)
 
 
 def require_auth(request: Request) -> AuthContext:

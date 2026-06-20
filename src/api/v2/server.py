@@ -22,11 +22,13 @@ from src.core.cache_manager import StrategyCacheManager
 from src.dashboard.system_admin import build_system_admin_panel
 from src.db.migrations import initialize_database
 from src.db.repository import StrategyReportRepository, UserRepository
+from src.db.workspace_repository import WorkspaceRepository
 from src.plugins import create_default_registry
 from src.reports.strategy_research_dashboard import build_strategy_research_dashboard
 from src.reports.strategy_report_compare import compare_strategy_research_reports
 from src.reports.strategy_report_trend import build_strategy_report_trend
 from src.security.policy import get_security_policy
+from src.workspace.workspace_service import create_workspace, ensure_default_workspace, get_user_workspaces, require_workspace_role
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -95,19 +97,24 @@ def create_v2_api_app() -> FastAPI:
         return response
 
     @api.get("/api/v2/reports/db-list")
-    def list_database_reports(request: Request, user_id: str = "default", page: int = 1, page_size: int = 20) -> dict:
+    def list_database_reports(request: Request, user_id: str = "default", workspace_id: str = "default", page: int = 1, page_size: int = 20) -> dict:
         started = perf_counter()
         auth_context = require_permission(request, "report:read")
         query = ReportListQuery(user_id=auth_context.user_id or user_id, page=page, page_size=page_size)
         account = create_account_context(auth_context.user_id)
         try:
-            report_items = StrategyReportRepository(database_config.DATABASE_URL).list_reports_by_user(account.user_id)
+            workspace = auth_context.workspace_id or workspace_id
+            report_items = StrategyReportRepository(database_config.DATABASE_URL).list_reports_by_user(account.user_id, workspace_id=workspace)
             reports = paginate_items(report_items, page=query.page, page_size=query.page_size)
             warning: list[str] = []
         except Exception as exc:
             reports = paginate_items([], page=query.page, page_size=query.page_size)
             warning = warning_from_exception("database unavailable", DatabaseApiError(str(exc)))
-        response = success_response({"user": account.as_dict(), "reports": reports}, started_at=started, warning=warning)
+        response = success_response(
+            {"user": account.as_dict(), "workspace_id": auth_context.workspace_id, "reports": reports},
+            started_at=started,
+            warning=warning,
+        )
         log_api_event("/api/v2/reports/db-list", account.user_id, "ok", response["meta"]["latency_ms"], len(warning))
         return response
 
@@ -162,6 +169,32 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v2/system/security-health", "default", "ok", response["meta"]["latency_ms"], len(security["warnings"]))
         return response
 
+    @api.get("/api/v2/system/workspace-health")
+    def workspace_health() -> dict:
+        started = perf_counter()
+        try:
+            repo = WorkspaceRepository(database_config.DATABASE_URL)
+            default_workspace = repo.ensure_default_workspace("default")
+            workspace_count = len(repo.list_workspaces_by_user("default"))
+            workspace = {
+                "default_workspace_ready": bool(default_workspace),
+                "workspace_isolation_enabled": True,
+                "workspace_count": workspace_count,
+                "warnings": [],
+            }
+            warning: list[str] = []
+        except Exception as exc:
+            warning = warning_from_exception("workspace unavailable", DatabaseApiError(str(exc)))
+            workspace = {
+                "default_workspace_ready": False,
+                "workspace_isolation_enabled": True,
+                "workspace_count": 0,
+                "warnings": warning,
+            }
+        response = success_response({"workspace": workspace}, started_at=started, warning=warning)
+        log_api_event("/api/v2/system/workspace-health", "default", "ok", response["meta"]["latency_ms"], len(warning))
+        return response
+
     @api.post("/api/v2/auth/login")
     def auth_login(payload: dict | None = None) -> dict:
         started = perf_counter()
@@ -170,6 +203,7 @@ def create_v2_api_app() -> FastAPI:
         user_id = str(payload.get("user_id") or "default")
         role = str(payload.get("role") or "admin")
         user = set_user_role(user_id, role)
+        ensure_default_workspace(user["user_id"], database_url=database_config.DATABASE_URL)
         session = create_session(user["user_id"], metadata={"role": user["role"]})
         session["role"] = user["role"]
         audit_auth_event(user["user_id"], "auth.login", {"role": user["role"]})
@@ -181,6 +215,43 @@ def create_v2_api_app() -> FastAPI:
             started_at=started,
         )
         log_api_event("/api/v2/auth/login", user["user_id"], "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v2/workspaces")
+    def list_workspaces(request: Request, user_id: str = "default") -> dict:
+        started = perf_counter()
+        auth_context = build_auth_context(request)
+        account_user = auth_context.user_id or user_id
+        workspaces = get_user_workspaces(account_user, database_url=database_config.DATABASE_URL)
+        response = success_response({"user_id": account_user, "workspaces": workspaces}, started_at=started)
+        log_api_event("/api/v2/workspaces", account_user, "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.post("/api/v2/workspaces")
+    def create_workspace_endpoint(request: Request, payload: dict | None = None) -> dict:
+        started = perf_counter()
+        policy = get_security_policy()
+        payload = payload or {}
+        if policy.auth_mode == "production":
+            auth_context = require_permission(request, "admin:read")
+            require_workspace_role(
+                auth_context.user_id,
+                auth_context.workspace_id,
+                {"owner", "admin"},
+                database_url=database_config.DATABASE_URL,
+            )
+            owner_user_id = auth_context.user_id
+        else:
+            owner_user_id = str(payload.get("owner_user_id") or request.query_params.get("user_id") or "default")
+        workspace = create_workspace(
+            owner_user_id=owner_user_id,
+            name=str(payload.get("name") or payload.get("workspace_id") or "Workspace"),
+            workspace_id=payload.get("workspace_id"),
+            database_url=database_config.DATABASE_URL,
+        )
+        audit_auth_event(owner_user_id, "workspace.create", {"workspace_id": workspace["workspace_id"], "name": workspace["name"]})
+        response = success_response({"workspace": workspace}, started_at=started)
+        log_api_event("/api/v2/workspaces", owner_user_id, "ok", response["meta"]["latency_ms"])
         return response
 
     @api.post("/api/v2/auth/logout")
@@ -249,8 +320,8 @@ def create_v2_api_app() -> FastAPI:
         auth_context = require_permission(request, "risk:read")
         query = UserQuery(user_id=auth_context.user_id or user_id)
         account = create_account_context(query.user_id)
-        plugin_result = registry.run("risk", {"user_id": account.user_id})
-        response = success_response({"user": account.as_dict(), "risk": plugin_result}, started_at=started)
+        plugin_result = registry.run("risk", {"user_id": account.user_id, "workspace_id": auth_context.workspace_id})
+        response = success_response({"user": account.as_dict(), "workspace_id": auth_context.workspace_id, "risk": plugin_result}, started_at=started)
         log_api_event("/api/v2/risk", account.user_id, "ok", response["meta"]["latency_ms"])
         return response
 
@@ -262,7 +333,7 @@ def create_v2_api_app() -> FastAPI:
         account = create_account_context(query.user_id)
         dashboard = build_strategy_research_dashboard([])
         cache.set_dashboard(account.dashboard_path("summary").as_posix(), dashboard)
-        response = success_response({"user": account.as_dict(), "dashboard": dashboard}, started_at=started)
+        response = success_response({"user": account.as_dict(), "workspace_id": auth_context.workspace_id, "dashboard": dashboard}, started_at=started)
         log_api_event("/api/v2/dashboard/summary", account.user_id, "ok", response["meta"]["latency_ms"])
         return response
 
@@ -273,7 +344,7 @@ def create_v2_api_app() -> FastAPI:
         query = UserQuery(user_id=auth_context.user_id or user_id)
         account = create_account_context(query.user_id)
         admin_panel = build_system_admin_panel(cache=cache, registry=registry)
-        response = success_response({"user": account.as_dict(), "admin": admin_panel}, started_at=started)
+        response = success_response({"user": account.as_dict(), "workspace_id": auth_context.workspace_id, "admin": admin_panel}, started_at=started)
         log_api_event("/api/v2/admin/system", account.user_id, "ok", response["meta"]["latency_ms"])
         return response
 
