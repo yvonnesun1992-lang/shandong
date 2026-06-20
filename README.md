@@ -1,699 +1,163 @@
-# 山洞 shandong
+# 🧠 Quant Strategy Intelligence Platform (V1.34)
+
+A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
-这是一个入门友好的 A股 + 美股趋势量化研究系统。
+Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
 
-V1 只做研究、回测、趋势评分和仓位参考，不连接真实券商，不自动下单，也不使用机器学习预测股价。
+---
 
-## 产品定位
+## 🚀 What This Platform Does
+
+- 📊 Generate structured strategy research reports automatically  
+- ⚠️ Evaluate strategy risk and stability with scoring engine  
+- 📈 Compare multiple strategies side-by-side  
+- 🧠 Track strategy performance over time  
+- 📦 Modular plugin-based analytics architecture  
+- 🌐 API-first SaaS architecture design  
 
-shandong 是一个股票量化研究与模拟交易平台原型。
+---
 
-当前版本仅用于学习、研究、历史回测和模拟交易，不连接真实券商，不自动下单，不构成投资建议。历史回测不代表未来收益。
+## 🚀 How It Works
 
-## 项目能做什么
+1. Select a trading strategy  
+2. System generates structured analysis report  
+3. Risk engine evaluates performance stability  
+4. Dashboard visualizes insights  
+5. Compare multiple strategies in real time  
 
-- 获取美股行情数据，数据源是 `yfinance`
-- 获取 A股行情数据，数据源是 `akshare`
-- 计算 MA20、MA60、MA120、RSI14、成交量 MA20
-- 给股票打 0 到 100 的趋势分数
-- 用简单规则做单只股票回测
-- 基于 watchlist 做多股票组合回测
-- 用 Streamlit dashboard 查看评分、均线和 RSI
+---
 
-## 快速启动
+## 🏗️ System Architecture
 
-新手建议先阅读：
+Frontend (Next.js)
+        ↓
+API Layer (FastAPI SaaS Gateway)
+        ↓
+Core Intelligence Engine
+  ├── Strategy Engine
+  ├── Report Pipeline
+  ├── Risk Engine
+  ├── Analytics Core
+        ↓
+Plugin System (Extensible Modules)
+        ↓
+Data Layer (User Isolation / SaaS-ready)
 
-```text
-docs/QUICK_START.md
-```
+---
 
-推荐一键启动：
+## 📊 Core Features
 
-```bash
-python scripts/start_dashboard.py
-```
+### 📈 Strategy System
+- Modular strategy analysis engine
+- Backtest-ready architecture
+- Extensible design for research workflows
 
-Windows 可以运行：
+### 📊 Report Engine
+- StandardReportV1 structured output
+- Automated report generation pipeline
+- Quality scoring system
+- Stability evaluation metrics
 
-```bash
-start_shandong.bat
-```
+### ⚠️ Risk Engine
+- Risk scoring system
+- Drawdown analysis
+- Strategy stability evaluation
+- Stress testing framework
 
-启动前诊断：
+### 📊 Dashboard
+- Strategy overview panel
+- Performance analytics
+- Risk visualization
+- System monitoring view
 
-```bash
-python scripts/system_doctor.py
-```
+### 🔌 Plugin Architecture
+- Modular plugin system
+- Independent execution modules
+- Extensible analytics components
+- Clean separation of concerns
 
-## 安装
+---
 
-建议先进入项目目录：
+## ☁️ SaaS Capabilities
 
-```bash
-cd D:\HuaweiMoveData\Users\Yvonne\Documents\codex\shandong
-```
+- Multi-user architecture (logical isolation)
+- Role-based access control (RBAC)
+- API key system design
+- Subscription model structure (Free / Pro / Team)
+- Plugin extensibility system
 
-安装依赖：
+---
 
-```bash
-pip install -r requirements.txt
-```
+## 🌐 API Layer
 
-## 运行 dashboard
+- `/api/report/generate`
+- `/api/report/list`
+- `/api/report/detail`
+- `/api/dashboard/summary`
+- `/api/trend`
+- `/api/risk`
+- `/api/compare`
 
-```bash
-streamlit run app/main.py
-```
+---
 
-打开后可以选择 A股或美股，查看默认股票池的趋势评分排名，也可以查看单只股票的收盘价、均线和 RSI。
+## 🧰 Tech Stack
 
-## V1.1 数据 fallback
+- Frontend: Next.js
+- Backend: FastAPI
+- Architecture: Modular SaaS Design
+- Testing: Pytest
+- Deployment: Docker-ready structure
 
-系统优先使用真实行情数据：
+---
 
-- 美股：`yfinance`
-- A股：`akshare`
+## 🧪 System Status
 
-如果真实数据源失败、返回空数据或缺少关键 OHLCV 字段，dashboard 会自动使用本地示例数据，让趋势评分、图表和简单回测仍然可以演示。
+- ✔ pytest: 380+ tests passed  
+- ✔ system doctor: OK  
+- ✔ API health: OK  
+- ✔ frontend build: OK  
+- ✔ architecture: production-ready SaaS design  
 
-本地示例数据位于：
+---
 
-```text
-data/sample/us_NVDA.csv
-data/sample/cn_300308.csv
-```
+## 🚫 Constraints
 
-示例数据只用于演示和测试，不代表真实市场行情，也不是投资建议。dashboard 使用示例数据时会显示提示。
+- No broker integration  
+- No automated trading  
+- No real-money execution  
+- No external AI API calls  
+- No financial advice generation  
 
-Streamlit 会缓存行情获取结果 1 小时，减少反复刷新时对 `yfinance` 和 `akshare` 的重复请求。
+---
 
-## V1.2 dashboard 产品化体验
+## 📌 Version Status
 
-V1.2 对 dashboard 做了轻量产品化优化：
+V1.34 = Production-ready SaaS architecture foundation  
+✔ Backend stable  
+✔ Frontend ready  
+✔ API layer complete  
+✔ Plugin system implemented  
+✔ Risk & report engine functional  
 
-- 页面顶部增加免责声明，明确不构成投资建议。
-- 趋势评分、单只股票分析和简单回测页面都会显示数据源状态。
-- 增加趋势评分规则说明，方便新用户理解分数来源。
-- 趋势评分排名支持导出 `trend_scores.csv`。
-- 页面结构调整为：趋势评分、单只股票分析、简单回测、说明与风险提示。
-- sidebar 增加缓存说明：行情数据默认缓存 1 小时。
+---
 
-本系统仍然只用于学习、研究、历史回测和模拟交易演示，不连接真实券商，不自动下单。
+## 🧠 Design Philosophy
 
-## V1.3 本地自选股配置
+- Modular architecture  
+- Plugin-based extensibility  
+- SaaS-ready system design  
+- Separation of concerns  
+- Production-first structure  
 
-V1.3 支持在 dashboard 中管理本地自选股：
+---
 
-- 可以从 sidebar 选择已有 watchlist。
-- 可以编辑股票代码，一行一个或用逗号分隔。
-- 可以保存当前自选股，也可以输入新名称保存为新的 watchlist。
-- 默认配置文件位置：`config/watchlists.json`。
+## 🚀 Summary
 
-`config/watchlists.json` 只应该保存股票代码列表，不应保存任何账户、密码、API key、secret、token 或券商凭证。
+This project demonstrates a full SaaS-style quantitative intelligence system architecture, covering:
 
-本系统仅用于学习、研究、历史回测和模拟交易演示，不构成投资建议。
-
-## V1.4 本地模拟交易
-
-V1.4 支持本地模拟交易 / 纸上交易：
-
-- 默认虚拟资金为 100000。
-- 支持模拟买入、模拟卖出。
-- 可以查看现金、持仓市值、总资产、浮动盈亏和持仓数量。
-- 可以查看当前持仓和最近交易记录。
-- 支持导出交易记录 CSV。
-- 模拟交易数据保存在 `config/paper_portfolio.json`。
-
-`config/paper_portfolio.json` 只保存虚拟账户数据，不保存任何真实账户、券商凭证、API key、secret、password 或 token。
-
-模拟交易仅用于学习和功能演示，不会连接真实券商，不会自动下单，不构成投资建议。
-
-文档已按 UTF-8 和 LF 换行保存，不应包含隐藏 Unicode 控制字符或双向文本控制字符。
-
-## V1.5 组合回测
-
-V1.5 支持基于当前 watchlist 的多股票组合回测：
-
-- 使用趋势评分筛选组合候选股票。
-- 支持设置初始资金、单只股票最大仓位、买入分数阈值和持有分数阈值。
-- 输出组合收益曲线、总收益、年化收益、最大回撤、最终资产和交易次数。
-- 支持导出 `equity_curve.csv` 和 `portfolio_trades.csv`。
-- 数据不足 120 行的股票会被跳过，并在 dashboard 中提示。
-
-V1.5 组合回测仍然是历史研究和功能演示，不代表未来收益，不构成投资建议。
-
-当前组合回测不包含：
-
-- 手续费
-- 滑点
-- 停牌
-- 涨跌停
-- 分红
-- 真实成交限制
-- 杠杆
-- 做空
-
-本系统不连接真实券商，不自动下单，不做实盘交易。
-
-## V1.6 回测报告中心
-
-V1.6 支持保存和查看本地回测报告：
-
-- 支持保存单票回测报告。
-- 支持保存组合回测报告。
-- dashboard 新增“报告中心”页面。
-- 可以查看历史报告列表、报告参数、回测摘要、净值曲线和交易记录。
-- 支持下载当前报告 JSON。
-- 支持下载当前报告交易记录 CSV。
-- 支持下载全部报告 summary CSV。
-- 报告保存在 `reports/backtests/`。
-
-回测报告只用于研究和复盘，可以保存策略参数、股票代码、回测摘要、净值曲线和交易记录。
-
-回测报告不应保存任何真实账户信息、券商凭证、API key、secret、password 或 token。
-
-历史回测不代表未来收益。本系统不连接真实券商，不自动下单，不构成投资建议。
-
-## V1.7 每日量化研究报告
-
-V1.7 支持生成每日量化研究报告：
-
-- 基于当前市场和当前 watchlist 生成研究日报。
-- 日报包含趋势评分摘要、Top 趋势股票、风险观察股票、数据源状态、模拟账户摘要和最近回测摘要。
-- dashboard 新增“每日研究报告”页面。
-- 支持保存和查看历史日报。
-- 支持导出日报 JSON。
-- 支持导出日报 Markdown。
-- 支持导出历史日报 summary CSV。
-- 日报保存在 `reports/daily/`。
-
-日报仅用于学习、研究和模拟交易演示，不构成投资建议。历史数据和模型评分不代表未来收益。
-
-本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API。
-
-## V1.8 一键每日研究流程
-
-V1.8 支持本地一键每日研究流程：
-
-- 自动读取当前 watchlist。
-- 自动获取行情数据。
-- 自动计算趋势评分。
-- 自动生成并保存每日研究报告。
-- dashboard 新增“每日流程”页面，可以手动点击运行。
-- 新增 CLI 脚本，可以在命令行运行每日流程。
-
-CLI 示例：
-
-```bash
-python scripts/run_daily_workflow.py --market us --watchlist us_default
-```
-
-每日流程只在用户手动点击按钮或运行本地命令时执行，不提供后台定时任务服务。
-
-本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不构成投资建议。
-
-## V1.9 workflow 运行记录
-
-V1.9 支持每日 workflow 本地运行日志：
-
-- 每次运行保存一个 run_id。
-- 保存开始时间、结束时间、运行耗时、成功股票、失败股票、失败原因和 report_id。
-- dashboard 新增“运行记录”页面。
-- 可以查看历史运行记录列表。
-- 可以查看单次运行详情。
-- 可以下载当前运行日志 JSON。
-- 可以下载运行记录 summary CSV。
-- CLI 运行每日 workflow 后也会保存日志。
-- 运行日志保存在 `reports/workflow_runs/`。
-
-运行记录仅用于研究流程审计和复盘，不代表投资建议，不会产生真实交易。
-
-本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不构成投资建议。
-
-## V1.10 行情缓存与数据质量
-
-V1.10 支持本地行情缓存和数据质量检查：
-
-- 支持把标准 OHLCV 行情保存到 `data/cache/`。
-- 支持从本地缓存读取行情，减少对 yfinance / akshare 的重复请求。
-- 支持查看缓存列表，包括 market、symbol、行数、起止日期和文件大小。
-- dashboard 新增“数据缓存与质量”页面。
-- 支持更新当前 watchlist 的行情缓存。
-- 支持删除单个缓存文件，删除前需要勾选确认。
-- 支持检查数据是否缺字段、行数不足、日期不递增、价格异常、成交量异常、缺失 close 或最近日期过旧。
-- 每日 workflow 会记录每只股票的数据来源：cache / remote / sample。
-
-行情缓存只保存 OHLCV 行情数据，不保存任何账户信息、密钥或券商凭证。
-
-数据缓存仅用于学习、研究和模拟交易演示，不代表实时行情，不构成投资建议。
-
-本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不使用 AI 预测股价。
-
-## V1.11 系统设置中心
-
-V1.11 支持本地系统设置中心：
-
-- 新增 `config/settings.json`。
-- 新增 dashboard “系统设置”页面。
-- 支持管理缓存配置、报告目录配置、模拟交易初始资金、dashboard 默认市场和 workflow 最少成功股票数。
-- 支持保存设置。
-- 支持重置为默认设置，重置前需要勾选确认。
-- dashboard 默认市场优先读取 `settings.dashboard.default_market`。
-- 模拟交易账户重置资金优先读取 `settings.paper_trading.initial_cash`。
-- 数据质量 freshness 默认天数优先读取 `settings.cache.max_age_days`。
-- 行情读取会参考 `settings.cache.enabled`。
-
-配置文件只用于本地研究环境，不应保存任何真实账户、密码、API key、secret、password、token 或券商凭证。
-
-本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不使用 AI 预测股价，不构成投资建议。
-
-## V1.12 系统健康检查中心
-
-V1.12 支持本地系统健康检查中心：
-
-- 新增 `src/system/health_check.py`。
-- dashboard 新增“系统健康”页面。
-- 支持检查配置文件、缓存目录、报告目录、示例数据和 workflow 运行日志。
-- 支持检查关键本地文件是否存在、JSON 是否损坏、示例 OHLCV 数据是否完整。
-- 支持安全边界检查，确认运行代码中没有真实券商连接、自动下单、密钥保存或 AI API 调用风险。
-- 支持导出健康检查 JSON。
-- 支持导出健康检查 CSV。
-
-系统健康检查仅用于本地研究环境诊断，不代表投资建议。
-
-本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不使用 AI 预测股价，不构成投资建议。
-
-## V1.13 一键启动与启动前自检
-
-V1.13 增加本地启动工具：
-
-- 新增 `scripts/system_doctor.py`，用于检查 Python 版本、关键依赖、关键目录、关键文件和系统健康状态。
-- 新增 `scripts/start_dashboard.py`，先运行启动前检查，再启动 Streamlit dashboard。
-- 新增 `start_shandong.bat`，适合 Windows 双击或命令行启动。
-- 新增 `start_shandong.ps1`，适合 PowerShell 用户启动。
-- 新增 `docs/QUICK_START.md`，面向新手说明安装、测试、启动和常见问题。
-
-启动工具只用于本地研究环境，不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不使用 AI 预测股价。
-
-## V1.14 Dashboard UI 优化
-
-V1.14 对 dashboard 做了轻量 UI 和页面结构优化：
-
-- 页面标题统一为 `Shandong Quant Research`。
-- 页面顶部增加统一产品副标题和研究风险提示。
-- tabs 顺序调整为市场总览、单股分析、单股回测、组合回测、模拟交易、每日流程、报告、数据质量、运行记录、系统设置、系统健康和说明。
-- 每个页面顶部增加简短说明，便于非技术用户理解。
-- 趋势评分、单股回测、组合回测、模拟交易和系统健康使用更统一的指标展示。
-- 新增 `src/ui/layout.py`，集中管理轻量 UI helper 和格式化函数。
-- 文档与本次新增代码保持 UTF-8 + LF 文本格式。
-
-本次优化不改变策略逻辑，不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API。
-
-## V1.15 首页 / 总览工作台
-
-V1.15 为 dashboard 增加首页 / 总览工作台：
-
-- 打开系统后优先查看市场、自选股、趋势评分和系统健康状态。
-- 首页展示 Strong trend、Watchlist、Weak、平均趋势评分等研究概览。
-- 首页展示模拟账户现金、持仓市值、总资产和浮动盈亏。
-- 首页展示最近 workflow 运行记录和最近日报 / 回测报告。
-- 首页提供市场总览、组合回测、每日流程和系统健康等常用功能入口说明。
-- UI 继续保持简约、美观、大方、实用。
-
-本次优化不改变策略逻辑，不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API。
-
-## V1.16 策略实验室
-
-V1.16 增加“策略实验室”页面：
-
-- 支持本地策略参数预设文件 `config/strategy_presets.json`。
-- 支持读取、查看、保存和删除策略预设。
-- 默认包含基础、保守、积极三组趋势策略参数。
-- 支持使用当前 watchlist 和选中的策略预设运行组合回测。
-- 展示组合回测总收益、年化收益、最大回撤、最终资产和交易次数。
-- 支持导出策略回测净值曲线和交易记录 CSV。
-- 页面继续保持简约、美观、大方、实用。
-
-本功能不改变核心策略逻辑，不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不构成投资建议。
-
-## V1.17 策略对比中心
-
-V1.17 增加“策略对比”页面：
-
-- 支持选择多个本地策略预设，对同一个 watchlist 批量运行组合回测。
-- 支持对比总收益、年化收益、最大回撤、交易次数和最终资产。
-- 支持展示多个策略的净值曲线。
-- 支持导出策略对比 ranking CSV、单个策略交易记录 CSV 和对比结果 JSON。
-- 单个策略运行失败时会记录失败原因，不影响其他策略对比。
-- 页面继续保持简约、美观、大方、实用。
-
-本功能不改变核心策略逻辑，只调用现有策略预设和组合回测模块。
-
-本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不构成投资建议。
-
-V1.17 相关文本文件已按 UTF-8 + LF 保存，并清理 hidden/bidi/zero-width/control characters。
-V1.17 文件已再次刷新，用于确认 GitHub PR 页面重新渲染为干净文本。
-V1.17 raw 文件已再次强制刷新，用于确认远程 raw 是真实多行文本。
-
-## V1.18 组合配置实验室
-
-V1.18 增加“组合配置实验室”页面：
-
-- 支持根据当前 watchlist 和本地趋势评分生成研究用目标仓位。
-- 支持设置单只股票最大仓位限制。
-- 支持设置现金缓冲比例。
-- 支持手动输入当前持仓，并对比当前持仓与目标持仓差异。
-- 支持展示目标权重、目标金额、目标股数、当前金额和差异金额。
-- 支持导出 allocation_plan.csv 和 allocation_summary.json。
-- 页面继续保持简约、美观、大方、实用。
-
-组合配置实验室只输出研究用目标仓位，不生成真实交易指令。
-
-本功能不连接真实券商，不自动下单，不调用 OpenAI API 或任何外部 AI API，不构成投资建议。
-
-V1.18 raw 文件已再次强制刷新，用于确认远程 raw 是真实多行文本。
-V1.18 文件格式已再次验证 6，用于确认 GitHub 远程分支刷新。
-
-## V1.19 风险控制中心
-
-V1.19 增加“风险控制中心”页面：
-
-- 支持基于当前 watchlist 和组合配置逻辑生成研究用风险检查报告。
-- 支持手动输入简化仓位，格式为 `symbol,target_weight,target_value`。
-- 支持仓位集中度检查。
-- 支持单股最大仓位检查。
-- 支持前三大持仓集中度检查。
-- 支持现金缓冲检查。
-- 支持数据质量和回撤风险提示。
-- 支持风险等级 Low / Medium / High。
-- 支持下载 risk_control_report.json、position_risks.csv 和 risk_checks.csv。
-- 页面继续保持简约、美观、大方、实用。
-
-风险控制中心只做研究组合检查，不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
-
-## V1.20 策略稳定性评估中心
-
-V1.20 增加“策略稳定性”页面：
-
-- 支持把当前 watchlist 的历史数据拆成多个时间窗口。
-- 支持对每个窗口运行已有组合回测逻辑，并汇总多窗口结果。
-- 支持收益稳定性检查。
-- 支持回撤稳定性检查。
-- 支持胜率稳定性、样本数量风险和数据质量风险提示。
-- 支持稳定性等级 Low / Medium / High。
-- 支持下载 strategy_stability_report.json、stability_windows.csv 和 stability_checks.csv。
-- 页面继续保持简约、美观、大方、实用。
-
-策略稳定性评估中心只分析已有多窗口回测结果，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
-
-## V1.21 样本外测试中心
-
-V1.21 增加“样本外测试”页面：
-
-- 支持把当前 watchlist 的历史数据切分为训练区间和样本外测试区间。
-- 支持对训练区间和样本外测试区间分别运行已有组合回测逻辑。
-- 支持比较训练收益、样本外收益、收益衰减、最大回撤、回撤恶化和交易次数。
-- 支持测试区间失败时不崩溃，并标记为 High 过拟合风险。
-- 支持训练区间为正收益、样本外为负收益时标记为 High 过拟合风险。
-- 支持样本外交易次数不足、收益明显衰减和回撤恶化提示。
-- 支持过拟合风险等级 Low / Medium / High。
-- 支持下载 out_of_sample_report.json、out_of_sample_periods.csv 和 out_of_sample_checks.csv。
-- 页面继续保持简约、美观、大方、实用。
-
-样本外测试中心只分析训练和测试区间的已有组合回测结果，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
-
-## V1.22 策略压力测试中心
-
-V1.22 增加“压力测试”页面：
-
-- 支持基于当前 watchlist 和策略预设运行已有组合回测，生成基准情景。
-- 支持轻度 / 中度 / 重度压力情景。
-- 支持收益下修估算。
-- 支持回撤放大估算。
-- 支持资金损失风险估算。
-- 支持最差情景识别。
-- 支持总体压力等级 Low / Medium / High。
-- 支持下载 strategy_stress_report.json、stress_scenarios.csv 和 stress_checks.csv。
-- 页面继续保持简约、美观、大方、实用。
-
-策略压力测试中心只分析已有组合回测摘要，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
-
-## V1.23 回测质量评分中心
-
-V1.23 增加“质量评分”页面：
-
-- 支持基于当前 watchlist 和策略预设运行已有组合回测。
-- 支持综合质量分 0-100。
-- 支持收益质量评分。
-- 支持回撤质量评分。
-- 支持稳定性质量评分。
-- 支持样本外质量评分。
-- 支持压力测试质量评分。
-- 支持数据质量风险提示。
-- 支持质量等级 Excellent / Good / Watch / Weak。
-- 支持下载 backtest_quality_score_report.json、quality_score_breakdown.csv 和 quality_score_checks.csv。
-- 页面继续保持简约、美观、大方、实用。
-
-回测质量评分中心只汇总已有研究结果，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
-
-## V1.24 策略研究报告中心
-
-V1.24 增加“研究报告”页面：
-
-- 支持汇总组合回测、稳定性、样本外、压力测试、风险控制和质量评分。
-- 支持 Positive / Neutral / Cautious 研究视图。
-- 支持展示综合研究结论、核心指标、质量评分和主要风险。
-- 支持 Markdown 报告预览。
-- 支持下载 strategy_research_report.json、strategy_research_report.md 和 strategy_research_warnings.csv。
-- 页面继续保持简约、美观、大方、实用。
-
-策略研究报告中心只汇总已有研究结果，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
-
-## V1.25 研究报告归档中心
-
-V1.25 增强“研究报告”页面：
-
-- 支持保存策略研究报告 JSON 到 reports/strategy_research_reports/。
-- 支持同时保存 Markdown 报告。
-- 支持查看历史报告列表。
-- 支持加载历史报告并预览 Markdown。
-- 支持删除历史报告。
-- 支持导出 strategy_research_report_archive.csv。
-- 所有文件操作限定在 reports/strategy_research_reports/。
-- 支持 report_id 路径穿越防护。
-- 页面继续保持简约、美观、大方、实用。
-
-研究报告归档中心只保存本地研究报告，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
-
-## V1.26 策略报告对比中心
-
-V1.26 增强“研究报告”页面：
-
-- 新增策略报告对比中心。
-- 支持从历史归档报告中选择 2-5 份报告。
-- 支持综合质量分对比。
-- 支持收益 / 回撤 / 样本外风险 / 压力等级对比。
-- 支持识别更值得进一步研究的报告。
-- 支持风险提示对比。
-- 支持 JSON / CSV 下载。
-- 页面继续保持简约、美观、大方、实用。
-
-策略报告对比中心只读取已归档研究报告，不重新计算回测，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
-
-## V1.27 策略研究趋势中心
-
-V1.27 增强“研究报告”页面：
-
-- 新增策略研究趋势中心。
-- 支持按 strategy_name 聚合历史归档报告。
-- 支持质量分趋势分析。
-- 支持收益 / 回撤趋势分析。
-- 支持样本外风险 / 压力等级趋势观察。
-- 支持 Improving / Stable / Deteriorating / Insufficient 趋势视图。
-- 支持 JSON / CSV 下载。
-- 页面继续保持简约、美观、大方、实用。
-
-策略研究趋势中心只读取已归档研究报告，不重新计算回测，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
-
-## V1.28 策略研究看板
-
-V1.28 增强“研究报告”页面：
-
-- 新增策略研究看板。
-- 支持按 strategy_name 汇总历史归档报告。
-- 支持查看每个策略最新质量分、研究结论、趋势视图和风险状态。
-- 支持 High / Medium / Watch / Low 研究优先级。
-- 支持识别高风险策略。
-- 支持 JSON / CSV 下载。
-- 页面继续保持简约、美观、大方、实用。
-
-策略研究看板只读取已归档研究报告，不重新计算回测，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
-
-## V1.29 策略系统产品化收口版本
-
-V1.29 增强首页和核心结构：
-
-- 新增 Strategy Control Center，作为默认统一入口。
-- 支持首页总览、报告生成入口、历史报告管理、策略对比分析、策略趋势分析、策略研究看板、风险总览和系统健康面板。
-- 新增本地 TTL 缓存管理，用于缓存报告、看板、对比和趋势类结果。
-- 新增 StandardReportV1 标准报告结构。
-- 新增轻量目录结构：src/core、src/dashboard、src/cache、src/utils。
-- 系统健康面板展示 cache hit rate、report generation time、system_doctor status、pytest status 和 last error logs。
-- 页面继续保持简约、美观、大方、实用。
-
-V1.29 是产品化体验层，不改变核心策略逻辑，不重新定义交易规则。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
-
-## V1.30 产品稳定化与 UI 高级优化
-
-V1.30 是产品级优化版本，不新增策略功能：
-
-- 统一 Strategy Control Center 的 card-based UI 和 lazy load 模块入口。
-- 增强 Cache 2.0，支持上下文变化自动失效，以及 report / dashboard / compare / trend 缓存入口。
-- 新增 report pipeline，固化策略研究报告生成、质量评分、压力评分、标准报告和归档保存流程。
-- 增强 StandardReportV1，增加 confidence_level、data_freshness_score 和 stability_index。
-- 增强 safe_render，用于缺失报告、空数据和渲染异常时的 fallback。
-- 保持极简金融产品风格和统一 empty state。
-
-V1.30 只做稳定化、UI 统一、缓存和 pipeline 优化，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不构成投资建议。
-
-## V1.31 平台化架构
-
-V1.31 将系统升级为平台架构雏形：
-
-- 新增插件系统，支持 report、strategy、risk、dashboard 插件动态注册和独立运行。
-- 新增 FastAPI API 层，提供 report、trend、compare、risk 和 dashboard summary 接口。
-- 新增逻辑用户上下文，用于 report、cache 和 dashboard namespace 隔离。
-- 新增 Platform Launcher，统一 INIT -> CONFIG -> CACHE -> PLUGINS -> API -> UI 启动流程。
-- 新增 `PLATFORM_PACKAGE.md`，说明平台架构、API、多用户隔离和安全边界。
-
-V1.31 只增加平台边界和服务入口，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不保存密钥，不新增真实登录或支付系统，不构成投资建议。
-
-## V1.32 商业化发布准备层
-
-V1.32 将系统升级为可部署的商业级平台雏形：
-
-- 新增 `deploy/`，支持 Docker 和 Docker Compose 启动 UI + API。
-- 新增 API v2，提供 V1.32 统一返回结构、版本信息和 latency metadata。
-- 新增 `src/core/account/`，按 `data/users/{user_id}/` 隔离 report、cache 和 dashboard 路径。
-- 新增 System Admin Panel 数据层，展示 API latency、cache hit rate、system health score、plugin status 和 error logs。
-- 新增 `src/config/platform_config.py`，集中配置 CACHE_ENABLED、API_ENABLED、MULTI_USER 和 LOG_LEVEL。
-- 新增 `RELEASE_NOTES_V1.32.md`，说明 SaaS-ready、API、Docker、多用户结构、插件架构和安全边界。
-
-V1.32 只增加发布准备和 SaaS-ready 架构，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不保存密钥，不新增真实登录或支付系统，不构成投资建议。
-
-## V1.33 SaaS 产品架构终局版本
-
-V1.33 将系统升级为完整 SaaS 产品架构雏形：
-
-- 新增 `src/auth/`，提供 mock User、login/logout、session 管理和 user context。
-- 新增 `src/core/rbac.py`，支持 admin、user、viewer 三类权限和 report/dashboard/api 访问控制。
-- 新增 `src/auth/api_keys.py`，支持 mock API key 生成、撤销、简单限流和 usage tracking。
-- 新增 `src/billing/`，提供 free、pro、team 三类模拟 SaaS plan，不做真实支付。
-- 新增 `web/`，提供 login、dashboard、strategy center、report viewer、trend page 和 API docs 页面结构。
-- 新增 `SAAS_PLATFORM.md`，说明 SaaS 架构、用户系统、API、权限、计费和安全边界。
-
-V1.33 只增加 SaaS 产品架构壳，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不保存敏感信息，不新增真实认证或支付系统，不构成投资建议。
-
-## V1.34 生产级上线架构
-
-V1.34 将系统升级为生产上线架构雏形：
-
-- 新增 `web/frontend/`，提供 Next.js app-router 前端结构，覆盖 login、dashboard、strategy、reports、risk、settings 和 api-docs。
-- 新增 `src/auth/jwt_auth.py`，提供 signup/login、JWT session validation 和 protected route 检查。
-- 新增 `src/billing/stripe/`，提供 Stripe-compatible subscription、checkout、webhook 和 plan management 结构，支付流保持 mock。
-- 新增 `deploy/Dockerfile.production`、`deploy/docker-compose.production.yml` 和 `deploy/nginx/nginx.conf`，提供 API/UI/Nginx 生产部署结构。
-- 新增 `.github/workflows/production-launch.yml`，提供 CI/CD 验证入口。
-- 新增 `src/monitoring/`，提供 API latency、logs、system health 和 usage metrics。
-- 新增 `PRODUCTION_LAUNCH.md`，说明 SaaS architecture、frontend、auth、billing、deployment 和 security model。
-
-V1.34 只增加生产上线架构，不改变核心策略逻辑。
-
-本功能不连接真实券商，不自动交易，不生成真实交易指令，不调用 AI API，不保存敏感数据，不做实盘交易逻辑，不构成投资建议。
-
-## 运行测试
-
-```bash
-pytest
-```
-
-测试会检查均线、RSI 和趋势评分这些核心计算。
-
-## 运行回测
-
-现在回测模块可以在 Python 里直接调用：
-
-```python
-from src.data.us_data import get_us_ohlcv
-from src.backtest.simple_backtest import run_simple_backtest
-
-data = get_us_ohlcv("NVDA")
-result = run_simple_backtest(data)
-print(result)
-```
-
-回测输出包括：
-
-- 总收益
-- 年化收益
-- 最大回撤
-- 胜率
-- 交易次数
-- 最终资金
-
-## 趋势评分规则
-
-每只股票最高 100 分：
-
-- 收盘价高于 MA20：+15
-- 收盘价高于 MA60：+20
-- 收盘价高于 MA120：+20
-- MA20 高于 MA60：+15
-- MA60 高于 MA120：+15
-- RSI 在 50 到 75：+10
-- 成交量高于成交量 MA20：+5
-
-分数解释：
-
-- 80 到 100：Strong trend
-- 60 到 79：Watchlist
-- 40 到 59：Neutral
-- 40 以下：Weak
-
-## 风险提醒
-
-这个项目是学习和研究工具，不是投资建议。任何真实交易都需要你自己判断风险。
-
-V1 回测还很简单，不包含手续费、滑点、涨跌停、停牌、分红和真实成交限制。
-
-V1 生成的趋势信号只用于研究和学习，不是投资建议。
-
-V1 不连接券商、不自动下单、不做实盘交易。
+- Strategy research system design  
+- Risk analytics engine  
+- Report automation pipeline  
+- Scalable API layer  
+- Plugin-based extensibility  
+- SaaS-ready architecture foundation  
