@@ -1,0 +1,26 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Compile key modules
+        run: python -m py_compile scripts/startup_check.py src/system/health_check.py src/api/v2/server.py
+      - name: Run tests
+        run: python -m pytest
+      - name: Startup check
+        run: python scripts/startup_check.py
+      - name: System doctor
+        run: python scripts/system_doctor.py

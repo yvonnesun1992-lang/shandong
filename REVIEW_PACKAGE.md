@@ -1,3 +1,76 @@
+# V2.6 Deployment / Ops Readiness
+
+V2.6 adds deployment and operations readiness only. It does not add business features, real payment execution, Stripe live integration, broker connectivity, trading behavior, AI calls, or strategy logic changes.
+
+New files:
+
+```text
+.env.example
+Dockerfile
+docker-compose.yml
+docker-compose.prod.example.yml
+nginx/nginx.conf.example
+scripts/startup_check.py
+docs/DEPLOYMENT.md
+docs/OPERATIONS_RUNBOOK.md
+docs/SECURITY_CHECKLIST.md
+.github/workflows/ci.yml
+tests/test_v26_deployment_ops_readiness.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+src/system/health_check.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+Deployment readiness:
+
+- Added root `.env.example` with placeholders only.
+- Added startup check.
+- Added liveness endpoint.
+- Added readiness endpoint.
+- Added Dockerfile.
+- Added local Docker Compose.
+- Added production-like Docker Compose example.
+- Added Nginx example config.
+- Added deployment guide.
+- Added operations runbook.
+- Added security checklist.
+- Added CI workflow.
+
+Safety boundaries:
+
+- Current status: research / SaaS foundation
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Stripe live API calls: no
+- AI API calls: no
+- Production secrets committed: no
+- Plaintext password / session value / API key storage: no
+- Core strategy logic changed: no
+
+Validation:
+
+```text
+py_compile: passed
+startup_check: passed
+tests/test_v26_deployment_ops_readiness.py: 8 passed
+pytest: 444 passed
+system_doctor: OK
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, after checks pass per user instruction
+```
+
 # V2.5 Plan / Quota / Usage Limit
 
 V2.5 adds local plan, quota, and usage-limit foundations only. It does not add real payment execution, Stripe live integration, broker connectivity, trading behavior, AI calls, or strategy logic changes.

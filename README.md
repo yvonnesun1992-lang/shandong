@@ -200,9 +200,26 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🚢 V2.6 Deployment / Ops Readiness
+
+- Root `.env.example` with local-safe placeholders only
+- Startup check script for Python, directories, database init, auth policy, plan config, API imports, and system health compatibility
+- `/api/v2/system/liveness` endpoint that does not access the database
+- `/api/v2/system/readiness` endpoint for database, auth, workspace, quota, and API readiness
+- Dockerfile and local `docker-compose.yml`
+- Production-like `docker-compose.prod.example.yml` using external `.env`
+- Example Nginx reverse proxy config
+- Deployment guide, operations runbook, and security checklist
+- CI workflow for py_compile, pytest, startup_check, and system_doctor
+- Current system remains a research / SaaS foundation
+- No broker connection, no auto trading, no AI API, no real payment execution, no plaintext secrets
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 436+ tests passed  
+- ✔ pytest: 444+ tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
