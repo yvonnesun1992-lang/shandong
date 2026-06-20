@@ -79,6 +79,9 @@ IGNORED_SECURITY_CONTEXTS = [
     "api_key_repository",
     "revoke_api_key",
     "list_api_keys_by_user",
+    "SENSITIVE_FIELDS",
+    "SENSITIVE_KEY_PATTERN",
+    "ASSIGNMENT_PATTERN",
     "import secrets",
     "secrets.token_hex",
 ]
