@@ -146,4 +146,38 @@ CREATE_TABLES_SQL = [
     create index if not exists idx_user_permissions_user
     on user_permissions(user_id, permission)
     """,
+    """
+    create table if not exists usage_events (
+        id integer primary key autoincrement,
+        event_id text not null unique,
+        workspace_id text not null default 'default',
+        user_id text not null,
+        event_type text not null,
+        resource_type text,
+        resource_id text,
+        quantity integer not null default 1,
+        created_at text not null,
+        metadata_json text not null default '{}'
+    )
+    """,
+    """
+    create index if not exists idx_usage_events_workspace_user_event
+    on usage_events(workspace_id, user_id, event_type, created_at)
+    """,
+    """
+    create table if not exists quota_snapshots (
+        id integer primary key autoincrement,
+        workspace_id text not null,
+        plan_name text not null,
+        period_start text not null,
+        period_end text not null,
+        usage_json text not null default '{}',
+        limits_json text not null default '{}',
+        created_at text not null
+    )
+    """,
+    """
+    create index if not exists idx_quota_snapshots_workspace_created
+    on quota_snapshots(workspace_id, created_at)
+    """,
 ]

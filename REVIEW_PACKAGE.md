@@ -1,3 +1,71 @@
+# V2.5 Plan / Quota / Usage Limit
+
+V2.5 adds local plan, quota, and usage-limit foundations only. It does not add real payment execution, Stripe live integration, broker connectivity, trading behavior, AI calls, or strategy logic changes.
+
+New files:
+
+```text
+src/config/plan_config.py
+src/db/usage_repository.py
+src/billing/init.py
+src/billing/plan_service.py
+src/billing/quota_service.py
+src/billing/usage_service.py
+tests/test_v25_plan_quota_usage_limit.py
+```
+
+Updated files:
+
+```text
+src/db/models.py
+src/api/v2/server.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+Plan / quota layer:
+
+- Added local `free`, `pro`, and `team` plan limits.
+- Added environment override support with fallback to safe defaults.
+- Added `usage_events` model.
+- Added `quota_snapshots` model.
+- Added usage repository with workspace-isolated queries.
+- Added plan service for workspace-level mock plans.
+- Added usage service for daily usage tracking.
+- Added quota service with `QUOTA_EXCEEDED` standard API errors.
+- Added quota enforcement for report generation and selected API calls.
+- Added `/api/v2/billing/plan`.
+- Added `/api/v2/billing/quota`.
+- Added `/api/v2/system/billing-health`.
+
+Safety boundaries:
+
+- Billing mode: mock only
+- Stripe live API calls: no
+- Real payment execution: no
+- Payment secrets stored: no
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- AI API calls: no
+- Secrets stored in plaintext: no
+
+Validation:
+
+```text
+py_compile: passed
+tests/test_v25_plan_quota_usage_limit.py: 7 passed
+pytest: 436 passed
+system_doctor: OK
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, after checks pass per user instruction
+```
+
 # V2.4 Workspace / Tenant Isolation
 
 V2.4 adds workspace / tenant isolation only. It does not add real payments, broker connectivity, trading behavior, AI calls, or strategy logic changes.
