@@ -1,3 +1,64 @@
+# V2.1 API Production Hardening
+
+V2.1 hardens the API layer only. It does not add business features, change core strategy logic, change trading behavior, or change payment behavior.
+
+New files:
+
+```text
+src/api/v2/response.py
+src/api/v2/errors.py
+src/api/v2/schemas.py
+src/api/v2/pagination.py
+src/api/v2/middleware.py
+src/api/v2/logging.py
+tests/test_v21_api_production_hardening.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+API hardening:
+
+- Production API response standard added.
+- Error handling layer added.
+- Request validation schemas added.
+- Pagination utilities added.
+- CORS middleware added with local origins by default.
+- Basic in-memory rate limit added.
+- API logging added with sensitive data sanitization.
+- DB health endpoint enhanced.
+- V2.0 database foundation preserved.
+
+Safety boundaries:
+
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Plaintext secret / token / password storage: no
+- AI API calls: no
+
+Validation:
+
+```text
+py_compile: passed
+tests/test_v21_api_production_hardening.py: 10 passed
+pytest: 400 passed
+system_doctor: OK
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V2.0 Production Data Foundation
 
 V2.0 adds the production data foundation layer only. It does not change core strategy logic, trading behavior, or payment behavior.

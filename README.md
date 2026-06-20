@@ -116,9 +116,24 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🛡️ V2.1 API Production Hardening
+
+- Production API response standard for success and error payloads
+- Error handling layer with sanitized messages and details
+- Request validation for user IDs, report generation, and pagination
+- Pagination utilities with bounded `page_size` up to 100
+- CORS middleware for local UI origins and configurable allowed origins
+- Basic in-memory rate limiting for local production structure
+- API logging with sensitive data sanitization and audit-log fallback
+- Enhanced DB health response with database type and warning details
+- Preserves the V2.0 database foundation and existing API paths
+- No broker connection, no auto trading, no AI API, no real payment execution, no plaintext secrets
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 390+ tests passed  
+- ✔ pytest: 400+ tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
