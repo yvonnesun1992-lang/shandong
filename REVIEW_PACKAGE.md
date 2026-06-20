@@ -1,3 +1,76 @@
+# V2.3 Production Auth Mode & Security Policy
+
+V2.3 hardens production auth mode and security policy only. It does not add real payment execution, real identity provider integration, broker connectivity, trading behavior, AI calls, or strategy logic changes.
+
+New files:
+
+```text
+src/config/auth_config.py
+src/security/__init__.py
+src/security/init.py
+src/security/policy.py
+src/security/sanitizer.py
+tests/test_v23_production_auth_security_policy.py
+```
+
+Updated files:
+
+```text
+src/api/v2/auth.py
+src/api/v2/errors.py
+src/api/v2/server.py
+src/auth/session_service.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+Production auth policy:
+
+- Added explicit `local`, `dev`, and `production` auth modes.
+- Local mode keeps default-admin fallback for local development compatibility.
+- Dev mode supports mock sessions and API keys without anonymous admin promotion.
+- Production mode requires a valid session or API key on protected endpoints.
+- Production mode disables local default-admin fallback.
+- Missing production credentials return `AUTH_REQUIRED`.
+- Invalid sessions return `INVALID_SESSION`.
+- Invalid API keys return `INVALID_API_KEY`.
+- Permission failures return `PERMISSION_DENIED`.
+- `/api/v2/system/security-health` reports the active security policy.
+- Production mock login returns a `mock_auth_only` warning.
+
+Security and audit hardening:
+
+- Added central `SecurityPolicy`.
+- Added sensitive data sanitizer.
+- Audit metadata removes raw session IDs, raw API keys, authorization headers, passwords, tokens, database paths, and local absolute paths.
+- Added auth audit actions for mode checks, required auth, invalid session, invalid API key, permission denial, and policy checks.
+
+Safety boundaries:
+
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Plaintext password / session value / API key storage: no
+- AI API calls: no
+- Secrets stored in plaintext: no
+
+Validation:
+
+```text
+py_compile: passed
+tests/test_v23_production_auth_security_policy.py: 11 passed
+pytest: 420 passed
+system_doctor: OK
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V2.2 Auth / User Session Hardening
 
 V2.2 hardens the auth, session, API key, and permission structure only. It does not add real payments, real identity provider integration, trading behavior, or strategy logic changes.

@@ -148,9 +148,26 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🔒 V2.3 Production Auth Mode & Security Policy
+
+- Configurable auth modes: `local`, `dev`, and `production`
+- Production security policy layer for auth requirement, session TTL, API-key requirement, and local-admin fallback control
+- Local mode keeps the existing default-admin fallback for local development
+- Dev mode supports mock session / API-key flow without anonymous admin promotion
+- Production mode requires a valid session or API key for protected endpoints
+- Protected API routes return standard 401 / 403 errors for missing, invalid, or insufficient auth
+- `/api/v2/system/security-health` exposes sanitized security-policy status
+- Audit logging records auth mode, required auth, invalid credentials, permission denial, and policy checks
+- Security sanitizer removes sensitive values, raw tokens, raw keys, authorization headers, database paths, and local absolute paths
+- Mock login remains mock-only and reports `mock_auth_only` in production mode
+- No broker connection, no auto trading, no AI API, no real payment execution, no plaintext secrets
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 409+ tests passed  
+- ✔ pytest: 420+ tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

@@ -76,3 +76,35 @@ class RateLimitApiError(ApiError):
 
     def __init__(self, message: str = "Rate limit exceeded", detail: dict | None = None) -> None:
         super().__init__(message, code=self.code, status_code=self.status_code, detail=detail)
+
+
+class AuthRequiredApiError(ApiError):
+    code = "AUTH_REQUIRED"
+    status_code = 401
+
+    def __init__(self, message: str = "Authentication required", detail: dict | None = None) -> None:
+        super().__init__(message, code=self.code, status_code=self.status_code, detail=detail)
+
+
+class InvalidSessionApiError(ApiError):
+    code = "INVALID_SESSION"
+    status_code = 401
+
+    def __init__(self, message: str = "Invalid session", detail: dict | None = None) -> None:
+        super().__init__(message, code=self.code, status_code=self.status_code, detail=detail)
+
+
+class InvalidApiKeyApiError(ApiError):
+    code = "INVALID_API_KEY"
+    status_code = 401
+
+    def __init__(self, message: str = "Invalid API key", detail: dict | None = None) -> None:
+        super().__init__(message, code=self.code, status_code=self.status_code, detail=detail)
+
+
+class ProductionAuthRequiredApiError(ApiError):
+    code = "PRODUCTION_AUTH_REQUIRED"
+    status_code = 401
+
+    def __init__(self, message: str = "Production authentication required", detail: dict | None = None) -> None:
+        super().__init__(message, code=self.code, status_code=self.status_code, detail=detail)
