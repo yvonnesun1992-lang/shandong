@@ -608,6 +608,21 @@ V1.32 只增加发布准备和 SaaS-ready 架构，不改变核心策略逻辑�
 
 本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不保存密钥，不新增真实登录或支付系统，不构成投资建议。
 
+## V1.33 SaaS 产品架构终局版本
+
+V1.33 将系统升级为完整 SaaS 产品架构雏形：
+
+- 新增 `src/auth/`，提供 mock User、login/logout、session 管理和 user context。
+- 新增 `src/core/rbac.py`，支持 admin、user、viewer 三类权限和 report/dashboard/api 访问控制。
+- 新增 `src/auth/api_keys.py`，支持 mock API key 生成、撤销、简单限流和 usage tracking。
+- 新增 `src/billing/`，提供 free、pro、team 三类模拟 SaaS plan，不做真实支付。
+- 新增 `web/`，提供 login、dashboard、strategy center、report viewer、trend page 和 API docs 页面结构。
+- 新增 `SAAS_PLATFORM.md`，说明 SaaS 架构、用户系统、API、权限、计费和安全边界。
+
+V1.33 只增加 SaaS 产品架构壳，不改变核心策略逻辑。
+
+本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不保存敏感信息，不新增真实认证或支付系统，不构成投资建议。
+
 ## 运行测试
 
 ```bash
