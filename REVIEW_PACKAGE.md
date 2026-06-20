@@ -390,11 +390,17 @@ py_compile: passed
 pytest: 381 passed
 system_doctor: passed
 dashboard: returned 200
-frontend_build: bundled node structure verification passed
+frontend_build: bundled node structure verification passed; Next dev smoke returned 200 for /login, /dashboard, /reports, /strategy, /risk, /settings, /api-docs
 changed files: real UTF-8 + LF multiline files
 local Unicode scan risk_count: 0
 source boundary scan findings: 0
 ```
+
+Freeze stability fixes:
+
+- Upgraded frontend package metadata to Next 16.2.9 / React 19.2.7 / Recharts 3.8.1 after install warned that Next 15.3.0 had a security issue.
+- Added frontend TypeScript type dependencies and Next-generated TypeScript config requirements.
+- Added `pnpm-lock.yaml` for production dependency reproducibility.
 
 安全边界：
 
