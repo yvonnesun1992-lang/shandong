@@ -1,4 +1,8 @@
+![banner](assets/github_banner.png)
+
 # 🧠 Quant Strategy Intelligence Platform (V1.34)
+
+> A production-grade SaaS platform for quantitative strategy intelligence, risk analytics, and automated reporting systems.
 
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
@@ -29,19 +33,7 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ## 🏗️ System Architecture
 
-Frontend (Next.js)
-        ↓
-API Layer (FastAPI SaaS Gateway)
-        ↓
-Core Intelligence Engine
-  ├── Strategy Engine
-  ├── Report Pipeline
-  ├── Risk Engine
-  ├── Analytics Core
-        ↓
-Plugin System (Extensible Modules)
-        ↓
-Data Layer (User Isolation / SaaS-ready)
+![architecture](assets/architecture_v134.png)
 
 ---
 
