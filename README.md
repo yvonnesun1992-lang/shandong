@@ -623,6 +623,22 @@ V1.33 只增加 SaaS 产品架构壳，不改变核心策略逻辑。
 
 本功能不连接真实券商，不自动下单，不生成真实交易指令，不调用 AI API，不保存敏感信息，不新增真实认证或支付系统，不构成投资建议。
 
+## V1.34 生产级上线架构
+
+V1.34 将系统升级为生产上线架构雏形：
+
+- 新增 `web/frontend/`，提供 Next.js app-router 前端结构，覆盖 login、dashboard、strategy、reports、risk、settings 和 api-docs。
+- 新增 `src/auth/jwt_auth.py`，提供 signup/login、JWT session validation 和 protected route 检查。
+- 新增 `src/billing/stripe/`，提供 Stripe-compatible subscription、checkout、webhook 和 plan management 结构，支付流保持 mock。
+- 新增 `deploy/Dockerfile.production`、`deploy/docker-compose.production.yml` 和 `deploy/nginx/nginx.conf`，提供 API/UI/Nginx 生产部署结构。
+- 新增 `.github/workflows/production-launch.yml`，提供 CI/CD 验证入口。
+- 新增 `src/monitoring/`，提供 API latency、logs、system health 和 usage metrics。
+- 新增 `PRODUCTION_LAUNCH.md`，说明 SaaS architecture、frontend、auth、billing、deployment 和 security model。
+
+V1.34 只增加生产上线架构，不改变核心策略逻辑。
+
+本功能不连接真实券商，不自动交易，不生成真实交易指令，不调用 AI API，不保存敏感数据，不做实盘交易逻辑，不构成投资建议。
+
 ## 运行测试
 
 ```bash

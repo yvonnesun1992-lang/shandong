@@ -327,6 +327,91 @@ source boundary scan findings: 0
 是否 merge PR：否
 ```
 
+## V1.34: production launch architecture
+
+V1.34 目标：
+
+- 增加 Next.js Web 前端结构。
+- 增加 JWT 认证系统结构。
+- 增加 Stripe 支付系统结构，支付保持 mock。
+- 增加 Docker + Nginx + CI/CD 云部署结构。
+- 增加生产级监控系统。
+- 增加生产上线文档。
+
+新增文件：
+
+```text
+PRODUCTION_LAUNCH.md
+.github/workflows/production-launch.yml
+deploy/Dockerfile.production
+deploy/docker-compose.production.yml
+deploy/nginx/nginx.conf
+src/auth/jwt_auth.py
+src/billing/stripe/__init__.py
+src/monitoring/__init__.py
+tests/test_v134_production.py
+web/frontend/package.json
+web/frontend/next.config.js
+web/frontend/tsconfig.json
+web/frontend/scripts/verify-build.mjs
+web/frontend/app/layout.tsx
+web/frontend/app/page.tsx
+web/frontend/app/styles.css
+web/frontend/app/components/ChartCard.tsx
+web/frontend/app/components/ProductionShell.tsx
+web/frontend/app/login/page.tsx
+web/frontend/app/dashboard/page.tsx
+web/frontend/app/strategy/page.tsx
+web/frontend/app/reports/page.tsx
+web/frontend/app/risk/page.tsx
+web/frontend/app/settings/page.tsx
+web/frontend/app/api-docs/page.tsx
+```
+
+修改文件：
+
+```text
+README.md
+REVIEW_PACKAGE.md
+```
+
+生产层说明：
+
+- Next.js 前端采用 responsive card layout 和 chart component。
+- JWT auth 支持 signup/login、session validation 和 protected route checks。
+- Stripe billing shell 支持 subscription、checkout、webhook 和 plan catalog，live payment 为 false。
+- Production deploy 包含 Dockerfile、Compose、Nginx reverse proxy 和 GitHub Actions workflow。
+- Monitoring 支持 API latency、logs、system health 和 usage metrics。
+
+检查结果：
+
+```text
+py_compile: passed
+pytest: 381 passed
+system_doctor: passed
+dashboard: returned 200
+frontend_build: bundled node structure verification passed
+changed files: real UTF-8 + LF multiline files
+local Unicode scan risk_count: 0
+source boundary scan findings: 0
+```
+
+安全边界：
+
+```text
+是否连接真实券商：否
+是否自动交易：否
+是否生成真实交易指令：否
+是否调用 AI API：否
+是否调用 OpenAI API：否
+是否预测股价：否
+是否保存敏感数据：否
+是否真实支付：否
+是否做实盘交易逻辑：否
+是否改变核心策略逻辑：否
+是否 merge PR：否
+```
+
 V1.18 raw 文件已再次强制刷新，用于确认远程 raw 是真实多行文本。
 V1.18 文件格式已再次验证 6，用于确认 GitHub 远程分支刷新。
 
