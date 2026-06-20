@@ -26,6 +26,7 @@ from src.plugins import create_default_registry
 from src.reports.strategy_research_dashboard import build_strategy_research_dashboard
 from src.reports.strategy_report_compare import compare_strategy_research_reports
 from src.reports.strategy_report_trend import build_strategy_report_trend
+from src.security.policy import get_security_policy
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -151,9 +152,20 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v2/system/db-health", "default", "ok", response["meta"]["latency_ms"], len(warning))
         return response
 
+    @api.get("/api/v2/system/security-health")
+    def security_health() -> dict:
+        started = perf_counter()
+        policy = get_security_policy()
+        security = policy.as_dict()
+        audit_auth_event("default", "security.policy_checked", security)
+        response = success_response({"security": security}, started_at=started, warning=security["warnings"])
+        log_api_event("/api/v2/system/security-health", "default", "ok", response["meta"]["latency_ms"], len(security["warnings"]))
+        return response
+
     @api.post("/api/v2/auth/login")
     def auth_login(payload: dict | None = None) -> dict:
         started = perf_counter()
+        policy = get_security_policy()
         payload = payload or {}
         user_id = str(payload.get("user_id") or "default")
         role = str(payload.get("role") or "admin")
@@ -161,7 +173,13 @@ def create_v2_api_app() -> FastAPI:
         session = create_session(user["user_id"], metadata={"role": user["role"]})
         session["role"] = user["role"]
         audit_auth_event(user["user_id"], "auth.login", {"role": user["role"]})
-        response = success_response({"session": session}, started_at=started)
+        warning = ["mock_auth_only"] if policy.auth_mode == "production" else []
+        response = success_response(
+            {"session": session},
+            meta={"auth_mode": policy.auth_mode, "mock_auth_only": True},
+            warning=warning,
+            started_at=started,
+        )
         log_api_event("/api/v2/auth/login", user["user_id"], "ok", response["meta"]["latency_ms"])
         return response
 

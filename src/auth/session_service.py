@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 
 from src.config import database_config
 from src.db.repository import UserSessionRepository, safe_identifier
+from src.security.policy import get_security_policy
 
 
 def hash_session_value(value: str) -> str:
@@ -21,10 +22,11 @@ def _parse_time(value: str | None) -> datetime | None:
         return None
 
 
-def create_session(user_id: str, ttl_minutes: int = 240, metadata: dict | None = None) -> dict:
+def create_session(user_id: str, ttl_minutes: int | None = None, metadata: dict | None = None) -> dict:
     safe_user = safe_identifier(user_id)
     session_value = secrets.token_urlsafe(32)
-    expires_at = (datetime.now(UTC) + timedelta(minutes=max(int(ttl_minutes or 240), 1))).replace(microsecond=0).isoformat()
+    ttl = get_security_policy().session_ttl_minutes if ttl_minutes is None else ttl_minutes
+    expires_at = (datetime.now(UTC) + timedelta(minutes=max(int(ttl or 240), 1))).replace(microsecond=0).isoformat()
     UserSessionRepository(database_config.DATABASE_URL).create_session_record(
         user_id=safe_user,
         session_id_hash=hash_session_value(session_value),
