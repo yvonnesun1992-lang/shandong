@@ -75,4 +75,36 @@ CREATE_TABLES_SQL = [
     create index if not exists idx_audit_logs_user_created
     on audit_logs(user_id, created_at)
     """,
+    """
+    create table if not exists user_sessions (
+        id integer primary key autoincrement,
+        session_id text not null unique,
+        user_id text not null,
+        status text not null default 'active',
+        created_at text not null,
+        expires_at text not null,
+        revoked_at text,
+        last_seen_at text,
+        metadata_json text not null default '{}'
+    )
+    """,
+    """
+    create index if not exists idx_user_sessions_user
+    on user_sessions(user_id, status)
+    """,
+    """
+    create table if not exists user_permissions (
+        id integer primary key autoincrement,
+        user_id text not null,
+        role text not null,
+        permission text not null,
+        resource_type text not null default '',
+        created_at text not null,
+        unique(user_id, permission, resource_type)
+    )
+    """,
+    """
+    create index if not exists idx_user_permissions_user
+    on user_permissions(user_id, permission)
+    """,
 ]

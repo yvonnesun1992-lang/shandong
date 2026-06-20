@@ -131,9 +131,26 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🔐 V2.2 Auth / User Session Hardening
+
+- Auth context for API requests
+- Session service with hashed stored session values and revoke support
+- Permission service with admin / user / viewer RBAC defaults
+- API key verification service with hash-only storage
+- Auth middleware helpers for `X-User-ID`, `X-Session-ID`, and `X-API-Key`
+- Local mock login / logout / me endpoints
+- RBAC checks on report, dashboard, risk, and admin API routes
+- Auth audit logs with sensitive data sanitization
+- Current login flow is local mock login, not a real production identity provider
+- No real passwords, no plaintext session values, no plaintext API keys
+- No broker connection, no auto trading, no AI API, no real payment execution
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 400+ tests passed  
+- ✔ pytest: 409+ tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

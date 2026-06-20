@@ -6,12 +6,15 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
+from src.api.v2.auth import audit_auth_event, build_auth_context, require_permission
 from src.api.v2.errors import ApiError, DatabaseApiError, ValidationApiError
 from src.api.v2.logging import log_api_event
 from src.api.v2.middleware import InMemoryRateLimiter, RateLimitMiddleware, configure_cors
 from src.api.v2.pagination import paginate_items
 from src.api.v2.response import success_response
 from src.api.v2.schemas import ReportGenerateRequest, ReportListQuery, UserQuery
+from src.auth.permission_service import set_user_role
+from src.auth.session_service import create_session, get_session, revoke_session
 
 from src.config import database_config
 from src.core.account import create_account_context
@@ -67,11 +70,14 @@ def create_v2_api_app() -> FastAPI:
         return response
 
     @api.post("/api/v2/report/generate")
-    def generate_report(payload: dict | None = None) -> dict:
+    def generate_report(request: Request, payload: dict | None = None) -> dict:
         started = perf_counter()
-        request = ReportGenerateRequest(**(payload or {}))
-        account = create_account_context(request.user_id)
-        strategy_name = request.strategy_name
+        auth_context = require_permission(request, "report:write")
+        report_request = ReportGenerateRequest(**(payload or {}))
+        has_explicit_auth = bool(request.headers.get("X-Session-ID") or request.headers.get("X-API-Key"))
+        account_user_id = auth_context.user_id if has_explicit_auth else report_request.user_id
+        account = create_account_context(account_user_id)
+        strategy_name = report_request.strategy_name
         plugin_result = registry.run("report", {"user_id": account.user_id, "strategy_name": strategy_name})
         response = success_response({"user": account.as_dict(), "plugin": plugin_result}, started_at=started)
         log_api_event("/api/v2/report/generate", account.user_id, "ok", response["meta"]["latency_ms"])
@@ -88,10 +94,11 @@ def create_v2_api_app() -> FastAPI:
         return response
 
     @api.get("/api/v2/reports/db-list")
-    def list_database_reports(user_id: str = "default", page: int = 1, page_size: int = 20) -> dict:
+    def list_database_reports(request: Request, user_id: str = "default", page: int = 1, page_size: int = 20) -> dict:
         started = perf_counter()
-        query = ReportListQuery(user_id=user_id, page=page, page_size=page_size)
-        account = create_account_context(query.user_id)
+        auth_context = require_permission(request, "report:read")
+        query = ReportListQuery(user_id=auth_context.user_id or user_id, page=page, page_size=page_size)
+        account = create_account_context(auth_context.user_id)
         try:
             report_items = StrategyReportRepository(database_config.DATABASE_URL).list_reports_by_user(account.user_id)
             reports = paginate_items(report_items, page=query.page, page_size=query.page_size)
@@ -144,6 +151,42 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v2/system/db-health", "default", "ok", response["meta"]["latency_ms"], len(warning))
         return response
 
+    @api.post("/api/v2/auth/login")
+    def auth_login(payload: dict | None = None) -> dict:
+        started = perf_counter()
+        payload = payload or {}
+        user_id = str(payload.get("user_id") or "default")
+        role = str(payload.get("role") or "admin")
+        user = set_user_role(user_id, role)
+        session = create_session(user["user_id"], metadata={"role": user["role"]})
+        session["role"] = user["role"]
+        audit_auth_event(user["user_id"], "auth.login", {"role": user["role"]})
+        response = success_response({"session": session}, started_at=started)
+        log_api_event("/api/v2/auth/login", user["user_id"], "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.post("/api/v2/auth/logout")
+    def auth_logout(payload: dict | None = None) -> dict:
+        started = perf_counter()
+        payload = payload or {}
+        session_value = str(payload.get("session_id") or "")
+        session_record = get_session(session_value) if session_value else None
+        user_id = session_record.get("user_id", "default") if session_record else "default"
+        revoked = revoke_session(session_value) if session_value else False
+        audit_auth_event(user_id, "auth.logout", {"revoked": revoked})
+        response = success_response({"revoked": revoked}, started_at=started)
+        log_api_event("/api/v2/auth/logout", user_id, "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v2/auth/me")
+    def auth_me(request: Request) -> dict:
+        started = perf_counter()
+        context = build_auth_context(request)
+        audit_auth_event(context.user_id, "auth.me", {"authenticated": context.is_authenticated})
+        response = success_response({"auth": context.as_dict()}, started_at=started)
+        log_api_event("/api/v2/auth/me", context.user_id, "ok", response["meta"]["latency_ms"])
+        return response
+
     @api.get("/api/v2/report/detail")
     def report_detail(report_id: str, user_id: str = "default") -> dict:
         started = perf_counter()
@@ -183,9 +226,10 @@ def create_v2_api_app() -> FastAPI:
         return response
 
     @api.get("/api/v2/risk")
-    def risk(user_id: str = "default") -> dict:
+    def risk(request: Request, user_id: str = "default") -> dict:
         started = perf_counter()
-        query = UserQuery(user_id=user_id)
+        auth_context = require_permission(request, "risk:read")
+        query = UserQuery(user_id=auth_context.user_id or user_id)
         account = create_account_context(query.user_id)
         plugin_result = registry.run("risk", {"user_id": account.user_id})
         response = success_response({"user": account.as_dict(), "risk": plugin_result}, started_at=started)
@@ -193,9 +237,10 @@ def create_v2_api_app() -> FastAPI:
         return response
 
     @api.get("/api/v2/dashboard/summary")
-    def dashboard_summary(user_id: str = "default") -> dict:
+    def dashboard_summary(request: Request, user_id: str = "default") -> dict:
         started = perf_counter()
-        query = UserQuery(user_id=user_id)
+        auth_context = require_permission(request, "dashboard:read")
+        query = UserQuery(user_id=auth_context.user_id or user_id)
         account = create_account_context(query.user_id)
         dashboard = build_strategy_research_dashboard([])
         cache.set_dashboard(account.dashboard_path("summary").as_posix(), dashboard)
@@ -204,9 +249,10 @@ def create_v2_api_app() -> FastAPI:
         return response
 
     @api.get("/api/v2/admin/system")
-    def system_admin(user_id: str = "default") -> dict:
+    def system_admin(request: Request, user_id: str = "default") -> dict:
         started = perf_counter()
-        query = UserQuery(user_id=user_id)
+        auth_context = require_permission(request, "admin:read")
+        query = UserQuery(user_id=auth_context.user_id or user_id)
         account = create_account_context(query.user_id)
         admin_panel = build_system_admin_panel(cache=cache, registry=registry)
         response = success_response({"user": account.as_dict(), "admin": admin_panel}, started_at=started)

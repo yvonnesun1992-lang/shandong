@@ -41,6 +41,14 @@ def audit_row_to_dict(row: Any) -> dict | None:
     return data
 
 
+def session_row_to_dict(row: Any) -> dict | None:
+    data = row_to_dict(row)
+    if data is None:
+        return None
+    data["metadata_json"] = decode_json(data.get("metadata_json"))
+    return data
+
+
 def hash_access_key_value(value: str) -> str:
     return hashlib.sha256(str(value).encode("utf-8")).hexdigest()
 
@@ -302,3 +310,87 @@ class AuditLogRepository(BaseRepository):
                 (safe_identifier(user_id),),
             ).fetchall()
         return [audit_row_to_dict(row) for row in rows if row is not None]
+
+
+class UserSessionRepository(BaseRepository):
+    def create_session_record(
+        self,
+        user_id: str,
+        session_id_hash: str,
+        expires_at: str,
+        status: str = "active",
+        metadata: dict | list | str | None = None,
+    ) -> dict:
+        now = utc_now_iso()
+        with get_connection(self.database_url) as connection:
+            connection.execute(
+                """
+                insert into user_sessions(session_id, user_id, status, created_at, expires_at, last_seen_at, metadata_json)
+                values (?, ?, ?, ?, ?, ?, ?)
+                on conflict(session_id) do update set
+                    user_id = excluded.user_id,
+                    status = excluded.status,
+                    expires_at = excluded.expires_at,
+                    last_seen_at = excluded.last_seen_at,
+                    metadata_json = excluded.metadata_json
+                """,
+                (
+                    str(session_id_hash),
+                    safe_identifier(user_id),
+                    status or "active",
+                    now,
+                    expires_at,
+                    now,
+                    encode_json(metadata),
+                ),
+            )
+        record = self.get_session_by_hash(session_id_hash)
+        if record is None:
+            raise RuntimeError("session record was not saved")
+        return record
+
+    def get_session_by_hash(self, session_id_hash: str) -> dict | None:
+        with get_connection(self.database_url) as connection:
+            row = connection.execute("select * from user_sessions where session_id = ?", (str(session_id_hash),)).fetchone()
+        return session_row_to_dict(row)
+
+    def revoke_session_by_hash(self, session_id_hash: str) -> bool:
+        now = utc_now_iso()
+        with get_connection(self.database_url) as connection:
+            cursor = connection.execute(
+                "update user_sessions set status = 'revoked', revoked_at = ?, last_seen_at = ? where session_id = ?",
+                (now, now, str(session_id_hash)),
+            )
+            return cursor.rowcount > 0
+
+    def touch_session_by_hash(self, session_id_hash: str) -> None:
+        now = utc_now_iso()
+        with get_connection(self.database_url) as connection:
+            connection.execute("update user_sessions set last_seen_at = ? where session_id = ?", (now, str(session_id_hash)))
+
+
+class UserPermissionRepository(BaseRepository):
+    def set_permissions(self, user_id: str, role: str, permissions: list[str], resource_type: str = "") -> list[dict]:
+        safe_user_id = safe_identifier(user_id)
+        now = utc_now_iso()
+        with get_connection(self.database_url) as connection:
+            connection.execute("delete from user_permissions where user_id = ?", (safe_user_id,))
+            for permission in permissions:
+                connection.execute(
+                    """
+                    insert into user_permissions(user_id, role, permission, resource_type, created_at)
+                    values (?, ?, ?, ?, ?)
+                    on conflict(user_id, permission, resource_type) do update set
+                        role = excluded.role
+                    """,
+                    (safe_user_id, role or "user", permission, resource_type or "", now),
+                )
+        return self.list_permissions(safe_user_id)
+
+    def list_permissions(self, user_id: str) -> list[dict]:
+        with get_connection(self.database_url) as connection:
+            rows = connection.execute(
+                "select * from user_permissions where user_id = ? order by permission asc",
+                (safe_identifier(user_id),),
+            ).fetchall()
+        return [dict(row) for row in rows]

@@ -77,13 +77,22 @@ IGNORED_SECURITY_CONTEXTS = [
     "api_keys",
     "api_key_record",
     "api_key_repository",
+    "api_key_service",
+    "api_key.verify",
+    "api_key:manage",
+    "hash_api_key",
+    "create_api_key",
+    "verify_api_key",
     "revoke_api_key",
     "list_api_keys_by_user",
+    "X-API-Key",
+    "extract_api_key",
     "SENSITIVE_FIELDS",
     "SENSITIVE_KEY_PATTERN",
     "ASSIGNMENT_PATTERN",
     "import secrets",
     "secrets.token_hex",
+    "secrets.token_urlsafe",
 ]
 
 
