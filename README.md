@@ -243,9 +243,22 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🧭 V2.9 Architecture Review & Local Startup Verification
+
+- Architecture Review for V2.0-V2.8 platform layers
+- Local Startup Verification script at `scripts/local_startup_verification.py`
+- Local Demo Guide at `docs/LOCAL_DEMO_GUIDE.md`
+- V2 platform readiness review at `docs/V2_ARCHITECTURE_REVIEW.md`
+- Checks API, Auth, Workspace, Quota, Deployment, Integration QA, and Admin Console together
+- No new business functionality
+- No broker connection, no auto trading, no AI API, no real payment execution, no plaintext secrets
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 456+ tests passed  
+- ✔ pytest: 461+ tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

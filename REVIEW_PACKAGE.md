@@ -1,3 +1,86 @@
+# V2.9 Architecture Review & Local Startup Verification
+
+V2.9 is an architecture review and local startup verification release. It does not add business functionality, change core strategy logic, connect to brokers, place orders, execute payments, call external AI services, or store plaintext secrets.
+
+New files:
+
+```text
+scripts/local_startup_verification.py
+docs/V2_ARCHITECTURE_REVIEW.md
+docs/LOCAL_DEMO_GUIDE.md
+tests/test_v29_architecture_review_local_startup_verification.py
+```
+
+Updated files:
+
+```text
+README.md
+REVIEW_PACKAGE.md
+```
+
+Verification scope:
+
+- Local startup chain.
+- API app import and creation.
+- API health endpoint.
+- Liveness endpoint.
+- Readiness endpoint.
+- Security health endpoint.
+- Database health endpoint.
+- Workspace health endpoint.
+- Billing health endpoint.
+- Admin Console in local mode.
+- startup_check.
+- v2_integration_check.
+- system_doctor.
+- Frontend Admin Console file.
+- V2 release candidate document.
+- Admin Console document.
+- No committed `.env`.
+- No obvious secret patterns.
+
+Architecture review scope:
+
+- API layer checked: yes
+- Auth/session layer checked: yes
+- Workspace layer checked: yes
+- Quota/usage layer checked: yes
+- Deployment layer checked: yes
+- Admin Console checked: yes
+- Local startup chain checked: yes
+
+Safety boundaries:
+
+- New business functionality: no
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Stripe live API calls: no
+- AI API calls: no
+- Production secrets committed: no
+- Plaintext password / session value / API key storage: no
+
+Validation:
+
+```text
+py_compile: passed
+startup_check: passed
+v2_integration_check: passed
+local_startup_verification: passed
+tests/test_v29_architecture_review_local_startup_verification.py: 5 passed
+pytest: 461 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V2.8 Admin Console / Product Control Center
 
 V2.8 adds an Admin Console / Product Control Center for product operations visibility only. It does not add trading behavior, real payment execution, Stripe live integration, broker connectivity, external AI calls, frontend architecture changes, or strategy logic changes.
