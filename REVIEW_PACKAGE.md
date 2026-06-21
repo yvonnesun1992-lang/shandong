@@ -1,3 +1,73 @@
+# V3.2 Frontend Auth Flow & Session UX
+
+V3.2 adds frontend demo auth and session UX. It does not add a real identity service, OAuth, trading functionality, payment execution, broker connectivity, external AI calls, or core strategy logic changes.
+
+New files:
+
+```text
+web/frontend/app/lib/authClient.ts
+web/frontend/app/components/AuthStatus.tsx
+web/frontend/app/components/PermissionNotice.tsx
+docs/FRONTEND_AUTH_FLOW.md
+tests/test_v32_frontend_auth_flow_session_ux.py
+```
+
+Updated files:
+
+```text
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/lib/sanitize.ts
+web/frontend/app/login/page.tsx
+web/frontend/app/admin/page.tsx
+web/frontend/app/dashboard/page.tsx
+web/frontend/app/styles.css
+README.md
+REVIEW_PACKAGE.md
+```
+
+Auth/session UX scope:
+
+- Added frontend demo auth client.
+- Added demo login / logout UX.
+- Added role-aware frontend session state.
+- Added API client session header support.
+- Added AuthStatus and PermissionNotice components.
+- Updated Admin Console with auth state.
+- Updated Dashboard with auth state.
+- Added frontend auth flow documentation.
+
+Safety boundaries:
+
+- Real identity service: no
+- OAuth: no
+- Password storage: no
+- API key storage: no
+- New trading functionality: no
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Stripe live API calls: no
+- AI API calls: no
+- Production credentials committed: no
+
+Validation:
+
+```text
+tests/test_v32_frontend_auth_flow_session_ux.py: 7 passed
+pytest: 480 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm unavailable in shell; bundled pnpm install/build blocked by local dependency build approval for sharp
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V3.1 Real Frontend API Integration
 
 V3.1 connects the polished Next.js frontend to backend health and admin APIs. It does not add trading functionality, change core strategy logic, connect to brokers, execute payments, call external AI services, or store plaintext credentials.

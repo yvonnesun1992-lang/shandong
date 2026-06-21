@@ -7,12 +7,14 @@ export const SENSITIVE_KEYS = [
   'api' + '_key',
   'raw' + '_key',
   'session' + '_id',
+  'X-Session-ID',
   'author' + 'ization',
   'bearer',
 ];
 
 export const LOCAL_PATH_PATTERN = /\/Users\/[^\s"',}]+/gi;
 export const DB_FILE_PATTERN = /\b[\w.-]+\.db\b/gi;
+export const ENV_FILE_PATTERN = /\.env\b/gi;
 
 function shouldHideKey(key: string) {
   const normalized = key.toLowerCase();
@@ -20,7 +22,7 @@ function shouldHideKey(key: string) {
 }
 
 export function sanitizeText(value: string) {
-  let text = value.replace(LOCAL_PATH_PATTERN, '[local-path]').replace(DB_FILE_PATTERN, '[database]');
+  let text = value.replace(LOCAL_PATH_PATTERN, '[local-path]').replace(DB_FILE_PATTERN, '[database]').replace(ENV_FILE_PATTERN, '[env-file]');
   for (const marker of SENSITIVE_KEYS) {
     text = text.replace(new RegExp(marker, 'gi'), '[redacted]');
   }

@@ -1,3 +1,4 @@
+import { getStoredSession } from './authClient';
 import { sanitizePayload, sanitizeText } from './sanitize';
 
 export type ApiResult<T> = {
@@ -16,14 +17,26 @@ type ApiEnvelope<T> = {
   };
 };
 
+type ApiGetOptions = {
+  sessionId?: string | null;
+};
+
 export function getApiBaseUrl() {
   return (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
 }
 
-export async function apiGet<T>(path: string): Promise<ApiResult<T>> {
+function friendlyAuthError(status: number) {
+  if (status === 401) return 'Authentication required';
+  if (status === 403) return 'Permission denied';
+  return 'Session expired or unavailable';
+}
+
+export async function apiGet<T>(path: string, options: ApiGetOptions = {}): Promise<ApiResult<T>> {
   const target = `${getApiBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
+  const sessionValue = options.sessionId ?? getStoredSession();
+  const headers: Record<string, string> = sessionValue ? { 'X-Session-ID': sessionValue } : {};
   try {
-    const response = await fetch(target, { cache: 'no-store' });
+    const response = await fetch(target, { cache: 'no-store', headers });
     const payload = (await response.json().catch(() => ({}))) as ApiEnvelope<T>;
     const cleanPayload = sanitizePayload(payload);
     if (!response.ok || cleanPayload.success === false) {
@@ -31,7 +44,7 @@ export async function apiGet<T>(path: string): Promise<ApiResult<T>> {
         ok: false,
         data: null,
         warning: cleanPayload.warning ?? [],
-        errorMessage: sanitizeText(cleanPayload.error?.message ?? 'API request unavailable'),
+        errorMessage: sanitizeText(response.status === 401 || response.status === 403 ? friendlyAuthError(response.status) : cleanPayload.error?.message ?? 'API request unavailable'),
       };
     }
     return {

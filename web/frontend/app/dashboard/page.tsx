@@ -1,5 +1,6 @@
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
+import { AuthStatus } from '../components/AuthStatus';
 import { LoadingState } from '../components/LoadingState';
 import { MetricCard } from '../components/MetricCard';
 import { ProductionShell } from '../components/ProductionShell';
@@ -55,6 +56,7 @@ export default async function DashboardPage() {
       description="A clean research dashboard for local demos, system readiness, and safe strategy analysis."
       activePath="/dashboard"
     >
+      <AuthStatus />
       {errorMessage ? <ErrorState description={errorMessage} /> : null}
       {!apiAvailable ? <LoadingState label="Preparing fallback dashboard" /> : null}
       <div className="summaryStrip">
@@ -87,7 +89,7 @@ export default async function DashboardPage() {
       </div>
       <EmptyState
         title="Empty state: no live operations connected"
-        description="If an API is unavailable during a demo, the product shell remains readable and safe."
+        description="If an API or demo session is unavailable during a demo, the product shell remains readable and safe."
         actionLabel="View API Docs"
         actionHref="/api-docs"
       />
