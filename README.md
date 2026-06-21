@@ -310,9 +310,24 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 📡 V3.4 Observability / Logs / Metrics Planning
+
+- Observability / Logs / Metrics Planning for local SaaS operations visibility
+- Local API metrics summary with request counts, warning counts, and latency summaries
+- Local health timeline summary for internal health snapshots
+- `/api/v2/system/observability` exposes sanitized observability planning status
+- Admin Console includes an Observability module
+- Frontend API client includes `fetchObservability()`
+- Observability planning documentation added in `docs/OBSERVABILITY_PLAN.md`
+- No external monitoring provider, no Sentry, no Datadog, no Grafana Cloud
+- No external log upload, no raw session/header logging, no broker connection, no auto trading, no AI API, no real payment execution
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 486 tests passed  
+- ✔ pytest: 492 tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

@@ -58,6 +58,14 @@ const fallbackConsole: Record<string, ConsoleModule> = {
     metric: 'Demo identity',
     detail: 'OAuth: not connected. Password storage: none.',
   },
+  observability: {
+    key: 'observability',
+    title: 'Observability',
+    status: 'OK',
+    description: 'Local observability summarizes API metrics and health timeline without exporting raw logs.',
+    metric: 'Local observability',
+    detail: 'External provider: not connected. API metrics: available. Health timeline: available. Log export: not connected.',
+  },
   workspace: {
     key: 'workspace',
     title: 'Workspace',
