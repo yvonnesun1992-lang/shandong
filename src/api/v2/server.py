@@ -16,6 +16,7 @@ from src.api.v2.pagination import paginate_items
 from src.api.v2.response import success_response
 from src.api.v2.schemas import ReportGenerateRequest, ReportListQuery, UserQuery
 from src.auth.permission_service import set_user_role
+from src.auth.identity_provider import get_identity_provider_plan
 from src.auth.session_service import create_session, get_session, revoke_session
 
 from src.billing.plan_service import get_workspace_plan
@@ -226,6 +227,22 @@ def create_v2_api_app() -> FastAPI:
         audit_auth_event("default", "security.policy_checked", security)
         response = success_response({"security": security}, started_at=started, warning=security["warnings"])
         log_api_event("/api/v2/system/security-health", "default", "ok", response["meta"]["latency_ms"], len(security["warnings"]))
+        return response
+
+    @api.get("/api/v2/system/identity-plan")
+    def identity_plan() -> dict:
+        started = perf_counter()
+        plan = get_identity_provider_plan()
+        status = plan.status
+        identity = {
+            "mode": status.mode,
+            "provider": status.current_provider,
+            "production_ready": status.production_ready,
+            "external_provider_enabled": status.external_provider_enabled,
+            "warnings": list(status.warnings),
+        }
+        response = success_response({"identity": identity}, started_at=started, warning=identity["warnings"])
+        log_api_event("/api/v2/system/identity-plan", "default", "ok", response["meta"]["latency_ms"], len(identity["warnings"]))
         return response
 
     @api.get("/api/v2/system/workspace-health")
