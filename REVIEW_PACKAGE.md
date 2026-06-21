@@ -1,3 +1,75 @@
+# V3.0 UI / UX Polish & Product Experience Upgrade
+
+V3.0 is a UI / UX and product experience polish release. It does not add trading functionality, change core strategy logic, connect to brokers, execute payments, call external AI services, or store plaintext credentials.
+
+New files:
+
+```text
+web/frontend/app/components/StatusBadge.tsx
+web/frontend/app/components/MetricCard.tsx
+web/frontend/app/components/EmptyState.tsx
+web/frontend/app/components/PageHeader.tsx
+docs/UI_UX_REVIEW.md
+tests/test_v30_ui_ux_product_polish.py
+```
+
+Updated files:
+
+```text
+web/frontend/app/components/ProductionShell.tsx
+web/frontend/app/admin/page.tsx
+web/frontend/app/dashboard/page.tsx
+web/frontend/app/page.tsx
+web/frontend/app/api-docs/page.tsx
+web/frontend/app/login/page.tsx
+web/frontend/app/reports/page.tsx
+web/frontend/app/risk/page.tsx
+web/frontend/app/settings/page.tsx
+web/frontend/app/strategy/page.tsx
+web/frontend/app/styles.css
+README.md
+REVIEW_PACKAGE.md
+```
+
+UI / UX scope:
+
+- Polished Admin Console UI.
+- Polished Dashboard / product shell.
+- Added reusable UI components.
+- Added unified status badge / card / empty state styles.
+- Added active navigation state.
+- Added product-level safety boundary messaging.
+- Added UI UX review document.
+
+Safety boundaries:
+
+- New trading functionality: no
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Stripe live API calls: no
+- AI API calls: no
+- Production credentials committed: no
+- Plaintext password / session value / API key storage: no
+
+Validation:
+
+```text
+tests/test_v30_ui_ux_product_polish.py: 6 passed
+pytest: 467 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm unavailable in shell; bundled pnpm install/build blocked by local dependency build approval for sharp
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, after checks pass per user instruction
+```
+
 # V2.9 Architecture Review & Local Startup Verification
 
 V2.9 is an architecture review and local startup verification release. It does not add business functionality, change core strategy logic, connect to brokers, place orders, execute payments, call external AI services, or store plaintext secrets.
