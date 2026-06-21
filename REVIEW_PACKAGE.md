@@ -1,3 +1,79 @@
+# V2.7 Release Freeze & Integration QA
+
+V2.7 is the first V2 release-freeze and total integration QA pass. It does not add business features, real payment execution, Stripe live integration, broker connectivity, trading behavior, AI calls, frontend UI changes, or strategy logic changes.
+
+New files:
+
+```text
+scripts/v2_integration_check.py
+tests/test_v27_release_freeze_integration_qa.py
+docs/V2_RELEASE_CANDIDATE.md
+```
+
+Updated files:
+
+```text
+README.md
+REVIEW_PACKAGE.md
+```
+
+Integration checks:
+
+- Database initialization.
+- Repeatable migrations.
+- Default user creation.
+- Default workspace creation.
+- Local auth default-admin fallback.
+- Production protected endpoint anonymous 401.
+- Mock login session creation.
+- Session access to protected report list.
+- Viewer report-write denial.
+- User admin denial.
+- Workspace isolation denial.
+- Usage event recording.
+- Quota exceeded response.
+- Readiness, liveness, security-health, billing-health, and workspace-health.
+- Startup check.
+- System doctor.
+- Runtime obvious-risk scan.
+
+Cleanup decision:
+
+- `src/security/init.py`: retained intentionally.
+- `src/workspace/init.py`: retained intentionally.
+- `src/billing/init.py`: retained intentionally.
+- `src/auth/init.py`: retained intentionally.
+- No files deleted; each reviewed file contains functional initializer/export helpers.
+
+Safety boundaries:
+
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Stripe live API calls: no
+- AI API calls: no
+- Production secrets committed: no
+- Plaintext password / session value / API key storage: no
+
+Validation:
+
+```text
+py_compile: passed
+startup_check: passed
+v2_integration_check: passed
+tests/test_v27_release_freeze_integration_qa.py: 6 passed
+pytest: 450 passed
+system_doctor: OK
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, after checks pass per user instruction
+```
+
 # V2.6 Deployment / Ops Readiness
 
 V2.6 adds deployment and operations readiness only. It does not add business features, real payment execution, Stripe live integration, broker connectivity, trading behavior, AI calls, or strategy logic changes.
