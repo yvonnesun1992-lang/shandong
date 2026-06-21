@@ -1,7 +1,9 @@
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
+import { AuthStatus } from '../components/AuthStatus';
 import { LoadingState } from '../components/LoadingState';
 import { MetricCard } from '../components/MetricCard';
+import { PermissionNotice } from '../components/PermissionNotice';
 import { ProductionShell } from '../components/ProductionShell';
 import { StatusBadge, type StatusTone } from '../components/StatusBadge';
 import { fetchAdminConsole } from '../lib/apiClient';
@@ -114,7 +116,9 @@ export default async function AdminConsolePage() {
       description="A single, demo-friendly view of API, database, security, workspace, quota, deployment, and release readiness."
       activePath="/admin"
     >
+      <AuthStatus />
       {!result.ok ? <ErrorState description={result.errorMessage ?? 'Backend API is unavailable. Showing safe fallback data.'} /> : null}
+      {!result.ok ? <PermissionNotice mode={result.errorMessage?.includes('Permission') ? 'denied' : result.errorMessage?.includes('Session') ? 'expired' : 'login'} /> : null}
       {!result.data && !result.errorMessage ? <LoadingState /> : null}
       <div className="summaryStrip">
         <MetricCard title="Control Center" value={result.ok ? 'Connected' : 'Fallback'} description="Admin Console reads backend data when available." />
@@ -138,7 +142,7 @@ export default async function AdminConsolePage() {
       </div>
       <EmptyState
         title="Empty state: no live operations connected"
-        description="Admin Console is safe for demos. It displays platform readiness without exposing private values or live integrations."
+        description="Admin Console is safe for demos. Fallback mode remains visible when demo auth is missing or the backend is unavailable."
         actionLabel="Open Local Demo Guide"
         actionHref="/api-docs"
       />

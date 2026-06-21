@@ -282,9 +282,22 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🔐 V3.2 Frontend Auth Flow & Session UX
+
+- Frontend Auth Flow for local demo roles
+- Demo session UX with local-only browser storage
+- Login / logout demo flow for Admin, User, and Viewer roles
+- Role-aware Admin Console and Dashboard auth status
+- Permission notice UX for missing or insufficient demo access
+- API client session header support without displaying raw session values
+- No real identity service, no OAuth, no broker connection, no auto trading, no AI API, no real payment execution
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 473+ tests passed  
+- ✔ pytest: 480+ tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
