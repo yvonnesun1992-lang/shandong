@@ -89,3 +89,7 @@ export function fetchBillingHealth() {
 export function fetchObservability() {
   return apiGet<Record<string, unknown>>('/api/v2/system/observability');
 }
+
+export function fetchDeploymentDryRun() {
+  return apiGet<Record<string, unknown>>('/api/v2/system/deployment-dry-run');
+}

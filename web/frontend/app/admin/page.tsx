@@ -90,6 +90,14 @@ const fallbackConsole: Record<string, ConsoleModule> = {
     metric: 'Ops ready',
     detail: 'Deployment examples remain local-safe.',
   },
+  deployment_dry_run: {
+    key: 'deployment_dry_run',
+    title: 'Deployment Dry Run',
+    status: 'Warning',
+    description: 'Deployment mode: local. Target: local / docker / external planned.',
+    metric: 'Dry run ready',
+    detail: 'External deployment: not connected. Secrets: not configured. Dry run check: available. Production launch: not enabled.',
+  },
   release_candidate: {
     key: 'release_candidate',
     title: 'Release Candidate',

@@ -26,6 +26,26 @@ Run:
 python scripts/startup_check.py
 ```
 
+## V3.5 External Deployment Dry Run
+
+V3.5 is a deployment rehearsal, not a production launch. Run:
+
+```bash
+python scripts/deployment_dry_run_check.py
+```
+
+The dry run checks backend import, API app creation, health endpoints, Admin Console local access, Docker files, frontend structure, deployment docs, local environment file absence, and obvious sensitive-value patterns.
+
+Only consider a later deployment phase after startup check, deployment dry run check, system doctor, pytest, frontend structure check, and human review pass.
+
+Still not done in V3.5:
+
+- no production cloud connected
+- no production database connected
+- no real domain
+- no TLS certificate
+- no external log upload
+
 ## Health Checks
 
 - Liveness: `/api/v2/system/liveness`

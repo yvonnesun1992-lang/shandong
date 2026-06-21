@@ -23,6 +23,7 @@ from src.billing.plan_service import get_workspace_plan
 from src.billing.quota_service import get_quota_status, require_quota
 from src.billing.usage_service import record_usage
 from src.config import database_config
+from src.config.deployment_config import deployment_planning_status
 from src.config.observability_config import observability_planning_status
 from src.core.account import create_account_context
 from src.core.cache_manager import StrategyCacheManager
@@ -262,6 +263,14 @@ def create_v2_api_app() -> FastAPI:
         }
         response = success_response({"observability": observability_summary}, started_at=started, warning=planning["warnings"])
         log_api_event("/api/v2/system/observability", "default", "ok", response["meta"]["latency_ms"], len(planning["warnings"]))
+        return response
+
+    @api.get("/api/v2/system/deployment-dry-run")
+    def deployment_dry_run() -> dict:
+        started = perf_counter()
+        deployment = deployment_planning_status()
+        response = success_response({"deployment": deployment}, started_at=started, warning=deployment["warnings"])
+        log_api_event("/api/v2/system/deployment-dry-run", "default", "ok", response["meta"]["latency_ms"], len(deployment["warnings"]))
         return response
 
     @api.get("/api/v2/system/workspace-health")
