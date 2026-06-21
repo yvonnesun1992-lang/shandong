@@ -1,48 +1,74 @@
-import { ChartCard } from './ChartCard';
+import type { ReactNode } from 'react';
+
+import { EmptyState } from './EmptyState';
+import { MetricCard } from './MetricCard';
+import { PageHeader } from './PageHeader';
 
 const links = [
-  ['Login', '/login'],
   ['Dashboard', '/dashboard'],
   ['Strategy', '/strategy'],
   ['Reports', '/reports'],
   ['Risk', '/risk'],
-  ['Settings', '/settings'],
   ['Admin Console', '/admin'],
+  ['Settings', '/settings'],
   ['API Docs', '/api-docs'],
 ];
 
-export function ProductionShell({ title, eyebrow }: { title: string; eyebrow: string }) {
+type ProductionShellProps = {
+  title: string;
+  eyebrow: string;
+  description?: string;
+  activePath?: string;
+  children?: ReactNode;
+};
+
+export function ProductionShell({ title, eyebrow, description, activePath = '/dashboard', children }: ProductionShellProps) {
   return (
     <main className="shell">
       <aside className="sidebar">
-        <div className="brand">Shandong SaaS</div>
-        <nav className="nav">
+        <div className="brand">
+          <span className="brandMark">QS</span>
+          <div>
+            <strong>Shandong SaaS</strong>
+            <p>Research control plane</p>
+          </div>
+        </div>
+        <nav className="nav" aria-label="Product navigation">
           {links.map(([label, href]) => (
-            <a href={href} key={href}>{label}</a>
+            <a className={activePath === href ? 'active' : undefined} href={href} key={href}>
+              {label}
+            </a>
           ))}
         </nav>
+        <section className="sidebarPanel">
+          <p className="meta">Environment</p>
+          <strong>Local / demo environment</strong>
+          <p>Research mode only. No broker connection.</p>
+        </section>
       </aside>
       <section className="content">
-        <p className="eyebrow">{eyebrow}</p>
-        <h1>{title}</h1>
-        <div className="grid">
-          <section className="card">
-            <h2>System Health</h2>
-            <p className="metric">99.9%</p>
-            <p className="muted">Production readiness shell</p>
-          </section>
-          <section className="card">
-            <h2>API Latency</h2>
-            <p className="metric">24ms</p>
-            <p className="muted">Mock monitoring metric</p>
-          </section>
-          <section className="card">
-            <h2>Plan</h2>
-            <p className="metric">Pro</p>
-            <p className="muted">Simulated billing tier</p>
-          </section>
-          <ChartCard />
-        </div>
+        <PageHeader
+          eyebrow={eyebrow}
+          title={title}
+          description={description ?? 'Unified SaaS research workspace for reports, risk, operations, and platform readiness.'}
+          actionLabel="Open Admin Console"
+          actionHref="/admin"
+        />
+        {children ?? (
+          <>
+            <div className="grid">
+              <MetricCard title="Platform Status" value="Ready" description="Local startup and health checks are available." />
+              <MetricCard title="Research Mode" value="On" description="No broker connection and no auto trading." />
+              <MetricCard title="Billing" value="Mock" description="Mock billing only for product demonstration." status="Warning" />
+            </div>
+            <EmptyState
+              title="No live trading workspace"
+              description="This product shell is for research, reporting, and platform readiness demos."
+              actionLabel="Review API Docs"
+              actionHref="/api-docs"
+            />
+          </>
+        )}
       </section>
     </main>
   );

@@ -8,4 +8,4 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-console.log('V2.8 frontend structure verified');
+console.log('V3.0 frontend structure verified');
