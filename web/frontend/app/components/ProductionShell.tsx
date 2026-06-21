@@ -7,6 +7,7 @@ const links = [
   ['Reports', '/reports'],
   ['Risk', '/risk'],
   ['Settings', '/settings'],
+  ['Admin Console', '/admin'],
   ['API Docs', '/api-docs'],
 ];
 

@@ -82,6 +82,36 @@ h1 {
   padding: 18px;
 }
 
+.cardHeader {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.badge {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 9px;
+}
+
+.badge-ok {
+  background: #e9f8f2;
+  color: var(--good);
+}
+
+.badge-warning {
+  background: #fff7e6;
+  color: #9a5b00;
+}
+
+.badge-error {
+  background: #fff0f0;
+  color: #b42318;
+}
+
 .metric {
   font-size: 28px;
   font-weight: 800;

@@ -230,9 +230,22 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🕹️ V2.8 Admin Console / Product Control Center
+
+- Unified product operations overview for V2.0-V2.7 platform layers
+- `/api/v2/admin/console` aggregates system, database, security, workspace, billing, deployment, and release-candidate status
+- Next.js Admin Console page at `web/frontend/app/admin/page.tsx`
+- Product-style cards with OK / Warning / Error status badges
+- Sanitized output: no local absolute paths, no raw API keys, no session identifiers, no authorization headers
+- No core strategy functionality added
+- No broker connection, no auto trading, no AI API, no real payment execution, no plaintext secrets
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 450+ tests passed  
+- ✔ pytest: 456+ tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
