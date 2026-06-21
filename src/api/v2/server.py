@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
+from src.api.v2.admin_console import build_admin_console_summary
 from src.api.v2.auth import audit_auth_event, build_auth_context, require_permission
 from src.api.v2.errors import ApiError, DatabaseApiError, ValidationApiError
 from src.api.v2.logging import log_api_event
@@ -444,6 +445,15 @@ def create_v2_api_app() -> FastAPI:
         record_usage(auth_context.workspace_id, account.user_id, "api_call", metadata={"endpoint": "/api/v2/admin/system"})
         response = success_response({"user": account.as_dict(), "workspace_id": auth_context.workspace_id, "admin": admin_panel}, started_at=started)
         log_api_event("/api/v2/admin/system", account.user_id, "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v2/admin/console")
+    def admin_console(request: Request) -> dict:
+        started = perf_counter()
+        auth_context = require_permission(request, "admin:read")
+        summary = build_admin_console_summary()
+        response = success_response({"admin_console": summary}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v2/admin/console", auth_context.user_id, "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
     return api

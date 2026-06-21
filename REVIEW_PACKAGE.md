@@ -1,3 +1,68 @@
+# V2.8 Admin Console / Product Control Center
+
+V2.8 adds an Admin Console / Product Control Center for product operations visibility only. It does not add trading behavior, real payment execution, Stripe live integration, broker connectivity, external AI calls, frontend architecture changes, or strategy logic changes.
+
+New files:
+
+```text
+src/api/v2/admin_console.py
+web/frontend/app/admin/page.tsx
+docs/ADMIN_CONSOLE.md
+tests/test_v28_admin_console_product_control_center.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+web/frontend/app/components/ProductionShell.tsx
+web/frontend/app/styles.css
+README.md
+REVIEW_PACKAGE.md
+```
+
+Admin Console coverage:
+
+- System overview.
+- API health and V2 service status.
+- Database status.
+- Auth and security policy status.
+- Workspace status.
+- Plan / quota status.
+- Deployment readiness.
+- Release candidate status.
+- Sanitized aggregated output.
+- Submodule failures degrade to warning instead of crashing the endpoint.
+
+Safety boundaries:
+
+- New core strategy functionality: no
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Stripe live API calls: no
+- AI API calls: no
+- Production secrets committed: no
+- Plaintext password / session value / API key storage: no
+
+Validation:
+
+```text
+py_compile: passed
+tests/test_v28_admin_console_product_control_center.py: 6 passed
+pytest: 456 passed
+system_doctor: OK
+frontend build / structure check: structure check passed via node scripts/verify-build.mjs; npm unavailable in shell and bundled pnpm build was blocked by local dependency build approval for sharp
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, after checks pass per user instruction
+```
+
 # V2.7 Release Freeze & Integration QA
 
 V2.7 is the first V2 release-freeze and total integration QA pass. It does not add business features, real payment execution, Stripe live integration, broker connectivity, trading behavior, AI calls, frontend UI changes, or strategy logic changes.
