@@ -1,3 +1,66 @@
+# V3.1 Real Frontend API Integration
+
+V3.1 connects the polished Next.js frontend to backend health and admin APIs. It does not add trading functionality, change core strategy logic, connect to brokers, execute payments, call external AI services, or store plaintext credentials.
+
+New files:
+
+```text
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/lib/sanitize.ts
+web/frontend/app/components/LoadingState.tsx
+web/frontend/app/components/ErrorState.tsx
+docs/FRONTEND_API_INTEGRATION.md
+tests/test_v31_real_frontend_api_integration.py
+```
+
+Updated files:
+
+```text
+web/frontend/app/admin/page.tsx
+web/frontend/app/dashboard/page.tsx
+web/frontend/app/styles.css
+README.md
+REVIEW_PACKAGE.md
+```
+
+Frontend API scope:
+
+- Added frontend API client.
+- Connected Admin Console to backend API with fallback data.
+- Connected Dashboard to backend health APIs.
+- Added frontend loading and error states.
+- Added frontend sanitizer for API payloads.
+- Added frontend API integration document.
+
+Safety boundaries:
+
+- New trading functionality: no
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Stripe live API calls: no
+- AI API calls: no
+- Production credentials committed: no
+- Plaintext password / session value / API key storage: no
+
+Validation:
+
+```text
+tests/test_v31_real_frontend_api_integration.py: 6 passed
+pytest: 473 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm unavailable in shell; bundled pnpm install/build blocked by local dependency build approval for sharp
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V3.0 UI / UX Polish & Product Experience Upgrade
 
 V3.0 is a UI / UX and product experience polish release. It does not add trading functionality, change core strategy logic, connect to brokers, execute payments, call external AI services, or store plaintext credentials.

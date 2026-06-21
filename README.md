@@ -269,9 +269,22 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🔌 V3.1 Real Frontend API Integration
+
+- Real Frontend API Integration for the Next.js product shell
+- Admin Console connected to backend API with safe fallback data
+- Dashboard health status integration for liveness, readiness, security, workspace, and billing
+- Loading and error states for API unavailable scenarios
+- Frontend sanitizer for API payloads before display
+- Safe frontend fallback states for local demos
+- No broker connection, no auto trading, no AI API, no real payment execution, no plaintext secrets
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 467+ tests passed  
+- ✔ pytest: 473+ tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
