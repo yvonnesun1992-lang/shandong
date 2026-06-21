@@ -325,9 +325,25 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🚀 V3.5 External Deployment Dry Run
+
+- External Deployment Dry Run for future production deployment readiness
+- Deployment readiness check via `scripts/deployment_dry_run_check.py`
+- Deployment dry run endpoint at `/api/v2/system/deployment-dry-run`
+- `/api/v2/system/deployment-dry-run` exposes sanitized dry-run planning status
+- Admin Console includes a Deployment Dry Run module
+- Frontend API client includes `fetchDeploymentDryRun()`
+- External deployment planning document added in `docs/EXTERNAL_DEPLOYMENT_DRY_RUN.md`
+- Deployment guide and operations runbook include dry run instructions
+- No production cloud connected, no production database connected, no real domain, no TLS certificate
+- No external log upload, no broker connection, no auto trading, no AI API, no real payment execution
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 492 tests passed  
+- ✔ pytest: 498 tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

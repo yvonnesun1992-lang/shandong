@@ -1,3 +1,72 @@
+# V3.5 External Deployment Dry Run
+
+V3.5 adds external deployment dry run planning and deployment readiness checks. It is not a real production launch and does not add real cloud services, production database connectivity, real domains, TLS material, external log upload, trading functionality, payment execution, broker connectivity, external AI calls, or core strategy logic changes.
+
+New files:
+
+```text
+src/config/deployment_config.py
+scripts/deployment_dry_run_check.py
+docs/EXTERNAL_DEPLOYMENT_DRY_RUN.md
+tests/test_v35_external_deployment_dry_run.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/admin/page.tsx
+docs/DEPLOYMENT.md
+docs/OPERATIONS_RUNBOOK.md
+README.md
+REVIEW_PACKAGE.md
+```
+
+External deployment dry run scope:
+
+- Added deployment configuration planning layer.
+- Added deployment dry run check script.
+- Added deployment dry run API endpoint.
+- Added Admin Console deployment dry run module.
+- Added frontend fetchDeploymentDryRun helper.
+- Added external deployment dry run documentation.
+- Updated deployment docs and operations runbook.
+
+Safety boundaries:
+
+- Real cloud service connected: no
+- Real production secret committed: no
+- Real production database connected: no
+- Real domain / TLS connected: no
+- External log upload: no
+- New trading functionality: no
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Stripe live API calls: no
+- AI API calls: no
+
+Validation:
+
+```text
+py_compile deployment/server modules: passed
+deployment_dry_run_check: success true
+tests/test_v35_external_deployment_dry_run.py: 6 passed
+pytest: 498 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm/pnpm unavailable in this shell; only bundled node is available
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V3.4 Observability / Logs / Metrics Planning
 
 V3.4 adds observability planning and local metrics summaries. It does not add an external monitoring service, Sentry, Datadog, Grafana Cloud, external log upload, trading functionality, payment execution, broker connectivity, external AI calls, or core strategy logic changes.
