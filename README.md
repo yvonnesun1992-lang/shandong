@@ -217,9 +217,22 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🧊 V2.7 Release Freeze & Integration QA
+
+- V2 release-candidate preparation
+- Integrated checks across data, API, auth/session, production auth policy, workspace isolation, quota/usage, and deployment readiness
+- `scripts/v2_integration_check.py` validates the V2.0-V2.6 chain in one structured check
+- `docs/V2_RELEASE_CANDIDATE.md` documents V2 scope, current status, and release-candidate checklist
+- No new business functionality
+- No cleanup deletions: initializer helper files were reviewed and retained intentionally
+- No broker connection, no auto trading, no AI API, no real payment execution, no plaintext secrets
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 444+ tests passed  
+- ✔ pytest: 450+ tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
