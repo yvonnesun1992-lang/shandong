@@ -1,3 +1,71 @@
+# V3.4 Observability / Logs / Metrics Planning
+
+V3.4 adds observability planning and local metrics summaries. It does not add an external monitoring service, Sentry, Datadog, Grafana Cloud, external log upload, trading functionality, payment execution, broker connectivity, external AI calls, or core strategy logic changes.
+
+New files:
+
+```text
+src/config/observability_config.py
+src/observability/__init__.py
+src/observability/metrics.py
+docs/OBSERVABILITY_PLAN.md
+tests/test_v34_observability_logs_metrics_planning.py
+```
+
+Updated files:
+
+```text
+src/api/v2/logging.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/admin/page.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Observability planning scope:
+
+- Added observability configuration planning layer.
+- Added local metrics collector.
+- Added local health timeline summary.
+- Added observability API endpoint.
+- Added Admin Console observability module.
+- Added frontend fetchObservability helper.
+- Added observability planning documentation.
+
+Safety boundaries:
+
+- External monitoring service: no
+- Sentry / Datadog / Grafana: no
+- External log upload: no
+- Raw session / token / header logging: no
+- New trading functionality: no
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Stripe live API calls: no
+- AI API calls: no
+- Production credentials committed: no
+
+Validation:
+
+```text
+py_compile observability/server modules: passed
+tests/test_v34_observability_logs_metrics_planning.py: 6 passed
+pytest: 492 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm/pnpm unavailable in this shell; only bundled node is available
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V3.3 Production Identity Provider Planning
 
 V3.3 adds production identity system planning. It does not add a real identity service, OAuth, Google/GitHub login, production password auth, trading functionality, payment execution, broker connectivity, external AI calls, or core strategy logic changes.

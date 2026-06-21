@@ -5,6 +5,7 @@ from typing import Any
 
 from src.config import database_config
 from src.db.repository import AuditLogRepository, safe_identifier
+from src.observability.metrics import record_api_metric
 
 
 LOGGER = logging.getLogger("shandong.api.v2")
@@ -58,4 +59,5 @@ def log_api_event(
     except Exception as exc:
         LOGGER.info("api_event_fallback", extra={"event": event, "error_type": type(exc).__name__})
         event["logged"] = False
+    record_api_metric(event["endpoint"], event["status"], event["latency_ms"], event["warning_count"])
     return event

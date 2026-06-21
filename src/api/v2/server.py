@@ -23,6 +23,7 @@ from src.billing.plan_service import get_workspace_plan
 from src.billing.quota_service import get_quota_status, require_quota
 from src.billing.usage_service import record_usage
 from src.config import database_config
+from src.config.observability_config import observability_planning_status
 from src.core.account import create_account_context
 from src.core.cache_manager import StrategyCacheManager
 from src.dashboard.system_admin import build_system_admin_panel
@@ -30,6 +31,7 @@ from src.db.migrations import initialize_database
 from src.db.repository import StrategyReportRepository, UserRepository
 from src.db.workspace_repository import WorkspaceRepository
 from src.plugins import create_default_registry
+from src.observability.metrics import get_api_metrics_summary, get_health_timeline_summary, record_health_snapshot
 from src.reports.strategy_research_dashboard import build_strategy_research_dashboard
 from src.reports.strategy_report_compare import compare_strategy_research_reports
 from src.reports.strategy_report_trend import build_strategy_report_trend
@@ -243,6 +245,23 @@ def create_v2_api_app() -> FastAPI:
         }
         response = success_response({"identity": identity}, started_at=started, warning=identity["warnings"])
         log_api_event("/api/v2/system/identity-plan", "default", "ok", response["meta"]["latency_ms"], len(identity["warnings"]))
+        return response
+
+    @api.get("/api/v2/system/observability")
+    def observability() -> dict:
+        started = perf_counter()
+        planning = observability_planning_status()
+        record_health_snapshot("observability", "ok", warning_count=len(planning["warnings"]), error_count=0)
+        observability_summary = {
+            "mode": planning["mode"],
+            "provider": planning["provider"],
+            "external_provider_enabled": planning["external_provider_enabled"],
+            "api_metrics": get_api_metrics_summary(),
+            "health_timeline": get_health_timeline_summary(),
+            "warnings": planning["warnings"],
+        }
+        response = success_response({"observability": observability_summary}, started_at=started, warning=planning["warnings"])
+        log_api_event("/api/v2/system/observability", "default", "ok", response["meta"]["latency_ms"], len(planning["warnings"]))
         return response
 
     @api.get("/api/v2/system/workspace-health")

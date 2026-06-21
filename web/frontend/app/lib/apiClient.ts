@@ -85,3 +85,7 @@ export function fetchWorkspaceHealth() {
 export function fetchBillingHealth() {
   return apiGet<Record<string, unknown>>('/api/v2/system/billing-health');
 }
+
+export function fetchObservability() {
+  return apiGet<Record<string, unknown>>('/api/v2/system/observability');
+}
