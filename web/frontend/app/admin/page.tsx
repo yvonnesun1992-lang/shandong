@@ -50,6 +50,14 @@ const fallbackConsole: Record<string, ConsoleModule> = {
     metric: 'Local mode',
     detail: 'Mock login remains a documented foundation.',
   },
+  identity: {
+    key: 'identity',
+    title: 'Identity Provider',
+    status: 'Warning',
+    description: 'Demo identity is active. Production identity: planned. External provider: not connected.',
+    metric: 'Demo identity',
+    detail: 'OAuth: not connected. Password storage: none.',
+  },
   workspace: {
     key: 'workspace',
     title: 'Workspace',

@@ -295,9 +295,24 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🪪 V3.3 Production Identity Provider Planning
+
+- Production Identity Provider Planning for future SaaS identity architecture
+- Demo auth vs production identity boundary is documented in frontend and backend
+- `/api/v2/system/identity-plan` exposes sanitized planning status
+- Frontend identity status helper clarifies demo identity and future external provider planning
+- Login page states demo login only, no OAuth connected, no password stored, and no external provider connected
+- Admin Console includes an Identity Provider module
+- Future identity provider architecture documented in `docs/PRODUCTION_IDENTITY_PLAN.md`
+- No real identity service, no OAuth, no Google/GitHub login, no production password auth
+- No broker connection, no auto trading, no AI API, no real payment execution, no plaintext production secrets
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 480+ tests passed  
+- ✔ pytest: 486 tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

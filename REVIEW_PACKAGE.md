@@ -1,3 +1,72 @@
+# V3.3 Production Identity Provider Planning
+
+V3.3 adds production identity system planning. It does not add a real identity service, OAuth, Google/GitHub login, production password auth, trading functionality, payment execution, broker connectivity, external AI calls, or core strategy logic changes.
+
+New files:
+
+```text
+src/config/identity_config.py
+src/auth/identity_provider.py
+web/frontend/app/lib/identityStatus.ts
+docs/PRODUCTION_IDENTITY_PLAN.md
+tests/test_v33_production_identity_provider_planning.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+web/frontend/app/login/page.tsx
+web/frontend/app/admin/page.tsx
+web/frontend/app/styles.css
+README.md
+REVIEW_PACKAGE.md
+```
+
+Identity planning scope:
+
+- Added identity configuration planning layer.
+- Added identity provider planning interface.
+- Added public identity plan endpoint.
+- Added frontend identity status helper.
+- Updated login page identity boundary copy.
+- Updated Admin Console identity provider module.
+- Added production identity planning documentation.
+
+Safety boundaries:
+
+- Real identity service: no
+- OAuth: no
+- Google/GitHub login: no
+- Password storage: no
+- Provider secret storage: no
+- New trading functionality: no
+- Core strategy logic changed: no
+- Broker connection: no
+- Auto trading: no
+- Real payment execution: no
+- Stripe live API calls: no
+- AI API calls: no
+- Production credentials committed: no
+
+Validation:
+
+```text
+py_compile identity/server modules: passed
+tests/test_v33_production_identity_provider_planning.py: 6 passed
+pytest: 486 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm/pnpm unavailable in this shell; only bundled node is available
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V3.2 Frontend Auth Flow & Session UX
 
 V3.2 adds frontend demo auth and session UX. It does not add a real identity service, OAuth, trading functionality, payment execution, broker connectivity, external AI calls, or core strategy logic changes.

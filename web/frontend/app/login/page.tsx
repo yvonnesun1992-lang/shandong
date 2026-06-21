@@ -6,6 +6,7 @@ import { AuthStatus } from '../components/AuthStatus';
 import { ErrorState } from '../components/ErrorState';
 import { ProductionShell } from '../components/ProductionShell';
 import { loginDemoUser, type DemoRole } from '../lib/authClient';
+import { getIdentityBoundaryNotice, getIdentityMode, getIdentityProviderLabel } from '../lib/identityStatus';
 
 const roles: { role: DemoRole; title: string; description: string }[] = [
   { role: 'admin', title: 'Admin', description: 'Full demo access for Admin Console review.' },
@@ -49,6 +50,35 @@ export default function LoginPage() {
           </a>
         </section>
       ) : null}
+      <section className="card">
+        <div className="cardHeader">
+          <h2>Identity boundary</h2>
+          <span className="badge badge-warning">{getIdentityMode()}</span>
+        </div>
+        <p className="muted">{getIdentityBoundaryNotice()}</p>
+        <div className="miniGrid">
+          <div>
+            <strong>Demo login only</strong>
+            <span>{getIdentityProviderLabel()}</span>
+          </div>
+          <div>
+            <strong>Not production identity</strong>
+            <span>Production identity is planned.</span>
+          </div>
+          <div>
+            <strong>No OAuth connected</strong>
+            <span>External provider is not connected.</span>
+          </div>
+          <div>
+            <strong>No password stored</strong>
+            <span>Demo role selection only.</span>
+          </div>
+          <div>
+            <strong>No external provider connected</strong>
+            <span>Provider setup remains planning-only.</span>
+          </div>
+        </div>
+      </section>
       <section className="card">
         <div className="cardHeader">
           <h2>Role selection</h2>
