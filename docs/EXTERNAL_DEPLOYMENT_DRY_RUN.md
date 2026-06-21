@@ -53,3 +53,13 @@
 - No real payment
 - No broker connection
 - No auto trading
+
+## V3.6 Release Candidate Freeze
+
+V3.6 adds release candidate QA for the product demo. Run:
+
+```bash
+python scripts/v3_release_candidate_check.py
+```
+
+This is not a production launch. The system remains demo / dry run only and cannot be used for real trading or real customer funds.

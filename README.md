@@ -341,9 +341,22 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🧊 V3.6 Release Candidate QA & Product Demo Freeze
+
+- Release Candidate QA for V3.0-V3.5 product demo scope
+- Product Demo Freeze documentation in `docs/V3_PRODUCT_DEMO_FREEZE.md`
+- V3 demo readiness check via `scripts/v3_release_candidate_check.py`
+- V3 release candidate endpoint at `/api/v2/system/v3-release-candidate`
+- Admin Console includes a Release Candidate Freeze module
+- Frontend API client includes `fetchV3ReleaseCandidate()`
+- No production launch, no production cloud connected, no real identity provider, no real payment, no broker connection
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 498 tests passed  
+- ✔ pytest: 504 tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

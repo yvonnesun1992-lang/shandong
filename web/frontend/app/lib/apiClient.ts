@@ -93,3 +93,7 @@ export function fetchObservability() {
 export function fetchDeploymentDryRun() {
   return apiGet<Record<string, unknown>>('/api/v2/system/deployment-dry-run');
 }
+
+export function fetchV3ReleaseCandidate() {
+  return apiGet<Record<string, unknown>>('/api/v2/system/v3-release-candidate');
+}

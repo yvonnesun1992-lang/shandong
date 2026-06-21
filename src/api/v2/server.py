@@ -273,6 +273,23 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v2/system/deployment-dry-run", "default", "ok", response["meta"]["latency_ms"], len(deployment["warnings"]))
         return response
 
+    @api.get("/api/v2/system/v3-release-candidate")
+    def v3_release_candidate() -> dict:
+        started = perf_counter()
+        release_candidate = {
+            "version": "V3.6",
+            "scope": "product_demo_freeze",
+            "demo_ready": True,
+            "external_services_connected": False,
+            "broker_connected": False,
+            "real_payment_enabled": False,
+            "production_identity_enabled": False,
+            "warnings": [],
+        }
+        response = success_response({"release_candidate": release_candidate}, started_at=started)
+        log_api_event("/api/v2/system/v3-release-candidate", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
     @api.get("/api/v2/system/workspace-health")
     def workspace_health() -> dict:
         started = perf_counter()
