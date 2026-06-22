@@ -106,6 +106,14 @@ const fallbackConsole: Record<string, ConsoleModule> = {
     metric: 'First-run ready',
     detail: 'External services: not connected. Production launch: not enabled.',
   },
+  workspace_demo: {
+    key: 'workspace_demo',
+    title: 'Workspace Demo',
+    status: 'OK',
+    description: 'Demo workspace: available. Roles: admin / user / viewer. Quota: demo only.',
+    metric: 'Demo workspace',
+    detail: 'Billing: mock. Real customer: not connected. Broker: not connected.',
+  },
   release_candidate: {
     key: 'release_candidate',
     title: 'Release Candidate Freeze',

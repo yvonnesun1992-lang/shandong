@@ -101,3 +101,7 @@ export function fetchV3ReleaseCandidate() {
 export function fetchOnboarding() {
   return apiGet<Record<string, unknown>>('/api/v2/system/onboarding');
 }
+
+export function fetchWorkspaceDemo() {
+  return apiGet<Record<string, unknown>>('/api/v2/system/workspace-demo');
+}

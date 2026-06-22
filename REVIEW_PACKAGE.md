@@ -1,3 +1,72 @@
+# V3.8 Customer Workspace Demo Flow
+
+V3.8 adds a customer workspace demo flow for product walkthroughs. It does not add trading functionality, change core strategy logic, connect real customers, connect real billing, perform a production launch, connect real cloud services, connect real identity services, execute payments, upload logs externally, connect brokers, call external AI services, or commit production credentials.
+
+New files:
+
+```text
+web/frontend/app/workspace-demo/page.tsx
+web/frontend/app/components/WorkspaceDemoCard.tsx
+docs/WORKSPACE_DEMO_FLOW.md
+tests/test_v38_customer_workspace_demo_flow.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+web/frontend/app/admin/page.tsx
+web/frontend/scripts/verify-build.mjs
+README.md
+REVIEW_PACKAGE.md
+```
+
+Workspace demo scope:
+
+- Added Workspace Demo page.
+- Added WorkspaceDemoCard component.
+- Added workspace demo API endpoint.
+- Added frontend fetchWorkspaceDemo helper.
+- Added Admin Console workspace demo module.
+- Added Workspace Demo navigation.
+- Added workspace demo documentation.
+
+Safety boundaries:
+
+- New trading functionality: no
+- Core strategy logic changed: no
+- Real customer connected: no
+- Real billing connected: no
+- Production launch: no
+- Real cloud service connected: no
+- Real production secret committed: no
+- Real identity service connected: no
+- Real payment execution: no
+- External log upload: no
+- Broker connection: no
+- Auto trading: no
+- AI API calls: no
+
+Validation:
+
+```text
+py_compile server module: passed
+tests/test_v38_customer_workspace_demo_flow.py: 5 passed
+pytest: 514 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm/pnpm unavailable in this shell; only bundled node is available
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, after checks pass per user instruction
+```
+
 # V3.7 Product Onboarding & First-Run Experience
 
 V3.7 adds product onboarding and first-run experience. It does not add trading functionality, change core strategy logic, perform a production launch, connect real cloud services, connect real identity services, execute payments, upload logs externally, connect brokers, call external AI services, or commit production credentials.

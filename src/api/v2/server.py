@@ -320,6 +320,40 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v2/system/onboarding", "default", "ok", response["meta"]["latency_ms"])
         return response
 
+    @api.get("/api/v2/system/workspace-demo")
+    def workspace_demo() -> dict:
+        started = perf_counter()
+        workspace_demo_summary = {
+            "version": "V3.8",
+            "mode": "demo",
+            "workspace_name": "Demo Workspace",
+            "plan": "demo",
+            "roles": ["admin", "user", "viewer"],
+            "quota": {
+                "report_limit": "demo only",
+                "api_limit": "demo only",
+                "workspace_limit": 1,
+            },
+            "usage": {
+                "reports_generated": 3,
+                "api_requests": 12,
+                "workspace_members": 3,
+            },
+            "reports": {
+                "available": 3,
+                "latest": "Release candidate summary",
+                "storage": "demo archive",
+            },
+            "real_customer_connected": False,
+            "real_billing_enabled": False,
+            "broker_connected": False,
+            "auto_trading_enabled": False,
+            "warnings": [],
+        }
+        response = success_response({"workspace_demo": workspace_demo_summary}, started_at=started)
+        log_api_event("/api/v2/system/workspace-demo", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
     @api.get("/api/v2/system/workspace-health")
     def workspace_health() -> dict:
         started = perf_counter()
