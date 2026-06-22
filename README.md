@@ -416,9 +416,20 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🔐 V4.2 Production Identity Integration Plan
+
+- Production Identity Integration Plan for future real-user login architecture
+- External identity mapping plan from provider identity to internal user and workspace membership
+- Session lifecycle checklist and auth audit planning
+- Identity integration endpoint at `/api/v2/system/identity-integration`
+- No real identity provider connected, no OAuth, no Google/GitHub Login, no identity credentials committed
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 529 tests passed  
+- ✔ pytest: 534 tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

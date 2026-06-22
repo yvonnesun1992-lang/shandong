@@ -1,3 +1,72 @@
+# V4.2 Production Identity Integration Plan
+
+V4.2 adds 生产身份集成规划 and identity mapping readiness preparation. It does not connect a real identity provider, implement OAuth, add Google/GitHub login, commit identity provider credentials, store external identity tokens, perform a real production launch, connect real cloud services, connect real payments, upload logs externally, connect brokers, call external AI services, or change core strategy logic.
+
+New files:
+
+```text
+src/config/production_identity_config.py
+src/auth/production_identity_plan.py
+scripts/production_identity_integration_check.py
+docs/PRODUCTION_IDENTITY_INTEGRATION_PLAN.md
+tests/test_v42_production_identity_integration_plan.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/admin/page.tsx
+docs/V4_PRODUCTION_LAUNCH_READINESS.md
+README.md
+REVIEW_PACKAGE.md
+```
+
+Production identity planning scope:
+
+- Added production identity configuration planning layer.
+- Added production identity integration plan module.
+- Added identity integration readiness API endpoint.
+- Added production identity integration check script.
+- Added Admin Console production identity integration module.
+- Added frontend fetchIdentityIntegration helper.
+- Added production identity integration planning documentation.
+
+Safety boundaries:
+
+- Real identity service connected: no
+- OAuth connected: no
+- Google/GitHub login connected: no
+- client_id/client_secret committed: no
+- access/refresh token stored: no
+- Real production launch: no
+- Real cloud service connected: no
+- Real payment connected: no
+- Broker connection: no
+- Auto trading: no
+- AI API calls: no
+- Core strategy logic changed: no
+
+Validation:
+
+```text
+py_compile production identity modules/server: passed
+production_identity_integration_check: success true
+tests/test_v42_production_identity_integration_plan.py: 5 passed
+pytest: 534 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm/pnpm unavailable in this shell; only bundled node is available
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, after checks pass per user instruction
+```
+
 # V4.1 Production Database Plan
 
 V4.1 adds 生产数据库规划 and migration readiness preparation. It does not connect a real production database, commit a real database URL, commit database credentials, migrate real customer data, perform a real production launch, connect real cloud services, connect real identity services, connect real payments, upload logs externally, connect brokers, call external AI services, or change core strategy logic.

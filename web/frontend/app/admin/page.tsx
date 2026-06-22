@@ -138,6 +138,14 @@ const fallbackConsole: Record<string, ConsoleModule> = {
     metric: 'Database planned',
     detail: 'Migration ready: no. Backup policy: planned. Rollback policy: planned.',
   },
+  production_identity_integration: {
+    key: 'production_identity_integration',
+    title: 'Production Identity Integration',
+    status: 'Warning',
+    description: 'Current identity: demo auth. Future identity: external OIDC planned. Production identity: not connected.',
+    metric: 'Identity planned',
+    detail: 'External mapping: not ready. Session lifecycle: planned. Auth audit: planned.',
+  },
   release_candidate: {
     key: 'release_candidate',
     title: 'Release Candidate Freeze',
