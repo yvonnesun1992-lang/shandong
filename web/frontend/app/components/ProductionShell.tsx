@@ -8,6 +8,7 @@ const links = [
   ['Onboarding', '/onboarding'],
   ['Dashboard', '/dashboard'],
   ['Workspace Demo', '/workspace-demo'],
+  ['Pricing', '/pricing'],
   ['Strategy', '/strategy'],
   ['Reports', '/reports'],
   ['Risk', '/risk'],

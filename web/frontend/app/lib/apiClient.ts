@@ -105,3 +105,7 @@ export function fetchOnboarding() {
 export function fetchWorkspaceDemo() {
   return apiGet<Record<string, unknown>>('/api/v2/system/workspace-demo');
 }
+
+export function fetchPricingPlan() {
+  return apiGet<Record<string, unknown>>('/api/v2/system/pricing-plan');
+}

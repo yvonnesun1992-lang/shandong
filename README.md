@@ -381,9 +381,21 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 💼 V3.9 Pricing / Packaging / Commercial Readiness
+
+- Pricing / Packaging / Commercial Readiness for future SaaS packaging review
+- Pricing Page with Free Demo, Research Pro, Team Workspace, and Enterprise Planned tiers
+- Pricing endpoint at `/api/v2/system/pricing-plan`
+- Commercial readiness module in Admin Console
+- Commercial readiness documentation added in `docs/COMMERCIAL_READINESS.md`
+- No real payment enabled, no Stripe live API, no credit card collection, no real subscription lifecycle
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 514 tests passed  
+- ✔ pytest: 519 tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

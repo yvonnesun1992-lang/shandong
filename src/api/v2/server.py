@@ -354,6 +354,59 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v2/system/workspace-demo", "default", "ok", response["meta"]["latency_ms"])
         return response
 
+    @api.get("/api/v2/system/pricing-plan")
+    def pricing_plan() -> dict:
+        started = perf_counter()
+        pricing = {
+            "version": "V3.9",
+            "billing_mode": "mock",
+            "real_payment_enabled": False,
+            "stripe_live_enabled": False,
+            "commercial_ready": False,
+            "plans": [
+                {
+                    "name": "Free Demo",
+                    "status": "demo",
+                    "price_label": "$0 demo",
+                    "target_user": "evaluator",
+                    "quota_concept": "small demo quota",
+                    "workspace_concept": "single demo workspace",
+                    "support_level": "self-guided docs",
+                },
+                {
+                    "name": "Research Pro",
+                    "status": "planned",
+                    "price_label": "future package",
+                    "target_user": "independent researcher",
+                    "quota_concept": "planned larger research quota",
+                    "workspace_concept": "one research workspace",
+                    "support_level": "planned product support",
+                },
+                {
+                    "name": "Team Workspace",
+                    "status": "planned",
+                    "price_label": "future package",
+                    "target_user": "small research team",
+                    "quota_concept": "planned team quota",
+                    "workspace_concept": "shared team workspace",
+                    "support_level": "planned team support",
+                },
+                {
+                    "name": "Enterprise Planned",
+                    "status": "planned",
+                    "price_label": "future package",
+                    "target_user": "enterprise buyer",
+                    "quota_concept": "custom planned quota",
+                    "workspace_concept": "multi-workspace structure",
+                    "support_level": "planned enterprise support",
+                },
+            ],
+            "warnings": [],
+        }
+        response = success_response({"pricing": pricing}, started_at=started)
+        log_api_event("/api/v2/system/pricing-plan", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
     @api.get("/api/v2/system/workspace-health")
     def workspace_health() -> dict:
         started = perf_counter()
