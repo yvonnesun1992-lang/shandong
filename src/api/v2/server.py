@@ -463,6 +463,26 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v2/system/production-database", "default", "ok", response["meta"]["latency_ms"])
         return response
 
+    @api.get("/api/v2/system/identity-integration")
+    def identity_integration() -> dict:
+        from src.auth.production_identity_plan import get_production_identity_integration_plan
+
+        started = perf_counter()
+        plan = get_production_identity_integration_plan()
+        identity_integration_summary = {
+            "current_identity": plan["current_identity"],
+            "future_identity": plan["future_identity"],
+            "production_identity_enabled": plan["production_identity_enabled"],
+            "external_identity_connected": plan["external_identity_connected"],
+            "external_identity_mapping_ready": plan["external_identity_mapping_ready"],
+            "production_session_lifecycle_ready": plan["production_session_lifecycle_ready"],
+            "auth_audit_ready": plan["auth_audit_ready"],
+            "warnings": plan["warnings"],
+        }
+        response = success_response({"identity_integration": identity_integration_summary}, started_at=started)
+        log_api_event("/api/v2/system/identity-integration", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
     @api.get("/api/v2/system/workspace-health")
     def workspace_health() -> dict:
         started = perf_counter()

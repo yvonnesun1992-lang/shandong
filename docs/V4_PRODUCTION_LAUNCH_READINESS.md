@@ -18,6 +18,14 @@
 - database migration readiness is not complete
 - production_database_ready remains false
 
+## V4.2 Production Identity Integration Status
+
+- production identity integration is planned
+- external identity provider is not connected
+- external identity mapping is not ready
+- production session lifecycle is not ready
+- production_identity_ready remains false
+
 ## Ready Items
 
 - UI shell
