@@ -407,6 +407,42 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v2/system/pricing-plan", "default", "ok", response["meta"]["latency_ms"])
         return response
 
+    @api.get("/api/v2/system/production-readiness")
+    def production_readiness() -> dict:
+        started = perf_counter()
+        production_readiness_summary = {
+            "version": "V4.0",
+            "demo_ready": True,
+            "production_ready": False,
+            "blocking_items": [
+                "production identity provider not connected",
+                "production database not connected",
+                "production cloud deployment not connected",
+                "real payment not connected",
+                "monitoring provider not connected",
+                "legal/compliance docs not complete",
+                "broker integration intentionally disabled",
+            ],
+            "ready_items": [
+                "UI shell",
+                "Admin Console",
+                "Demo auth",
+                "Workspace demo",
+                "Pricing demo",
+                "Observability local",
+                "Deployment dry run",
+                "Release candidate checks",
+            ],
+            "external_services_connected": False,
+            "broker_connected": False,
+            "real_payment_enabled": False,
+            "production_identity_enabled": False,
+            "warnings": [],
+        }
+        response = success_response({"production_readiness": production_readiness_summary}, started_at=started)
+        log_api_event("/api/v2/system/production-readiness", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
     @api.get("/api/v2/system/workspace-health")
     def workspace_health() -> dict:
         started = perf_counter()

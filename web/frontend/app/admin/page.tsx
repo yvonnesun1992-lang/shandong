@@ -122,6 +122,14 @@ const fallbackConsole: Record<string, ConsoleModule> = {
     metric: 'Pricing planned',
     detail: `Stripe ${'live'}: not connected. Subscription lifecycle: planned. Customer billing: not connected.`,
   },
+  production_launch_readiness: {
+    key: 'production_launch_readiness',
+    title: 'Production Launch Readiness',
+    status: 'Warning',
+    description: 'Demo ready: yes. Production ready: no. Production identity: not connected.',
+    metric: 'Demo-ready freeze',
+    detail: 'Production database: not connected. Cloud deployment: not connected. Real payment: not enabled. Broker integration: intentionally disabled. Legal/compliance: pending.',
+  },
   release_candidate: {
     key: 'release_candidate',
     title: 'Release Candidate Freeze',

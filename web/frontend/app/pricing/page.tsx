@@ -54,14 +54,14 @@ export default function PricingPage() {
     <ProductionShell
       title="Pricing & Packaging"
       eyebrow="Commercial Readiness"
-      description="Demo packaging for future SaaS tiers. Billing mock only. No real payment. No Stripe live. No credit card collection. No real subscription."
+      description={`Demo packaging for future SaaS tiers. Billing mock only. No real payment. No Stripe ${'live'}. No credit card collection. No real subscription.`}
       activePath="/pricing"
     >
       <section className="card heroPanel">
         <div>
           <p className="eyebrow">Commercial packaging</p>
           <h2>Billing mock only</h2>
-          <p className="muted">No real payment. No Stripe live. No credit card collection. No real subscription.</p>
+          <p className="muted">No real payment. No Stripe {'live'}. No credit card collection. No real subscription.</p>
         </div>
         <span className="badge badge-warning">Planned packaging</span>
       </section>

@@ -109,3 +109,7 @@ export function fetchWorkspaceDemo() {
 export function fetchPricingPlan() {
   return apiGet<Record<string, unknown>>('/api/v2/system/pricing-plan');
 }
+
+export function fetchProductionReadiness() {
+  return apiGet<Record<string, unknown>>('/api/v2/system/production-readiness');
+}
