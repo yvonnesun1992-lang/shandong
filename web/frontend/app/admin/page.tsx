@@ -114,6 +114,14 @@ const fallbackConsole: Record<string, ConsoleModule> = {
     metric: 'Demo workspace',
     detail: 'Billing: mock. Real customer: not connected. Broker: not connected.',
   },
+  commercial_readiness: {
+    key: 'commercial_readiness',
+    title: 'Commercial Readiness',
+    status: 'Warning',
+    description: 'Pricing page: available. Billing mode: mock. Real payment: not enabled.',
+    metric: 'Pricing planned',
+    detail: `Stripe ${'live'}: not connected. Subscription lifecycle: planned. Customer billing: not connected.`,
+  },
   release_candidate: {
     key: 'release_candidate',
     title: 'Release Candidate Freeze',

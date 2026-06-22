@@ -1,3 +1,74 @@
+# V3.9 Pricing / Packaging / Commercial Readiness
+
+V3.9 adds pricing / packaging / commercial readiness for future SaaS packaging demos. It does not add trading functionality, change core strategy logic, connect real payments, connect Stripe live, collect cards, connect real customers, perform a production launch, connect real cloud services, connect real identity services, execute payments, upload logs externally, connect brokers, call external AI services, or commit production credentials.
+
+New files:
+
+```text
+web/frontend/app/pricing/page.tsx
+web/frontend/app/components/PricingPlanCard.tsx
+docs/COMMERCIAL_READINESS.md
+tests/test_v39_pricing_packaging_commercial_readiness.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+web/frontend/app/admin/page.tsx
+web/frontend/scripts/verify-build.mjs
+README.md
+REVIEW_PACKAGE.md
+```
+
+Commercial readiness scope:
+
+- Added Pricing page.
+- Added PricingPlanCard component.
+- Added pricing plan API endpoint.
+- Added frontend fetchPricingPlan helper.
+- Added Admin Console commercial readiness module.
+- Added Pricing navigation.
+- Added commercial readiness documentation.
+
+Safety boundaries:
+
+- Real payment connected: no
+- Stripe live connected: no
+- Credit card storage: no
+- Real customer connected: no
+- New trading functionality: no
+- Core strategy logic changed: no
+- Real production launch: no
+- Real cloud service connected: no
+- Real production secret committed: no
+- Real identity service connected: no
+- Real payment execution: no
+- External log upload: no
+- Broker connection: no
+- Auto trading: no
+- AI API calls: no
+
+Validation:
+
+```text
+py_compile server module: passed
+tests/test_v39_pricing_packaging_commercial_readiness.py: 5 passed
+pytest: 519 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm/pnpm unavailable in this shell; only bundled node is available
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, after checks pass per user instruction
+```
+
 # V3.8 Customer Workspace Demo Flow
 
 V3.8 adds a customer workspace demo flow for product walkthroughs. It does not add trading functionality, change core strategy logic, connect real customers, connect real billing, perform a production launch, connect real cloud services, connect real identity services, execute payments, upload logs externally, connect brokers, call external AI services, or commit production credentials.
