@@ -98,6 +98,14 @@ const fallbackConsole: Record<string, ConsoleModule> = {
     metric: 'Dry run ready',
     detail: 'External deployment: not connected. Secrets: not configured. Dry run check: available. Production launch: not enabled.',
   },
+  onboarding: {
+    key: 'onboarding',
+    title: 'Onboarding Readiness',
+    status: 'OK',
+    description: 'First-run ready: yes. Demo journey: available. Safety boundaries: visible.',
+    metric: 'First-run ready',
+    detail: 'External services: not connected. Production launch: not enabled.',
+  },
   release_candidate: {
     key: 'release_candidate',
     title: 'Release Candidate Freeze',

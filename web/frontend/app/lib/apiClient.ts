@@ -97,3 +97,7 @@ export function fetchDeploymentDryRun() {
 export function fetchV3ReleaseCandidate() {
   return apiGet<Record<string, unknown>>('/api/v2/system/v3-release-candidate');
 }
+
+export function fetchOnboarding() {
+  return apiGet<Record<string, unknown>>('/api/v2/system/onboarding');
+}

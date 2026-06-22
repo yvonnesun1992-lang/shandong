@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 
-const pages = ['login', 'dashboard', 'strategy', 'reports', 'risk', 'settings', 'admin', 'api-docs'];
+const pages = ['onboarding', 'login', 'dashboard', 'strategy', 'reports', 'risk', 'settings', 'admin', 'api-docs'];
 const missing = pages.filter((page) => !existsSync(`app/${page}/page.tsx`));
 
 if (missing.length > 0) {
@@ -8,4 +8,4 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-console.log('V3.2 frontend structure verified');
+console.log('V3.7 frontend structure verified');

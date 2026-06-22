@@ -5,10 +5,12 @@ import { MetricCard } from './MetricCard';
 import { PageHeader } from './PageHeader';
 
 const links = [
+  ['Onboarding', '/onboarding'],
   ['Dashboard', '/dashboard'],
   ['Strategy', '/strategy'],
   ['Reports', '/reports'],
   ['Risk', '/risk'],
+  ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],
   ['API Docs', '/api-docs'],

@@ -354,9 +354,23 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 👋 V3.7 Product Onboarding & First-Run Experience
+
+- Product Onboarding page for first-run product demos
+- First-Run Experience checklist for backend, frontend, demo login, Admin Console, observability, deployment dry run, and safety boundaries
+- Demo Journey that routes users to Dashboard, Demo Login, Admin Console, and API Docs
+- Safety Boundary UX that explains research mode, no broker connection, no auto trading, no real payment, no production identity, no external cloud, and no AI API
+- Onboarding endpoint at `/api/v2/system/onboarding`
+- Admin Console includes an Onboarding Readiness module
+- Product onboarding documentation added in `docs/PRODUCT_ONBOARDING.md`
+- No production launch, no real external services, no broker connection, no auto trading, no real payment execution
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 504 tests passed  
+- ✔ pytest: 509 tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

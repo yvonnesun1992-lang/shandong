@@ -290,6 +290,36 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v2/system/v3-release-candidate", "default", "ok", response["meta"]["latency_ms"])
         return response
 
+    @api.get("/api/v2/system/onboarding")
+    def onboarding() -> dict:
+        started = perf_counter()
+        onboarding_summary = {
+            "version": "V3.7",
+            "mode": "demo",
+            "first_run_ready": True,
+            "recommended_steps": [
+                "Open onboarding",
+                "Open dashboard",
+                "Use demo login",
+                "Review admin console",
+                "Read API docs",
+            ],
+            "safety_boundaries": [
+                "Research mode only",
+                "No broker connection",
+                "No automated trading",
+                "No real payment",
+                "No production identity",
+                "No external cloud connected",
+                "No AI API connected",
+            ],
+            "external_services_connected": False,
+            "warnings": [],
+        }
+        response = success_response({"onboarding": onboarding_summary}, started_at=started)
+        log_api_event("/api/v2/system/onboarding", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
     @api.get("/api/v2/system/workspace-health")
     def workspace_health() -> dict:
         started = perf_counter()

@@ -1,3 +1,70 @@
+# V3.7 Product Onboarding & First-Run Experience
+
+V3.7 adds product onboarding and first-run experience. It does not add trading functionality, change core strategy logic, perform a production launch, connect real cloud services, connect real identity services, execute payments, upload logs externally, connect brokers, call external AI services, or commit production credentials.
+
+New files:
+
+```text
+web/frontend/app/onboarding/page.tsx
+web/frontend/app/components/FirstRunChecklist.tsx
+docs/PRODUCT_ONBOARDING.md
+tests/test_v37_product_onboarding_first_run_experience.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+web/frontend/app/admin/page.tsx
+web/frontend/scripts/verify-build.mjs
+README.md
+REVIEW_PACKAGE.md
+```
+
+Onboarding scope:
+
+- Added onboarding page.
+- Added first-run checklist component.
+- Added onboarding API endpoint.
+- Added frontend fetchOnboarding helper.
+- Added Admin Console onboarding readiness module.
+- Added onboarding navigation.
+- Added product onboarding documentation.
+
+Safety boundaries:
+
+- New trading functionality: no
+- Core strategy logic changed: no
+- Production launch: no
+- Real cloud service connected: no
+- Real production secret committed: no
+- Real identity service connected: no
+- Real payment execution: no
+- External log upload: no
+- Broker connection: no
+- Auto trading: no
+- AI API calls: no
+
+Validation:
+
+```text
+py_compile server module: passed
+tests/test_v37_product_onboarding_first_run_experience.py: 5 passed
+pytest: 509 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm/pnpm unavailable in this shell; only bundled node is available
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, after checks pass per user instruction
+```
+
 # V3.6 Release Candidate QA & Product Demo Freeze
 
 V3.6 adds V3 release candidate QA and product demo freeze checks. It does not add trading functionality, change core strategy logic, perform a production launch, connect real cloud services, connect a production database, configure a real domain or TLS certificate, connect real identity services, execute payments, upload logs externally, connect brokers, call external AI services, or commit production credentials.
