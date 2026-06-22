@@ -11,6 +11,13 @@
 - No real payment
 - No broker integration
 
+## V4.1 Production Database Status
+
+- production database is planned
+- production database is not connected
+- database migration readiness is not complete
+- production_database_ready remains false
+
 ## Ready Items
 
 - UI shell

@@ -130,6 +130,14 @@ const fallbackConsole: Record<string, ConsoleModule> = {
     metric: 'Demo-ready freeze',
     detail: 'Production database: not connected. Cloud deployment: not connected. Real payment: not enabled. Broker integration: intentionally disabled. Legal/compliance: pending.',
   },
+  production_database: {
+    key: 'production_database',
+    title: 'Production Database',
+    status: 'Warning',
+    description: 'Current database: local SQLite. Future database: PostgreSQL planned. Production database: not connected.',
+    metric: 'Database planned',
+    detail: 'Migration ready: no. Backup policy: planned. Rollback policy: planned.',
+  },
   release_candidate: {
     key: 'release_candidate',
     title: 'Release Candidate Freeze',
