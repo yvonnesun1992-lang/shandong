@@ -405,9 +405,20 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🗄️ V4.1 Production Database Plan
+
+- Production Database Plan for future PostgreSQL migration readiness
+- PostgreSQL planned while current demo storage remains local SQLite
+- Production database endpoint at `/api/v2/system/production-database`
+- Migration readiness checklist and future database architecture documented
+- No production database connected, no DATABASE_URL committed, no database credentials committed
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 524 tests passed  
+- ✔ pytest: 529 tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

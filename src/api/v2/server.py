@@ -443,6 +443,26 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v2/system/production-readiness", "default", "ok", response["meta"]["latency_ms"])
         return response
 
+    @api.get("/api/v2/system/production-database")
+    def production_database() -> dict:
+        from src.db.production_database_plan import get_production_database_plan
+
+        started = perf_counter()
+        plan = get_production_database_plan()
+        production_database_summary = {
+            "current_database": plan["current_database"],
+            "future_database": plan["future_database"],
+            "production_enabled": plan["production_enabled"],
+            "migration_ready": plan["migration_ready"],
+            "external_database_connected": plan["external_database_connected"],
+            "backup_policy_ready": plan["backup_policy_ready"],
+            "rollback_policy_ready": plan["rollback_policy_ready"],
+            "warnings": plan["warnings"],
+        }
+        response = success_response({"production_database": production_database_summary}, started_at=started)
+        log_api_event("/api/v2/system/production-database", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
     @api.get("/api/v2/system/workspace-health")
     def workspace_health() -> dict:
         started = perf_counter()

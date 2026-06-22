@@ -113,3 +113,7 @@ export function fetchPricingPlan() {
 export function fetchProductionReadiness() {
   return apiGet<Record<string, unknown>>('/api/v2/system/production-readiness');
 }
+
+export function fetchProductionDatabase() {
+  return apiGet<Record<string, unknown>>('/api/v2/system/production-database');
+}

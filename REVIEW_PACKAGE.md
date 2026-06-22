@@ -1,3 +1,72 @@
+# V4.1 Production Database Plan
+
+V4.1 adds 生产数据库规划 and migration readiness preparation. It does not connect a real production database, commit a real database URL, commit database credentials, migrate real customer data, perform a real production launch, connect real cloud services, connect real identity services, connect real payments, upload logs externally, connect brokers, call external AI services, or change core strategy logic.
+
+New files:
+
+```text
+src/config/production_database_config.py
+src/db/production_database_plan.py
+scripts/production_database_plan_check.py
+docs/PRODUCTION_DATABASE_PLAN.md
+tests/test_v41_production_database_plan.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/admin/page.tsx
+docs/V4_PRODUCTION_LAUNCH_READINESS.md
+README.md
+REVIEW_PACKAGE.md
+```
+
+Production database planning scope:
+
+- Added production database configuration planning layer.
+- Added production database plan module.
+- Added production database API endpoint.
+- Added production database plan check script.
+- Added Admin Console production database module.
+- Added frontend fetchProductionDatabase helper.
+- Added production database planning documentation.
+
+Safety boundaries:
+
+- Real production database connected: no
+- DATABASE_URL committed: no
+- Database credentials committed: no
+- Real customer data migration: no
+- Real production launch: no
+- Real cloud service connected: no
+- Real identity service connected: no
+- Real payment connected: no
+- Broker connection: no
+- Auto trading: no
+- AI API calls: no
+- Core strategy logic changed: no
+
+Validation:
+
+```text
+py_compile production database modules/server: passed
+production_database_plan_check: success true
+tests/test_v41_production_database_plan.py: 5 passed
+pytest: 529 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm/pnpm unavailable in this shell; only bundled node is available
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, after checks pass per user instruction
+```
+
 # V4.0 Production Launch Readiness Freeze
 
 V4.0 adds production launch readiness freeze checks and V4 roadmap documentation. It does not perform a real production launch, connect real cloud services, connect a production database, commit production credentials, connect real identity services, connect real payments, upload logs externally, connect brokers, call external AI services, or change core strategy logic.
