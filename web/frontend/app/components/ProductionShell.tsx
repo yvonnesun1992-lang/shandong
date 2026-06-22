@@ -7,6 +7,7 @@ import { PageHeader } from './PageHeader';
 const links = [
   ['Onboarding', '/onboarding'],
   ['Dashboard', '/dashboard'],
+  ['Workspace Demo', '/workspace-demo'],
   ['Strategy', '/strategy'],
   ['Reports', '/reports'],
   ['Risk', '/risk'],

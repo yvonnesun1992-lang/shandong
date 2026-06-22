@@ -368,9 +368,22 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🧑‍💼 V3.8 Customer Workspace Demo Flow
+
+- Customer Workspace Demo Flow for explaining tenant-style SaaS product behavior
+- Workspace Demo page with workspace overview, member roles, quota snapshot, usage summary, research reports overview, and safety boundaries
+- Workspace Demo endpoint at `/api/v2/system/workspace-demo`
+- Admin Console includes a Workspace Demo module
+- Frontend API client includes `fetchWorkspaceDemo()`
+- Workspace demo documentation added in `docs/WORKSPACE_DEMO_FLOW.md`
+- No real customer connected, no real billing, no broker connection, no auto trading, no real payment execution
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 509 tests passed  
+- ✔ pytest: 514 tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
