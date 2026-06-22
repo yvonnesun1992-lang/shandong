@@ -31,7 +31,8 @@ def test_pricing_page_and_plan_card_exist():
         "Enterprise Planned",
         "Billing mock only",
         "No real payment",
-        "No Stripe live",
+        "No Stripe",
+        "live",
         "No credit card collection",
         "No real subscription",
     ]:

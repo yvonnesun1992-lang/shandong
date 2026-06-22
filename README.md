@@ -393,9 +393,21 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🧊 V4.0 Production Launch Readiness Freeze
+
+- Production Launch Readiness Freeze for moving from product demo to production roadmap
+- Demo-ready but not production-ready
+- Production readiness endpoint at `/api/v2/system/production-readiness`
+- Production launch readiness check script at `scripts/production_launch_readiness_check.py`
+- V4 roadmap documented in `docs/V4_PRODUCTION_LAUNCH_READINESS.md`
+- No production launch, no production cloud, no production database, no real payment, no broker connection
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 519 tests passed  
+- ✔ pytest: 524 tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

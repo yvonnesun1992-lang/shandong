@@ -1,3 +1,73 @@
+# V4.0 Production Launch Readiness Freeze
+
+V4.0 adds production launch readiness freeze checks and V4 roadmap documentation. It does not perform a real production launch, connect real cloud services, connect a production database, commit production credentials, connect real identity services, connect real payments, upload logs externally, connect brokers, call external AI services, or change core strategy logic.
+
+New files:
+
+```text
+scripts/production_launch_readiness_check.py
+docs/V4_PRODUCTION_LAUNCH_READINESS.md
+tests/test_v40_production_launch_readiness_freeze.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/admin/page.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Production launch readiness scope:
+
+- Added production launch readiness check script.
+- Added production readiness API endpoint.
+- Added frontend fetchProductionReadiness helper.
+- Added Admin Console production launch readiness module.
+- Added V4 production launch readiness documentation.
+
+Readiness status:
+
+- demo_ready: true
+- production_ready: false
+
+Safety boundaries:
+
+- Real production launch: no
+- Real cloud service connected: no
+- Real production secret committed: no
+- Real production database connected: no
+- Real identity service connected: no
+- Real payment connected: no
+- External log upload: no
+- Broker connection: no
+- Auto trading: no
+- AI API calls: no
+- Core strategy logic changed: no
+
+Validation:
+
+```text
+py_compile production launch readiness/server modules: passed
+production_launch_readiness_check: success true
+v3_release_candidate_check: success true
+deployment_dry_run_check: success true
+tests/test_v40_production_launch_readiness_freeze.py: 5 passed
+pytest: 524 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm/pnpm unavailable in this shell; only bundled node is available
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, after checks pass per user instruction
+```
+
 # V3.9 Pricing / Packaging / Commercial Readiness
 
 V3.9 adds pricing / packaging / commercial readiness for future SaaS packaging demos. It does not add trading functionality, change core strategy logic, connect real payments, connect Stripe live, collect cards, connect real customers, perform a production launch, connect real cloud services, connect real identity services, execute payments, upload logs externally, connect brokers, call external AI services, or commit production credentials.
