@@ -1,3 +1,73 @@
+# V3.6 Release Candidate QA & Product Demo Freeze
+
+V3.6 adds V3 release candidate QA and product demo freeze checks. It does not add trading functionality, change core strategy logic, perform a production launch, connect real cloud services, connect a production database, configure a real domain or TLS certificate, connect real identity services, execute payments, upload logs externally, connect brokers, call external AI services, or commit production credentials.
+
+New files:
+
+```text
+scripts/v3_release_candidate_check.py
+docs/V3_PRODUCT_DEMO_FREEZE.md
+tests/test_v36_release_candidate_qa_product_demo_freeze.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/admin/page.tsx
+docs/LOCAL_DEMO_GUIDE.md
+docs/EXTERNAL_DEPLOYMENT_DRY_RUN.md
+docs/OPERATIONS_RUNBOOK.md
+README.md
+REVIEW_PACKAGE.md
+```
+
+Release candidate QA scope:
+
+- Added V3 release candidate check script.
+- Added V3 product demo freeze documentation.
+- Added V3 release candidate API endpoint.
+- Added Admin Console release candidate freeze module.
+- Added frontend fetchV3ReleaseCandidate helper.
+- Updated local demo and operations docs.
+
+Safety boundaries:
+
+- New trading functionality: no
+- Core strategy logic changed: no
+- Production launch: no
+- Real cloud service connected: no
+- Real production secret committed: no
+- Real production database connected: no
+- Real domain / TLS connected: no
+- Real identity service connected: no
+- Real payment execution: no
+- External log upload: no
+- Broker connection: no
+- Auto trading: no
+- AI API calls: no
+
+Validation:
+
+```text
+py_compile v3 release candidate/server modules: passed
+v3_release_candidate_check: success true
+deployment_dry_run_check: success true
+tests/test_v36_release_candidate_qa_product_demo_freeze.py: 6 passed
+pytest: 504 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm/pnpm unavailable in this shell; only bundled node is available
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V3.5 External Deployment Dry Run
 
 V3.5 adds external deployment dry run planning and deployment readiness checks. It is not a real production launch and does not add real cloud services, production database connectivity, real domains, TLS material, external log upload, trading functionality, payment execution, broker connectivity, external AI calls, or core strategy logic changes.

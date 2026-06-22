@@ -41,12 +41,21 @@ python scripts/deployment_dry_run_check.py
 
 The check should report `success: true` before moving to any later deployment planning. If it fails, inspect the named check, fix local configuration or missing docs, and rerun it. Do not add real cloud credentials, real database endpoints, real domain configuration, or TLS material to the repo.
 
+## V3.6 Release Candidate QA
+
+V3.6 freezes the product demo candidate. It is still demo / dry run only, not a production launch, and cannot be used for real trading or real customer funds.
+
+```bash
+python scripts/v3_release_candidate_check.py
+```
+
 ## Health Endpoints
 
 ```bash
 curl http://localhost:8000/api/v2/system/liveness
 curl http://localhost:8000/api/v2/system/readiness
 curl http://localhost:8000/api/v2/system/deployment-dry-run
+curl http://localhost:8000/api/v2/system/v3-release-candidate
 ```
 
 ## Database Warning

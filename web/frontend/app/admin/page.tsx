@@ -100,11 +100,11 @@ const fallbackConsole: Record<string, ConsoleModule> = {
   },
   release_candidate: {
     key: 'release_candidate',
-    title: 'Release Candidate',
+    title: 'Release Candidate Freeze',
     status: 'OK',
-    description: 'V2 release candidate docs and architecture review are ready for demo.',
-    metric: 'V2.9',
-    detail: 'Architecture review and local demo guide are complete.',
+    description: 'Version: V3.6. Demo ready: yes. External services: not connected.',
+    metric: 'Product demo freeze',
+    detail: 'Broker: not connected. Real payment: not enabled. Production identity: not enabled. Deployment: dry run only.',
   },
 };
 
