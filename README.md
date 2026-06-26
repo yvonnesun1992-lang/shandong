@@ -90,6 +90,18 @@
 - `runtime/system_controller.py` provides start, stop, pause, resume, safe shutdown, and emergency stop controls
 - This remains paper trading only: no broker connection, no real orders, no new strategy, and no alpha model changes
 
+## 🛡️ V5.2 Production Stability Engineering
+
+- Adds watchdog monitoring for event-loop delay, signal latency, memory usage, and restart conditions
+- Adds local JSON state checkpointing for portfolio, positions, cash, PnL, and open orders
+- Adds recovery engine to restore paper account state from the latest checkpoint
+- Adds health monitor with HEALTHY / DEGRADED / FAILED status
+- Adds error handler that catches runtime exceptions and switches to fallback mode
+- Adds mode manager for NORMAL, DEGRADED, and SAFE_MODE
+- Adds structured JSON logging without sensitive fields
+- Enhances `runtime/trading_engine.py` with try/catch, watchdog, health, checkpoint, and safe-mode hooks
+- Stability layer only: no alpha model changes, no factor changes, no new strategy, no broker connection, and no real trading
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
