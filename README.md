@@ -427,9 +427,20 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ---
 
+## 🚀 V4.3 Production Deployment Target Selection
+
+- Production Deployment Target Selection for future SaaS hosting choices
+- Frontend target planned, backend target planned, database target planned
+- Secrets target planned and monitoring target planned
+- Deployment target endpoint at `/api/v2/system/deployment-target`
+- No production deployment enabled, no real cloud provider connected, no cloud token committed
+- Core strategy logic unchanged
+
+---
+
 ## 🧪 System Status
 
-- ✔ pytest: 534 tests passed  
+- ✔ pytest: 539 tests passed  
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  

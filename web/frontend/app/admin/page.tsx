@@ -146,6 +146,14 @@ const fallbackConsole: Record<string, ConsoleModule> = {
     metric: 'Identity planned',
     detail: 'External mapping: not ready. Session lifecycle: planned. Auth audit: planned.',
   },
+  production_deployment_target: {
+    key: 'production_deployment_target',
+    title: 'Production Deployment Target',
+    status: 'Warning',
+    description: 'Current state: local demo. Frontend: Vercel planned. Backend: Render / Fly.io planned.',
+    metric: 'Target planned',
+    detail: 'Database: PostgreSQL planned. Secrets: managed secrets planned. Monitoring: Sentry / OpenTelemetry planned. Production deployment: not enabled.',
+  },
   release_candidate: {
     key: 'release_candidate',
     title: 'Release Candidate Freeze',

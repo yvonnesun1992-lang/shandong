@@ -121,3 +121,7 @@ export function fetchProductionDatabase() {
 export function fetchIdentityIntegration() {
   return apiGet<Record<string, unknown>>('/api/v2/system/identity-integration');
 }
+
+export function fetchDeploymentTarget() {
+  return apiGet<Record<string, unknown>>('/api/v2/system/deployment-target');
+}
