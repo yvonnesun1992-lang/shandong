@@ -65,6 +65,19 @@
 - V5 preserves the V1.0-V1.3 history while providing a cleaner current-system entrypoint
 - Commercial readiness is tracked in `docs/V5_COMMERCIAL_ALPHA_READINESS.md`
 
+## 💼 V5.0 Paper Trading Core
+
+- Adds a true paper trading simulation loop: Signal → Order → Execution → Position → Cash → Portfolio Value → PnL → Risk Check → Trade Log
+- `trading/order.py` defines paper-only order and execution result data structures
+- `trading/execution_engine.py` simulates fee, slippage, fills, and rejection logic
+- `trading/paper_account.py` tracks cash, positions, realized/unrealized PnL, equity, and trade history
+- `trading/paper_broker.py` connects order submission, simulated execution, and account updates
+- `trading/signal_to_order.py` converts alpha signals into risk-sized paper orders
+- `trading/paper_trading_runner.py` runs a complete paper trading loop over historical or simulated bars
+- `trading/performance.py` reports total return, annual return, max drawdown, Sharpe, win rate, fees, and slippage cost
+- `trading/risk_limits.py` enforces max order value, max asset exposure, daily loss, and drawdown stops
+- This is paper trading only: no broker connection, no real orders, no real account, no payment, no production deployment, and no alpha model changes
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
