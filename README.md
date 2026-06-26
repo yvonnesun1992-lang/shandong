@@ -4,6 +4,80 @@
 
 > A production-grade SaaS platform for quantitative strategy intelligence, risk analytics, and automated reporting systems.
 
+## 📈 V1.0 Paper Trading System
+
+- Complete research loop: Market Data → Strategy Engine → Signal Engine → Paper Broker → Portfolio → Backtest Report
+- Data loader supports yfinance with standardized OHLCV output and local caching
+- Strategies included: MA Crossover, Momentum, Mean Reversion
+- Signal engine resolves duplicate/conflicting strategy signals
+- Paper broker simulates cash, positions, fees, slippage, trades, holdings, and equity
+- Backtest engine outputs total return, annual return, max drawdown, Sharpe ratio, win rate, and trade count
+- Visualization helpers generate equity curves, drawdown curves, trade markers, and strategy comparison charts
+- Safety boundary: no broker API, no real trading, no real account, no payment system, no real-money execution
+
+## 🧠 V1.1 Quant Alpha + Risk Control + Strategy Ensemble
+
+- Upgrades the paper trading loop to: Data → Feature Engine → Regime Detection → Multi-Strategy Ensemble → Portfolio Optimizer → Risk Engine → Paper Trading → Backtest + Report
+- Feature engine calculates momentum, mean reversion, volatility, and trend factors
+- Regime detector identifies bull, bear, and sideways markets with confidence scores
+- Strategy ensemble combines MA crossover, momentum, mean reversion, and volatility breakout signals with regime-aware weights
+- Risk engine enforces max position control, drawdown control, volatility deleveraging, and 0-100 risk scoring
+- Portfolio optimizer allocates weights from signal strength, volatility, and market regime
+- Backtest metrics now include Sortino ratio, Calmar ratio, turnover, risk-adjusted return, regime breakdown, strategy contribution, and risk exposure
+- Visualization helpers include regime overlay, strategy contribution, and risk exposure charts
+- Safety boundary remains unchanged: no broker API, no real trading, no auto order routing, no external AI API, no real-money execution
+
+## 🔬 V1.2 Quant Factor Research System
+
+- Adds an alpha discovery loop: Market Data → Feature Engineering → Factor Construction → IC Analysis → Factor Scoring → Factor Selection → Portfolio Simulation → Report
+- Feature engine now includes V1.2 momentum, mean reversion, volatility, and trend factors such as `momentum_10d`, `price_distance_ma20`, `volatility_change`, `ma_slope_20`, and `breakout_strength`
+- FactorBuilder creates date-by-asset factor matrices and aligned price matrices for research workflows
+- IC analysis calculates future-return information coefficient, rolling IC, mean IC, IC standard deviation, IC IR, and IC stability without look-ahead bias
+- Factor scoring ranks factors with `IC_mean × IC_IR × stability - turnover_penalty`
+- Factor selection keeps positive, stable factors and reports rejected factors with clear reasons
+- Factor portfolio simulator combines multi-factor scores, normalizes factor weights, and simulates local portfolio returns
+- Factor report generator creates a markdown report plus IC curve, factor ranking, and cumulative factor return charts
+- Look-ahead bias fix: runtime factor research files do not use future backfill; warm-up data remains missing until enough history exists; portfolio simulation uses prior signals for next-period returns
+- Train/test and walk-forward split helpers support out-of-sample factor validation
+- Safety boundary remains unchanged: no broker API, no real trading, no auto order routing, no external AI API, no real-money execution
+
+## 📊 V1.3 Multi-Factor Alpha System
+
+- Adds a complete alpha pipeline: Factors → IC Scoring → Normalization → Weighting → Portfolio Construction → Risk Adjustment → Backtest → Attribution
+- `alpha_engine` provides cross-sectional z-score normalization, winsorization, and weighted alpha score construction
+- `weighting/factor_weighting.py` computes softmax factor weights from IC mean, IC IR, stability, and recent IC decay
+- `regime/regime_adjuster.py` tilts factor weights toward momentum in bull markets and mean reversion in bear markets
+- `portfolio/multi_factor_portfolio.py` builds long-only multi-factor portfolios with normalized weights, no leverage, and single-asset caps
+- `risk/risk_engine.py` now supports portfolio-level exposure reduction from drawdown and volatility controls
+- `evaluation/multi_factor_backtest.py` runs causal multi-factor backtests using prior-day weights for next-period returns
+- `evaluation/attribution.py` reports factor return contribution, risk contribution, and factor correlation structure
+- V1.3 remains time-safe: no `bfill`, no future-price fills, and portfolio returns begin after signals are formed
+
+## 🧭 V5.0 Alpha System
+
+- `quant_core_v5` is the current alpha-system layer built beside the legacy V1 research modules
+- `quant_core_v5/main.py` exposes `run_factor_pipeline`, `run_alpha_model`, and `run_portfolio`
+- `quant_core_v5/pipeline.py` can run the V5 alpha pipeline directly from market data frames
+- `quant_core_v5/validation.py` runs train/test and walk-forward validation for auditable alpha evidence
+- V5 validation includes turnover-based transaction cost and slippage adjusted metrics
+- `scripts/run_v5_validation.py` can generate `reports/v5_alpha_validation_report.md` from cached market data
+- `scripts/run_v5_validation_batch.py` can generate multi-universe validation evidence
+- V5 preserves the V1.0-V1.3 history while providing a cleaner current-system entrypoint
+- Commercial readiness is tracked in `docs/V5_COMMERCIAL_ALPHA_READINESS.md`
+
+## 💼 V5.0 Paper Trading Core
+
+- Adds a true paper trading simulation loop: Signal → Order → Execution → Position → Cash → Portfolio Value → PnL → Risk Check → Trade Log
+- `trading/order.py` defines paper-only order and execution result data structures
+- `trading/execution_engine.py` simulates fee, slippage, fills, and rejection logic
+- `trading/paper_account.py` tracks cash, positions, realized/unrealized PnL, equity, and trade history
+- `trading/paper_broker.py` connects order submission, simulated execution, and account updates
+- `trading/signal_to_order.py` converts alpha signals into risk-sized paper orders
+- `trading/paper_trading_runner.py` runs a complete paper trading loop over historical or simulated bars
+- `trading/performance.py` reports total return, annual return, max drawdown, Sharpe, win rate, fees, and slippage cost
+- `trading/risk_limits.py` enforces max order value, max asset exposure, daily loss, and drawdown stops
+- This is paper trading only: no broker connection, no real orders, no real account, no payment, no production deployment, and no alpha model changes
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

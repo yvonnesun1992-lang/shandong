@@ -1,3 +1,55 @@
+# V5.0: Paper Trading Core System
+
+This update adds a paper trading core for the closed loop:
+
+Signal -> Order -> Execution -> Position -> Cash -> Portfolio Value -> PnL -> Risk Check -> Trade Log
+
+New files:
+
+```text
+trading/__init__.py
+trading/order.py
+trading/execution_engine.py
+trading/paper_account.py
+trading/paper_broker.py
+trading/signal_to_order.py
+trading/paper_trading_runner.py
+trading/performance.py
+trading/risk_limits.py
+tests/test_v50_paper_trading_core.py
+docs/V5_PAPER_TRADING_CORE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Real orders: no
+Real account: no
+Real capital: no
+Payment system: no
+Alpha model changed: no
+Factor logic changed: no
+Production deployment: no
+Plaintext API key / secret / token / password: no
+```
+
+Validation:
+
+```text
+python -m py_compile trading/order.py trading/execution_engine.py trading/paper_account.py trading/paper_broker.py trading/signal_to_order.py trading/paper_trading_runner.py trading/performance.py trading/risk_limits.py: passed
+python -m pytest tests/test_v50_paper_trading_core.py: 10 passed
+python -m pytest: 603 passed
+python scripts/system_doctor.py: OK
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V4.3 Production Deployment Target Selection
 
 V4.3 adds 生产部署目标选择规划 for future frontend, backend, database, configuration, and monitoring hosting choices. It does not deploy to a real cloud provider, commit cloud credentials, commit a deployment token, connect a production database, perform a real production launch, connect real payments, upload logs externally, connect brokers, call external AI services, or change core strategy logic.
