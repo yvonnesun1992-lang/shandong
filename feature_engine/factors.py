@@ -59,7 +59,7 @@ def calculate_factors(data: pd.DataFrame) -> pd.DataFrame:
         "breakout_strength",
         "adx_proxy",
     ]
-    frame[factor_cols] = frame[factor_cols].replace([np.inf, -np.inf], np.nan).ffill().bfill().fillna(0)
+    frame[factor_cols] = frame[factor_cols].replace([np.inf, -np.inf], np.nan)
     return frame
 
 
@@ -67,5 +67,8 @@ def _prepare(data: pd.DataFrame) -> pd.DataFrame:
     frame = data.copy()
     frame["datetime"] = pd.to_datetime(frame["datetime"])
     for column in ["open", "high", "low", "close", "volume"]:
-        frame[column] = pd.to_numeric(frame[column], errors="coerce").ffill().bfill().fillna(0)
-    return frame.sort_values("datetime").reset_index(drop=True)
+        frame[column] = pd.to_numeric(frame[column], errors="coerce")
+    frame = frame.sort_values("datetime").reset_index(drop=True)
+    frame[["open", "high", "low", "close"]] = frame[["open", "high", "low", "close"]].ffill()
+    frame["volume"] = frame["volume"].ffill().fillna(0)
+    return frame.dropna(subset=["open", "high", "low", "close"]).reset_index(drop=True)

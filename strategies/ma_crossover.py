@@ -32,8 +32,8 @@ class MACrossoverStrategy:
 def _prepare(data: pd.DataFrame) -> pd.DataFrame:
     frame = data.copy()
     frame["datetime"] = pd.to_datetime(frame["datetime"])
-    frame["close"] = pd.to_numeric(frame["close"], errors="coerce").ffill().bfill()
-    return frame.sort_values("datetime").reset_index(drop=True)
+    frame["close"] = pd.to_numeric(frame["close"], errors="coerce").ffill()
+    return frame.sort_values("datetime").dropna(subset=["close"]).reset_index(drop=True)
 
 
 def _signal(symbol: str, action: str, strength: float, frame: pd.DataFrame) -> dict:

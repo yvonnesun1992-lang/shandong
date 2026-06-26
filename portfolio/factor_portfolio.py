@@ -14,17 +14,20 @@ class FactorPortfolioSimulator:
     ) -> dict:
         factor_weights = self._normalize_scores(factor_scores)
         combined = self._combine_factors(factor_matrices, factor_weights)
-        prices = price_matrix.sort_index().apply(pd.to_numeric, errors="coerce").ffill().bfill()
-        future_returns = prices.shift(-forward_days) / prices - 1
+        prices = price_matrix.sort_index().apply(pd.to_numeric, errors="coerce").ffill()
+        asset_returns = prices.pct_change(periods=forward_days)
+        shifted_scores = combined.shift(forward_days)
         portfolio_returns = []
         timestamps = []
 
-        common_index = combined.index.intersection(future_returns.index)
-        for timestamp in common_index[:-forward_days] if forward_days > 0 else common_index:
-            scores = combined.loc[timestamp].replace([np.inf, -np.inf], np.nan).dropna()
-            returns = future_returns.loc[timestamp].reindex(scores.index).dropna()
+        common_index = shifted_scores.index.intersection(asset_returns.index)
+        for timestamp in common_index:
+            scores = shifted_scores.loc[timestamp].replace([np.inf, -np.inf], np.nan).dropna()
+            returns = asset_returns.loc[timestamp].reindex(scores.index).dropna()
             scores = scores.reindex(returns.index)
-            if returns.empty or scores.abs().sum() == 0:
+            if returns.empty or scores.empty:
+                continue
+            if scores.abs().sum() == 0:
                 portfolio_return = 0.0
             else:
                 asset_weights = scores.clip(lower=0)

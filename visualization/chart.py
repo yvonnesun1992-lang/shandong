@@ -24,7 +24,7 @@ def plot_equity_curve(equity_curve: pd.DataFrame):
 def plot_drawdown_curve(equity_curve: pd.DataFrame):
     fig, ax = plt.subplots(figsize=(10, 4))
     frame = _with_datetime(equity_curve)
-    equity = pd.to_numeric(frame["total_equity"], errors="coerce").ffill().bfill().fillna(0)
+    equity = pd.to_numeric(frame["total_equity"], errors="coerce").ffill().fillna(0)
     peak = equity.cummax()
     drawdown = ((peak - equity) / peak.replace(0, pd.NA)).fillna(0)
     ax.plot(frame["datetime"], drawdown, label="Drawdown", color="#dc2626")

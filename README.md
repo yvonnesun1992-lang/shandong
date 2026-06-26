@@ -37,6 +37,8 @@
 - Factor selection keeps positive, stable factors and reports rejected factors with clear reasons
 - Factor portfolio simulator combines multi-factor scores, normalizes factor weights, and simulates local portfolio returns
 - Factor report generator creates a markdown report plus IC curve, factor ranking, and cumulative factor return charts
+- Look-ahead bias fix: runtime factor research files do not use future backfill; warm-up data remains missing until enough history exists; portfolio simulation uses prior signals for next-period returns
+- Train/test and walk-forward split helpers support out-of-sample factor validation
 - Safety boundary remains unchanged: no broker API, no real trading, no auto order routing, no external AI API, no real-money execution
 
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.

@@ -94,8 +94,11 @@ class BacktestEngine:
         frame = data.copy()
         frame["datetime"] = pd.to_datetime(frame["datetime"])
         for column in ["open", "high", "low", "close", "volume"]:
-            frame[column] = pd.to_numeric(frame[column], errors="coerce").ffill().bfill().fillna(0)
-        return frame.sort_values("datetime").reset_index(drop=True)
+            frame[column] = pd.to_numeric(frame[column], errors="coerce")
+        frame = frame.sort_values("datetime").reset_index(drop=True)
+        frame[["open", "high", "low", "close"]] = frame[["open", "high", "low", "close"]].ffill()
+        frame["volume"] = frame["volume"].ffill().fillna(0)
+        return frame.dropna(subset=["open", "high", "low", "close"]).reset_index(drop=True)
 
     @staticmethod
     def _generate_signal(strategy, history: pd.DataFrame, symbol: str, regime: dict) -> dict:
@@ -128,7 +131,7 @@ def calculate_metrics(equity_curve: pd.DataFrame, trades: pd.DataFrame, initial_
             "number_of_trades": 0,
         }
 
-    equity = pd.to_numeric(equity_curve["total_equity"], errors="coerce").ffill().bfill().fillna(initial_cash)
+    equity = pd.to_numeric(equity_curve["total_equity"], errors="coerce").ffill().fillna(initial_cash)
     total_return = float(equity.iloc[-1] / initial_cash - 1) if initial_cash else 0.0
     daily_returns = equity.pct_change().replace([np.inf, -np.inf], np.nan).fillna(0)
     years = max(len(equity) / 252, 1 / 252)

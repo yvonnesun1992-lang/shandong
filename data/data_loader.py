@@ -85,5 +85,7 @@ class DataLoader:
 
         normalized = normalized[STANDARD_COLUMNS].sort_values("datetime").reset_index(drop=True)
         numeric_columns = ["open", "high", "low", "close", "volume"]
-        normalized[numeric_columns] = normalized[numeric_columns].ffill().bfill().fillna(0)
+        normalized[numeric_columns] = normalized[numeric_columns].ffill()
+        normalized = normalized.dropna(subset=["open", "high", "low", "close"]).reset_index(drop=True)
+        normalized["volume"] = normalized["volume"].fillna(0)
         return normalized

@@ -12,7 +12,8 @@ class MeanReversionStrategy:
 
     def generate_signal(self, data: pd.DataFrame, symbol: str) -> dict:
         frame = data.copy().sort_values("datetime").reset_index(drop=True)
-        frame["close"] = pd.to_numeric(frame["close"], errors="coerce").ffill().bfill()
+        frame["close"] = pd.to_numeric(frame["close"], errors="coerce").ffill()
+        frame = frame.dropna(subset=["close"]).reset_index(drop=True)
         if len(frame) < self.window:
             return _signal(symbol, "HOLD", 0.0, frame)
 

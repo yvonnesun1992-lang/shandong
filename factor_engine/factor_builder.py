@@ -28,4 +28,4 @@ class FactorBuilder:
 
 def _clean_matrix(matrix: pd.DataFrame) -> pd.DataFrame:
     matrix.index = pd.to_datetime(matrix.index)
-    return matrix.sort_index().replace([float("inf"), float("-inf")], pd.NA).ffill().bfill().fillna(0)
+    return matrix.sort_index().replace([float("inf"), float("-inf")], pd.NA).ffill()
