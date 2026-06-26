@@ -1,3 +1,72 @@
+# V4.3 Production Deployment Target Selection
+
+V4.3 adds 生产部署目标选择规划 for future frontend, backend, database, configuration, and monitoring hosting choices. It does not deploy to a real cloud provider, commit cloud credentials, commit a deployment token, connect a production database, perform a real production launch, connect real payments, upload logs externally, connect brokers, call external AI services, or change core strategy logic.
+
+New files:
+
+```text
+src/config/deployment_target_config.py
+src/deployment/__init__.py
+src/deployment/deployment_target_plan.py
+scripts/deployment_target_selection_check.py
+docs/PRODUCTION_DEPLOYMENT_TARGET_SELECTION.md
+tests/test_v43_production_deployment_target_selection.py
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/admin/page.tsx
+docs/V4_PRODUCTION_LAUNCH_READINESS.md
+README.md
+REVIEW_PACKAGE.md
+```
+
+Deployment target planning scope:
+
+- Added deployment target configuration planning layer.
+- Added deployment target plan module.
+- Added deployment target selection API endpoint.
+- Added deployment target selection check script.
+- Added Admin Console production deployment target module.
+- Added frontend fetchDeploymentTarget helper.
+- Added production deployment target selection documentation.
+
+Safety boundaries:
+
+- Real production deployment: no
+- Real cloud service connected: no
+- Cloud token committed: no
+- DATABASE_URL committed: no
+- Production secret committed: no
+- Real production database connected: no
+- Real payment connected: no
+- Broker connection: no
+- Auto trading: no
+- AI API calls: no
+- Core strategy logic changed: no
+
+Validation:
+
+```text
+py_compile deployment target modules/server: passed
+deployment_target_selection_check: success true
+tests/test_v43_production_deployment_target_selection.py: 5 passed
+pytest: 539 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+npm build: npm/pnpm unavailable in this shell; only bundled node is available
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review per V4.3 instruction
+```
+
 # V4.2 Production Identity Integration Plan
 
 V4.2 adds 生产身份集成规划 and identity mapping readiness preparation. It does not connect a real identity provider, implement OAuth, add Google/GitHub login, commit identity provider credentials, store external identity tokens, perform a real production launch, connect real cloud services, connect real payments, upload logs externally, connect brokers, call external AI services, or change core strategy logic.

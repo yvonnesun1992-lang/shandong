@@ -483,6 +483,27 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v2/system/identity-integration", "default", "ok", response["meta"]["latency_ms"])
         return response
 
+    @api.get("/api/v2/system/deployment-target")
+    def deployment_target() -> dict:
+        from src.deployment.deployment_target_plan import get_deployment_target_plan
+
+        started = perf_counter()
+        plan = get_deployment_target_plan()
+        deployment_target_summary = {
+            "current_state": plan["current_state"],
+            "frontend_target": plan["frontend_target"],
+            "backend_target": plan["backend_target"],
+            "database_target": plan["database_target"],
+            "secrets_target": plan["secrets_target"],
+            "monitoring_target": plan["monitoring_target"],
+            "production_deployment_enabled": plan["production_deployment_enabled"],
+            "external_cloud_connected": plan["external_cloud_connected"],
+            "warnings": plan["warnings"],
+        }
+        response = success_response({"deployment_target": deployment_target_summary}, started_at=started)
+        log_api_event("/api/v2/system/deployment-target", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
     @api.get("/api/v2/system/workspace-health")
     def workspace_health() -> dict:
         started = perf_counter()

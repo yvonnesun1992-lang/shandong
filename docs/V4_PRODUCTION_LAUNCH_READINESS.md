@@ -26,6 +26,14 @@
 - production session lifecycle is not ready
 - production_identity_ready remains false
 
+## V4.3 Production Deployment Target Status
+
+- production deployment target selection is planned
+- frontend target is planned
+- backend target is planned
+- production deployment remains disabled
+- external cloud remains not connected
+
 ## Ready Items
 
 - UI shell
