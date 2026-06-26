@@ -4,6 +4,41 @@
 
 > A production-grade SaaS platform for quantitative strategy intelligence, risk analytics, and automated reporting systems.
 
+## 📈 V1.0 Paper Trading System
+
+- Complete research loop: Market Data → Strategy Engine → Signal Engine → Paper Broker → Portfolio → Backtest Report
+- Data loader supports yfinance with standardized OHLCV output and local caching
+- Strategies included: MA Crossover, Momentum, Mean Reversion
+- Signal engine resolves duplicate/conflicting strategy signals
+- Paper broker simulates cash, positions, fees, slippage, trades, holdings, and equity
+- Backtest engine outputs total return, annual return, max drawdown, Sharpe ratio, win rate, and trade count
+- Visualization helpers generate equity curves, drawdown curves, trade markers, and strategy comparison charts
+- Safety boundary: no broker API, no real trading, no real account, no payment system, no real-money execution
+
+## 🧠 V1.1 Quant Alpha + Risk Control + Strategy Ensemble
+
+- Upgrades the paper trading loop to: Data → Feature Engine → Regime Detection → Multi-Strategy Ensemble → Portfolio Optimizer → Risk Engine → Paper Trading → Backtest + Report
+- Feature engine calculates momentum, mean reversion, volatility, and trend factors
+- Regime detector identifies bull, bear, and sideways markets with confidence scores
+- Strategy ensemble combines MA crossover, momentum, mean reversion, and volatility breakout signals with regime-aware weights
+- Risk engine enforces max position control, drawdown control, volatility deleveraging, and 0-100 risk scoring
+- Portfolio optimizer allocates weights from signal strength, volatility, and market regime
+- Backtest metrics now include Sortino ratio, Calmar ratio, turnover, risk-adjusted return, regime breakdown, strategy contribution, and risk exposure
+- Visualization helpers include regime overlay, strategy contribution, and risk exposure charts
+- Safety boundary remains unchanged: no broker API, no real trading, no auto order routing, no external AI API, no real-money execution
+
+## 🔬 V1.2 Quant Factor Research System
+
+- Adds an alpha discovery loop: Market Data → Feature Engineering → Factor Construction → IC Analysis → Factor Scoring → Factor Selection → Portfolio Simulation → Report
+- Feature engine now includes V1.2 momentum, mean reversion, volatility, and trend factors such as `momentum_10d`, `price_distance_ma20`, `volatility_change`, `ma_slope_20`, and `breakout_strength`
+- FactorBuilder creates date-by-asset factor matrices and aligned price matrices for research workflows
+- IC analysis calculates future-return information coefficient, rolling IC, mean IC, IC standard deviation, IC IR, and IC stability without look-ahead bias
+- Factor scoring ranks factors with `IC_mean × IC_IR × stability - turnover_penalty`
+- Factor selection keeps positive, stable factors and reports rejected factors with clear reasons
+- Factor portfolio simulator combines multi-factor scores, normalizes factor weights, and simulates local portfolio returns
+- Factor report generator creates a markdown report plus IC curve, factor ranking, and cumulative factor return charts
+- Safety boundary remains unchanged: no broker API, no real trading, no auto order routing, no external AI API, no real-money execution
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
