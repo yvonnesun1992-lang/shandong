@@ -1,3 +1,54 @@
+# V5.1: Trading Engine Runtime System
+
+This update adds the runtime system that turns V5.0 paper trading components into a continuous engine loop:
+
+Market Data Tick -> Signal Engine -> Signal to Order -> Risk Check -> Execution Engine -> Portfolio Update -> PnL Update -> Log -> Next Tick
+
+New files:
+
+```text
+runtime/__init__.py
+runtime/trading_engine.py
+runtime/market_simulator.py
+runtime/state_manager.py
+runtime/event_bus.py
+runtime/pnl_engine.py
+runtime/system_controller.py
+runtime/risk_gate.py
+runtime/monitor.py
+tests/test_v51_trading_engine_runtime.py
+docs/V5_TRADING_ENGINE_RUNTIME.md
+```
+
+Safety boundaries:
+
+```text
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+Real trading: no
+Broker connection: no
+Real account: no
+Payment system: no
+Plaintext API key / secret / token / password: no
+```
+
+Validation:
+
+```text
+python -m py_compile runtime/trading_engine.py runtime/market_simulator.py runtime/state_manager.py runtime/event_bus.py runtime/pnl_engine.py runtime/system_controller.py runtime/risk_gate.py runtime/monitor.py: passed
+python -m pytest tests/test_v51_trading_engine_runtime.py: 6 passed
+python -m pytest: 609 passed
+python scripts/system_doctor.py: OK
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.0: Paper Trading Core System
 
 This update adds a paper trading core for the closed loop:
