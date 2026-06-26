@@ -10,6 +10,8 @@ TARGET_FILES = [
     Path("feature_engine/factors.py"),
     Path("factor_engine/factor_builder.py"),
     Path("portfolio/factor_portfolio.py"),
+    Path("alpha_engine/normalization.py"),
+    Path("portfolio/multi_factor_portfolio.py"),
 ]
 
 

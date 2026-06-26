@@ -69,6 +69,23 @@ class RiskEngine:
             "reasons": reasons,
         }
 
+    def adjust_portfolio_weights(self, weights: pd.Series, current_drawdown: float, portfolio_volatility: float) -> dict:
+        adjusted = weights.clip(lower=0).clip(upper=self.max_position_per_asset)
+        exposure_multiplier = 1.0
+        reasons = []
+        if current_drawdown > self.max_drawdown:
+            exposure_multiplier *= 0.5
+            reasons.append("drawdown_control")
+        if portfolio_volatility > self.high_volatility_threshold:
+            exposure_multiplier *= 0.5
+            reasons.append("volatility_deleveraging")
+        adjusted = adjusted * exposure_multiplier
+        return {
+            "adjusted_weights": adjusted,
+            "exposure_multiplier": exposure_multiplier,
+            "reasons": reasons,
+        }
+
     @staticmethod
     def _current_drawdown(equity_curve) -> float:
         if equity_curve is None:

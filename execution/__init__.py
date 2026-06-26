@@ -1,0 +1,2 @@
+"""Paper-first execution engine."""
+

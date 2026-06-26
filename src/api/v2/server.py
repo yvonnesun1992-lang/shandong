@@ -38,6 +38,7 @@ from src.reports.strategy_report_compare import compare_strategy_research_report
 from src.reports.strategy_report_trend import build_strategy_report_trend
 from src.security.policy import get_security_policy
 from src.workspace.workspace_service import create_workspace, ensure_default_workspace, get_user_workspaces, require_workspace_role
+from live.pipeline import get_live_state
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -730,6 +731,57 @@ def create_v2_api_app() -> FastAPI:
         summary = build_admin_console_summary()
         response = success_response({"admin_console": summary}, started_at=started, warning=summary.get("warnings", []))
         log_api_event("/api/v2/admin/console", auth_context.user_id, "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/live_status")
+    def v5_live_status() -> dict:
+        started = perf_counter()
+        state = get_live_state()
+        response = success_response(
+            {
+                "live_status": {
+                    "status": state["status"],
+                    "safety": state["safety"],
+                    "monitoring": state["monitoring"],
+                }
+            },
+            started_at=started,
+        )
+        log_api_event("/api/v5/live_status", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/pnl")
+    def v5_pnl() -> dict:
+        started = perf_counter()
+        state = get_live_state()
+        response = success_response(
+            {
+                "pnl": {
+                    "portfolio": state["portfolio"],
+                    "equity_curve": state["monitoring"]["equity_curve"],
+                    "drawdown_curve": state["monitoring"]["drawdown_curve"],
+                    "exposure_curve": state["monitoring"]["exposure_curve"],
+                }
+            },
+            started_at=started,
+        )
+        log_api_event("/api/v5/pnl", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/positions")
+    def v5_positions() -> dict:
+        started = perf_counter()
+        state = get_live_state()
+        response = success_response({"positions": state["positions"]}, started_at=started)
+        log_api_event("/api/v5/positions", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/signals")
+    def v5_signals() -> dict:
+        started = perf_counter()
+        state = get_live_state()
+        response = success_response({"signals": state["signals"]}, started_at=started)
+        log_api_event("/api/v5/signals", "default", "ok", response["meta"]["latency_ms"])
         return response
 
     return api

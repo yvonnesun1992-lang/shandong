@@ -41,6 +41,30 @@
 - Train/test and walk-forward split helpers support out-of-sample factor validation
 - Safety boundary remains unchanged: no broker API, no real trading, no auto order routing, no external AI API, no real-money execution
 
+## 📊 V1.3 Multi-Factor Alpha System
+
+- Adds a complete alpha pipeline: Factors → IC Scoring → Normalization → Weighting → Portfolio Construction → Risk Adjustment → Backtest → Attribution
+- `alpha_engine` provides cross-sectional z-score normalization, winsorization, and weighted alpha score construction
+- `weighting/factor_weighting.py` computes softmax factor weights from IC mean, IC IR, stability, and recent IC decay
+- `regime/regime_adjuster.py` tilts factor weights toward momentum in bull markets and mean reversion in bear markets
+- `portfolio/multi_factor_portfolio.py` builds long-only multi-factor portfolios with normalized weights, no leverage, and single-asset caps
+- `risk/risk_engine.py` now supports portfolio-level exposure reduction from drawdown and volatility controls
+- `evaluation/multi_factor_backtest.py` runs causal multi-factor backtests using prior-day weights for next-period returns
+- `evaluation/attribution.py` reports factor return contribution, risk contribution, and factor correlation structure
+- V1.3 remains time-safe: no `bfill`, no future-price fills, and portfolio returns begin after signals are formed
+
+## 🧭 V5.0 Alpha System
+
+- `quant_core_v5` is the current alpha-system layer built beside the legacy V1 research modules
+- `quant_core_v5/main.py` exposes `run_factor_pipeline`, `run_alpha_model`, and `run_portfolio`
+- `quant_core_v5/pipeline.py` can run the V5 alpha pipeline directly from market data frames
+- `quant_core_v5/validation.py` runs train/test and walk-forward validation for auditable alpha evidence
+- V5 validation includes turnover-based transaction cost and slippage adjusted metrics
+- `scripts/run_v5_validation.py` can generate `reports/v5_alpha_validation_report.md` from cached market data
+- `scripts/run_v5_validation_batch.py` can generate multi-universe validation evidence
+- V5 preserves the V1.0-V1.3 history while providing a cleaner current-system entrypoint
+- Commercial readiness is tracked in `docs/V5_COMMERCIAL_ALPHA_READINESS.md`
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
