@@ -39,6 +39,7 @@ from src.reports.strategy_report_trend import build_strategy_report_trend
 from src.security.policy import get_security_policy
 from src.workspace.workspace_service import create_workspace, ensure_default_workspace, get_user_workspaces, require_workspace_role
 from live.pipeline import get_live_state
+from runtime.monitoring_summary import build_monitoring_summary
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -782,6 +783,119 @@ def create_v2_api_app() -> FastAPI:
         state = get_live_state()
         response = success_response({"signals": state["signals"]}, started_at=started)
         log_api_event("/api/v5/signals", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/monitoring/summary")
+    def v5_monitoring_summary() -> dict:
+        started = perf_counter()
+        summary = build_monitoring_summary()
+        response = success_response({"monitoring": summary}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/monitoring/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/monitoring/pnl")
+    def v5_monitoring_pnl() -> dict:
+        started = perf_counter()
+        summary = build_monitoring_summary()
+        response = success_response(
+            {
+                "pnl": {
+                    "paper_trading": True,
+                    "real_trading": False,
+                    "broker_connected": False,
+                    "latest_equity": summary["latest_equity"],
+                    "cash": summary["cash"],
+                    "position_value": summary["position_value"],
+                }
+            },
+            started_at=started,
+            warning=summary.get("warnings", []),
+        )
+        log_api_event("/api/v5/monitoring/pnl", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/monitoring/positions")
+    def v5_monitoring_positions() -> dict:
+        started = perf_counter()
+        summary = build_monitoring_summary()
+        response = success_response(
+            {"positions": summary["open_positions"], "paper_trading": True, "real_trading": False, "broker_connected": False},
+            started_at=started,
+            warning=summary.get("warnings", []),
+        )
+        log_api_event("/api/v5/monitoring/positions", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/monitoring/signals")
+    def v5_monitoring_signals() -> dict:
+        started = perf_counter()
+        summary = build_monitoring_summary()
+        response = success_response(
+            {"signals": summary["recent_signals"], "paper_trading": True, "real_trading": False, "broker_connected": False},
+            started_at=started,
+            warning=summary.get("warnings", []),
+        )
+        log_api_event("/api/v5/monitoring/signals", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/monitoring/trades")
+    def v5_monitoring_trades() -> dict:
+        started = perf_counter()
+        summary = build_monitoring_summary()
+        response = success_response(
+            {"trades": summary["recent_trades"], "paper_trading": True, "real_trading": False, "broker_connected": False},
+            started_at=started,
+            warning=summary.get("warnings", []),
+        )
+        log_api_event("/api/v5/monitoring/trades", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/monitoring/errors")
+    def v5_monitoring_errors() -> dict:
+        started = perf_counter()
+        summary = build_monitoring_summary()
+        response = success_response(
+            {"errors": summary["recent_errors"], "paper_trading": True, "real_trading": False, "broker_connected": False},
+            started_at=started,
+            warning=summary.get("warnings", []),
+        )
+        log_api_event("/api/v5/monitoring/errors", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/monitoring/health")
+    def v5_monitoring_health() -> dict:
+        started = perf_counter()
+        summary = build_monitoring_summary()
+        response = success_response(
+            {"health": summary["health"], "status": summary["status"], "paper_trading": True, "real_trading": False, "broker_connected": False},
+            started_at=started,
+            warning=summary.get("warnings", []),
+        )
+        log_api_event("/api/v5/monitoring/health", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/monitoring/risk")
+    def v5_monitoring_risk() -> dict:
+        started = perf_counter()
+        summary = build_monitoring_summary()
+        response = success_response(
+            {"risk": summary["risk"], "mode": summary["mode"], "paper_trading": True, "real_trading": False, "broker_connected": False},
+            started_at=started,
+            warning=summary.get("warnings", []),
+        )
+        log_api_event("/api/v5/monitoring/risk", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/monitoring/soak-report")
+    def v5_monitoring_soak_report() -> dict:
+        started = perf_counter()
+        summary = build_monitoring_summary()
+        response = success_response(
+            {"soak_report": summary["soak_report"], "paper_trading": True, "real_trading": False, "broker_connected": False},
+            started_at=started,
+            warning=summary.get("warnings", []),
+        )
+        log_api_event("/api/v5/monitoring/soak-report", "default", "ok", response["meta"]["latency_ms"])
         return response
 
     return api

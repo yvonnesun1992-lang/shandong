@@ -1,3 +1,67 @@
+# V5.4: Live Paper Trading Dashboard / Monitoring API
+
+This update adds V5.4 monitoring API and dashboard-ready monitoring layer for the paper trading runtime.
+
+New files:
+
+```text
+runtime/monitoring_data_reader.py
+runtime/monitoring_summary.py
+runtime/monitoring_report.py
+scripts/run_v54_monitoring_snapshot.py
+web/frontend/app/v5-monitoring/page.tsx
+tests/test_v54_live_paper_trading_monitoring_api.py
+docs/V5_LIVE_PAPER_TRADING_MONITORING.md
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+runtime/security_scan.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Real orders: no
+Real trading API: no
+Real capital: no
+Payment system: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+Production deployment: no
+External AI API: no
+External database dependency: no
+External log upload: no
+Plaintext API key / secret / token / password / authorization: no
+```
+
+Validation:
+
+```text
+python -m py_compile runtime/monitoring_data_reader.py runtime/monitoring_summary.py runtime/monitoring_report.py scripts/run_v54_monitoring_snapshot.py src/api/v2/server.py: passed
+python scripts/run_v54_monitoring_snapshot.py: exit 0, verdict WARNING
+python -m pytest tests/test_v54_live_paper_trading_monitoring_api.py: 6 passed
+python -m pytest: 630 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.4 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.3: Long-Run Paper Trading Soak Test System
 
 This update adds a long-run paper trading soak test system to validate that the V5.2 runtime stability layer survives repeated ticks, controlled faults, checkpoints, recovery paths, logging, and consistency checks.

@@ -125,3 +125,39 @@ export function fetchIdentityIntegration() {
 export function fetchDeploymentTarget() {
   return apiGet<Record<string, unknown>>('/api/v2/system/deployment-target');
 }
+
+export function fetchV5MonitoringSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/monitoring/summary');
+}
+
+export function fetchV5MonitoringPnl() {
+  return apiGet<Record<string, unknown>>('/api/v5/monitoring/pnl');
+}
+
+export function fetchV5MonitoringPositions() {
+  return apiGet<Record<string, unknown>>('/api/v5/monitoring/positions');
+}
+
+export function fetchV5MonitoringSignals() {
+  return apiGet<Record<string, unknown>>('/api/v5/monitoring/signals');
+}
+
+export function fetchV5MonitoringTrades() {
+  return apiGet<Record<string, unknown>>('/api/v5/monitoring/trades');
+}
+
+export function fetchV5MonitoringErrors() {
+  return apiGet<Record<string, unknown>>('/api/v5/monitoring/errors');
+}
+
+export function fetchV5MonitoringHealth() {
+  return apiGet<Record<string, unknown>>('/api/v5/monitoring/health');
+}
+
+export function fetchV5MonitoringRisk() {
+  return apiGet<Record<string, unknown>>('/api/v5/monitoring/risk');
+}
+
+export function fetchV5MonitoringSoakReport() {
+  return apiGet<Record<string, unknown>>('/api/v5/monitoring/soak-report');
+}
