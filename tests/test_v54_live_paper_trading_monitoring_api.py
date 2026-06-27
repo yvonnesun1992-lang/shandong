@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 
 from fastapi.testclient import TestClient
 
@@ -88,7 +89,7 @@ def test_monitoring_report_and_cli_can_run():
     assert _is_safe(result)
 
     completed = subprocess.run(
-        [".venv312/bin/python", "scripts/run_v54_monitoring_snapshot.py"],
+        [sys.executable, "scripts/run_v54_monitoring_snapshot.py"],
         check=False,
         capture_output=True,
         text=True,
