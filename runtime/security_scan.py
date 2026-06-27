@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+import json
 
 
 SENSITIVE_PATTERN = re.compile(r"(api_key|secret|token|password|authorization|sk-[A-Za-z0-9])", re.IGNORECASE)
@@ -22,4 +23,11 @@ def scan_runtime_outputs(paths: list[str | Path]) -> dict:
                     break
     return {"safe": not findings, "findings": findings}
 
+
+def scan_payload(payload: dict | list | str) -> dict:
+    text = json.dumps(payload, default=str) if not isinstance(payload, str) else payload
+    findings = []
+    for match in SENSITIVE_PATTERN.finditer(text):
+        findings.append({"kind": "sensitive-pattern", "match": match.group(0)})
+    return {"safe": not findings, "findings": findings}
 

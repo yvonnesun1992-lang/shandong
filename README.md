@@ -113,6 +113,18 @@
 - Adds CLI: `python scripts/run_v53_soak_test.py --mode synthetic --ticks 1000`
 - Paper-only validation: no broker connection, no real trading, no real account, no payment, no alpha model changes, no new strategy
 
+## 📡 V5.4 Live Paper Trading Monitoring API
+
+- Adds monitoring data reader for local runtime logs, checkpoints, and V5.3 soak reports
+- Adds dashboard-ready monitoring summary builder
+- Adds `/api/v5/monitoring/*` endpoints for summary, PnL, positions, signals, trades, errors, health, risk, and soak report
+- Adds frontend API client helpers for V5 monitoring
+- Adds `web/frontend/app/v5-monitoring/page.tsx`
+- Adds V5 Monitoring navigation item
+- Adds monitoring report export to `reports/v5_4_monitoring_report.md`
+- Adds `scripts/run_v54_monitoring_snapshot.py`
+- Monitoring layer only: paper trading visibility, no real trading, no broker connection, no external log upload, and no alpha model changes
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

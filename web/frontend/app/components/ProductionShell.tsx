@@ -12,6 +12,7 @@ const links = [
   ['Strategy', '/strategy'],
   ['Reports', '/reports'],
   ['Risk', '/risk'],
+  ['V5 Monitoring', '/v5-monitoring'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],
