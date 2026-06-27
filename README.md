@@ -166,6 +166,17 @@
 - Adds V5 Broker frontend page and navigation
 - Planning-only: no broker connection, no real orders, no real account, no real money, no production live trading, no alpha model changes, and no new strategy
 
+## 🛂 V5.9 Manual Approval Gate Planning
+
+- Adds manual approval configuration with approval required by default
+- Adds approval request model and approval state machine
+- Adds reject-by-default policy for future order intent review
+- Adds local approval audit trail and paper-only risk summary
+- Adds `/api/v5/approval/*` planning endpoints
+- Adds manual approval readiness report and CLI
+- Adds V5 Approval frontend page and navigation
+- Planning-only: no auto approval, no real orders after approval, no broker connection, no real money, no production live trading, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
