@@ -41,6 +41,10 @@ from src.workspace.workspace_service import create_workspace, ensure_default_wor
 from live.pipeline import get_live_state
 from runtime.monitoring_summary import build_monitoring_summary
 from scripts.v55_deployment_dry_run_check import build_v55_deployment_payload
+from config.v5_live_data_config import get_live_data_status
+from runtime.live_market_data import build_live_market_data_adapter
+from runtime.live_data_normalizer import normalize_live_ticks
+from runtime.live_paper_staging_runner import run_live_paper_staging
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -913,6 +917,50 @@ def create_v2_api_app() -> FastAPI:
         deployment = build_v55_deployment_payload()
         response = success_response({"deployment": deployment}, started_at=started, warning=deployment.get("warnings", []))
         log_api_event("/api/v5/deployment/readiness", "default", "ok", response["meta"]["latency_ms"], len(deployment.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/live-paper/status")
+    def v5_live_paper_status() -> dict:
+        started = perf_counter()
+        status = get_live_data_status()
+        response = success_response({"live_paper": status}, started_at=started)
+        log_api_event("/api/v5/live-paper/status", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/live-paper/config")
+    def v5_live_paper_config() -> dict:
+        started = perf_counter()
+        status = get_live_data_status()
+        response = success_response({"config": status}, started_at=started)
+        log_api_event("/api/v5/live-paper/config", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/live-paper/latest-tick")
+    def v5_live_paper_latest_tick() -> dict:
+        started = perf_counter()
+        status = get_live_data_status()
+        adapter = build_live_market_data_adapter(status["live_data_mode"], status["symbols"])
+        normalized = normalize_live_ticks(adapter.get_latest_ticks())
+        latest_tick = normalized["valid_ticks"][-1] if normalized["valid_ticks"] else {}
+        data = {
+            "latest_tick": latest_tick,
+            "paper_trading": True,
+            "real_trading": False,
+            "broker_connected": False,
+            "real_money_enabled": False,
+            "warnings": [item.get("reason", "invalid tick") for item in normalized["invalid_ticks"]],
+        }
+        response = success_response(data, started_at=started, warning=data["warnings"])
+        log_api_event("/api/v5/live-paper/latest-tick", "default", "ok", response["meta"]["latency_ms"], len(data["warnings"]))
+        return response
+
+    @api.get("/api/v5/live-paper/summary")
+    def v5_live_paper_summary() -> dict:
+        started = perf_counter()
+        status = get_live_data_status()
+        summary = run_live_paper_staging(mode=status["live_data_mode"], max_ticks=1, dry_run_once=True)
+        response = success_response({"summary": summary}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/live-paper/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
     return api

@@ -169,3 +169,19 @@ export function fetchV5DeploymentDryRun() {
 export function fetchV5DeploymentReadiness() {
   return apiGet<Record<string, unknown>>('/api/v5/deployment/readiness');
 }
+
+export function fetchV5LivePaperStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/live-paper/status');
+}
+
+export function fetchV5LivePaperConfig() {
+  return apiGet<Record<string, unknown>>('/api/v5/live-paper/config');
+}
+
+export function fetchV5LivePaperLatestTick() {
+  return apiGet<Record<string, unknown>>('/api/v5/live-paper/latest-tick');
+}
+
+export function fetchV5LivePaperSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/live-paper/summary');
+}
