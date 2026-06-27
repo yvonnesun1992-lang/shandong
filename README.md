@@ -155,6 +155,17 @@
 - Adds V5 Live Alpha frontend page and navigation
 - Paper-only: no broker connection, no real trading, no real account, no real money, no alpha model changes, and no new strategy
 
+## 🧭 V5.8 Broker Integration Planning
+
+- Adds broker integration configuration with broker disabled by default
+- Adds broker adapter interface for future planning only
+- Adds planned broker adapter that rejects all external order attempts
+- Adds broker order mapping plan and broker safety gate
+- Adds `/api/v5/broker/*` planning endpoints
+- Adds broker integration readiness report and CLI
+- Adds V5 Broker frontend page and navigation
+- Planning-only: no broker connection, no real orders, no real account, no real money, no production live trading, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

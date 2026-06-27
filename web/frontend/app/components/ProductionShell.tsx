@@ -16,6 +16,7 @@ const links = [
   ['V5 Deployment', '/v5-deployment'],
   ['V5 Live Paper', '/v5-live-paper'],
   ['V5 Live Alpha', '/v5-live-alpha'],
+  ['V5 Broker', '/v5-broker'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

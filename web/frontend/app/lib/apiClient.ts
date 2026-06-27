@@ -201,3 +201,19 @@ export function fetchV5LiveAlphaSummary() {
 export function fetchV5LiveAlphaBufferStatus() {
   return apiGet<Record<string, unknown>>('/api/v5/live-alpha/buffer-status');
 }
+
+export function fetchV5BrokerStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/broker/status');
+}
+
+export function fetchV5BrokerReadiness() {
+  return apiGet<Record<string, unknown>>('/api/v5/broker/readiness');
+}
+
+export function fetchV5BrokerSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/broker/safety');
+}
+
+export function fetchV5BrokerOrderMapping() {
+  return apiGet<Record<string, unknown>>('/api/v5/broker/order-mapping');
+}
