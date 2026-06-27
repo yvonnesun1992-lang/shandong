@@ -1,3 +1,74 @@
+# V5.8: Broker Integration Planning System
+
+This update adds a planning-only broker integration layer. It documents the future adapter shape, order mapping, safety gate, API, CLI, report, and frontend page without connecting to any real broker or submitting real orders.
+
+New files:
+
+```text
+config/v5_broker_integration_config.py
+broker/broker_adapter_interface.py
+broker/planned_broker_adapter.py
+broker/order_mapping_plan.py
+broker/broker_safety_gate.py
+broker/broker_integration_report.py
+scripts/run_v58_broker_integration_planning.py
+web/frontend/app/v5-broker/page.tsx
+tests/test_v58_broker_integration_planning.py
+docs/V5_BROKER_INTEGRATION_PLANNING.md
+reports/v5_8_broker_integration_planning_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Real orders: no
+Real trading API: no
+Real account read: no
+Real position read: no
+Real balance read: no
+Real capital: no
+Payment system: no
+Production live trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+Real order attempts rejected by default: yes
+Production credentials committed: no
+External AI API: no
+External log upload: no
+```
+
+Validation:
+
+```text
+python -m py_compile config/v5_broker_integration_config.py broker/broker_adapter_interface.py broker/planned_broker_adapter.py broker/order_mapping_plan.py broker/broker_safety_gate.py broker/broker_integration_report.py scripts/run_v58_broker_integration_planning.py src/api/v2/server.py: passed
+python scripts/run_v58_broker_integration_planning.py: exit 0, verdict WARNING
+python -m pytest tests/test_v58_broker_integration_planning.py: 10 passed
+python -m pytest: 662 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.8 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.7: Live Alpha Signal Integration for Live Paper
 
 This update upgrades V5 live paper staging from heartbeat validation to V5 alpha signal driven paper trading.

@@ -46,6 +46,10 @@ from runtime.live_market_data import build_live_market_data_adapter
 from runtime.live_data_normalizer import normalize_live_ticks
 from runtime.live_paper_staging_runner import run_live_paper_staging
 from runtime.live_paper_alpha_runner import run_live_paper_alpha_staging
+from broker.broker_integration_report import build_broker_integration_summary
+from broker.broker_safety_gate import broker_readiness_summary, validate_broker_safety
+from broker.order_mapping_plan import build_order_mapping_plan
+from config.v5_broker_integration_config import get_broker_integration_status
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -1007,6 +1011,39 @@ def create_v2_api_app() -> FastAPI:
         summary = run_live_paper_alpha_staging(mode=status["live_data_mode"], max_ticks=5)
         response = success_response({"buffer_status": summary["buffer_status"], "paper_trading": True, "real_trading": False, "broker_connected": False}, started_at=started, warning=summary.get("warnings", []))
         log_api_event("/api/v5/live-alpha/buffer-status", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/broker/status")
+    def v5_broker_status() -> dict:
+        started = perf_counter()
+        status = get_broker_integration_status()
+        response = success_response({"broker": status}, started_at=started, warning=status.get("warning", []))
+        log_api_event("/api/v5/broker/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warning", [])))
+        return response
+
+    @api.get("/api/v5/broker/readiness")
+    def v5_broker_readiness() -> dict:
+        started = perf_counter()
+        summary = build_broker_integration_summary()
+        response = success_response({"readiness": summary}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/broker/readiness", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/broker/safety")
+    def v5_broker_safety() -> dict:
+        started = perf_counter()
+        safety = validate_broker_safety()
+        readiness = broker_readiness_summary()
+        response = success_response({"safety": safety, "readiness": readiness}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/broker/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/broker/order-mapping")
+    def v5_broker_order_mapping() -> dict:
+        started = perf_counter()
+        mapping = build_order_mapping_plan()
+        response = success_response({"order_mapping": mapping}, started_at=started, warning=mapping.get("warnings", []))
+        log_api_event("/api/v5/broker/order-mapping", "default", "ok", response["meta"]["latency_ms"], len(mapping.get("warnings", [])))
         return response
 
     return api

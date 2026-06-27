@@ -63,3 +63,26 @@ def scan_live_alpha_outputs(payload: dict | list | str, report_path: str | Path 
         if report.exists():
             findings.extend(scan_runtime_outputs([report])["findings"])
     return {"safe": not findings, "findings": findings}
+
+
+def scan_broker_planning_outputs(payload: dict | list | str, report_path: str | Path | None = None) -> dict:
+    findings = scan_payload(payload)["findings"]
+    text = json.dumps(payload, default=str).lower() if not isinstance(payload, str) else payload.lower()
+    blocked_terms = [
+        "broker credential",
+        "account_id",
+        "authorization",
+        "/users/apple",
+    ]
+    for term in blocked_terms:
+        if term in text:
+            findings.append({"kind": "sensitive-pattern", "match": "blocked-broker-planning-output"})
+            break
+    if report_path:
+        report = Path(report_path)
+        if report.exists():
+            findings.extend(scan_runtime_outputs([report])["findings"])
+            report_text = report.read_text(encoding="utf-8", errors="ignore").lower()
+            if any(term in report_text for term in blocked_terms):
+                findings.append({"kind": "sensitive-pattern", "match": "blocked-broker-planning-report"})
+    return {"safe": not findings, "findings": findings}
