@@ -185,3 +185,19 @@ export function fetchV5LivePaperLatestTick() {
 export function fetchV5LivePaperSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/live-paper/summary');
 }
+
+export function fetchV5LiveAlphaStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/live-alpha/status');
+}
+
+export function fetchV5LiveAlphaLatestSignals() {
+  return apiGet<Record<string, unknown>>('/api/v5/live-alpha/latest-signals');
+}
+
+export function fetchV5LiveAlphaSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/live-alpha/summary');
+}
+
+export function fetchV5LiveAlphaBufferStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/live-alpha/buffer-status');
+}

@@ -1,3 +1,71 @@
+# V5.7: Live Alpha Signal Integration for Live Paper
+
+This update upgrades V5 live paper staging from heartbeat validation to V5 alpha signal driven paper trading.
+
+New files:
+
+```text
+runtime/live_feature_buffer.py
+runtime/live_alpha_signal_adapter.py
+runtime/live_paper_alpha_runner.py
+runtime/live_alpha_report.py
+scripts/run_v57_live_alpha_paper.py
+web/frontend/app/v5-live-alpha/page.tsx
+tests/test_v57_live_alpha_signal_integration.py
+docs/V5_LIVE_ALPHA_SIGNAL_INTEGRATION.md
+```
+
+Updated files:
+
+```text
+runtime/live_paper_staging_runner.py
+src/api/v2/server.py
+runtime/security_scan.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Real orders: no
+Real trading API: no
+Real capital: no
+Payment system: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+Production live trading: no
+V5.6 heartbeat order replaced: yes
+V5 alpha signal driven paper trading: yes
+Production credentials committed: no
+External AI API: no
+External log upload: no
+```
+
+Validation:
+
+```text
+python -m py_compile runtime/live_feature_buffer.py runtime/live_alpha_signal_adapter.py runtime/live_paper_alpha_runner.py runtime/live_alpha_report.py scripts/run_v57_live_alpha_paper.py src/api/v2/server.py: passed
+python scripts/run_v57_live_alpha_paper.py --mode mock_live --ticks 100: exit 0, verdict WARNING
+python scripts/run_v57_live_alpha_paper.py --mode yfinance_polling --ticks 20: exit 0, verdict WARNING with mock_live fallback
+python -m pytest tests/test_v57_live_alpha_signal_integration.py: 8 passed
+python -m pytest: 652 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.7 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.6: Live Paper Trading Staging System
 
 This update adds a live market data paper trading staging layer. It allows market-data-like ticks to feed the V5 paper runtime shape while all order, execution, account, and portfolio state remains simulated.
