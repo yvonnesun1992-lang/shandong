@@ -50,6 +50,10 @@ from broker.broker_integration_report import build_broker_integration_summary
 from broker.broker_safety_gate import broker_readiness_summary, validate_broker_safety
 from broker.order_mapping_plan import build_order_mapping_plan
 from config.v5_broker_integration_config import get_broker_integration_status
+from approval.approval_audit_trail import build_approval_audit_summary
+from approval.manual_approval_gate import approval_readiness_summary
+from approval.manual_approval_report import build_manual_approval_summary
+from config.v5_manual_approval_config import get_manual_approval_policy, get_manual_approval_status
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -1044,6 +1048,40 @@ def create_v2_api_app() -> FastAPI:
         mapping = build_order_mapping_plan()
         response = success_response({"order_mapping": mapping}, started_at=started, warning=mapping.get("warnings", []))
         log_api_event("/api/v5/broker/order-mapping", "default", "ok", response["meta"]["latency_ms"], len(mapping.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/approval/status")
+    def v5_approval_status() -> dict:
+        started = perf_counter()
+        status = get_manual_approval_status()
+        response = success_response({"approval": status}, started_at=started, warning=status.get("warning", []))
+        log_api_event("/api/v5/approval/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warning", [])))
+        return response
+
+    @api.get("/api/v5/approval/readiness")
+    def v5_approval_readiness() -> dict:
+        started = perf_counter()
+        summary = build_manual_approval_summary()
+        response = success_response({"readiness": summary}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/approval/readiness", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/approval/policy")
+    def v5_approval_policy() -> dict:
+        started = perf_counter()
+        policy = get_manual_approval_policy()
+        readiness = approval_readiness_summary()
+        response = success_response({"policy": policy, "readiness": readiness}, started_at=started)
+        log_api_event("/api/v5/approval/policy", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/approval/audit-summary")
+    def v5_approval_audit_summary() -> dict:
+        started = perf_counter()
+        summary = build_approval_audit_summary()
+        payload = {**summary, "manual_approval_required": True, "auto_approval_enabled": False, "real_orders_enabled": False, "real_money_enabled": False, "paper_trading": True}
+        response = success_response({"audit_summary": payload}, started_at=started)
+        log_api_event("/api/v5/approval/audit-summary", "default", "ok", response["meta"]["latency_ms"])
         return response
 
     return api

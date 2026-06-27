@@ -217,3 +217,19 @@ export function fetchV5BrokerSafety() {
 export function fetchV5BrokerOrderMapping() {
   return apiGet<Record<string, unknown>>('/api/v5/broker/order-mapping');
 }
+
+export function fetchV5ApprovalStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/approval/status');
+}
+
+export function fetchV5ApprovalReadiness() {
+  return apiGet<Record<string, unknown>>('/api/v5/approval/readiness');
+}
+
+export function fetchV5ApprovalPolicy() {
+  return apiGet<Record<string, unknown>>('/api/v5/approval/policy');
+}
+
+export function fetchV5ApprovalAuditSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/approval/audit-summary');
+}

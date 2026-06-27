@@ -1,3 +1,78 @@
+# V5.9: Manual Approval Gate Planning System
+
+This update adds a planning-only manual approval safety gate. It models approval requests, state transitions, reject-by-default behavior, local audit trail, paper-only risk summaries, API endpoints, CLI/report, and frontend page without enabling real broker order release.
+
+New files:
+
+```text
+config/v5_manual_approval_config.py
+approval/__init__.py
+approval/approval_request.py
+approval/manual_approval_gate.py
+approval/approval_state_machine.py
+approval/approval_audit_trail.py
+approval/approval_risk_summary.py
+approval/manual_approval_report.py
+scripts/run_v59_manual_approval_gate.py
+web/frontend/app/v5-approval/page.tsx
+tests/test_v59_manual_approval_gate.py
+docs/V5_MANUAL_APPROVAL_GATE_PLANNING.md
+reports/v5_9_manual_approval_gate_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Real orders: no
+Real trading API: no
+Real account read: no
+Real position read: no
+Real balance read: no
+Real capital: no
+Payment system: no
+Production live trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+Real order attempts rejected by default: yes
+Auto approval: no
+Manual approval simulated only: yes
+Production credentials committed: no
+External AI API: no
+External log upload: no
+```
+
+Validation:
+
+```text
+python -m py_compile config/v5_manual_approval_config.py approval/approval_request.py approval/manual_approval_gate.py approval/approval_state_machine.py approval/approval_audit_trail.py approval/approval_risk_summary.py approval/manual_approval_report.py scripts/run_v59_manual_approval_gate.py src/api/v2/server.py: passed
+python scripts/run_v59_manual_approval_gate.py: exit 0, verdict WARNING
+python -m pytest tests/test_v59_manual_approval_gate.py: 10 passed
+python -m pytest: 672 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.9 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.8: Broker Integration Planning System
 
 This update adds a planning-only broker integration layer. It documents the future adapter shape, order mapping, safety gate, API, CLI, report, and frontend page without connecting to any real broker or submitting real orders.
