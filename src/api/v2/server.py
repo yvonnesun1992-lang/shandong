@@ -45,6 +45,7 @@ from config.v5_live_data_config import get_live_data_status
 from runtime.live_market_data import build_live_market_data_adapter
 from runtime.live_data_normalizer import normalize_live_ticks
 from runtime.live_paper_staging_runner import run_live_paper_staging
+from runtime.live_paper_alpha_runner import run_live_paper_alpha_staging
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -961,6 +962,51 @@ def create_v2_api_app() -> FastAPI:
         summary = run_live_paper_staging(mode=status["live_data_mode"], max_ticks=1, dry_run_once=True)
         response = success_response({"summary": summary}, started_at=started, warning=summary.get("warnings", []))
         log_api_event("/api/v5/live-paper/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/live-alpha/status")
+    def v5_live_alpha_status() -> dict:
+        started = perf_counter()
+        status = get_live_data_status()
+        payload = {
+            "version": "V5.7",
+            "mode": status["live_data_mode"],
+            "symbols": status["symbols"],
+            "alpha_signal_driven": True,
+            "paper_trading": True,
+            "real_trading": False,
+            "broker_connected": False,
+            "real_money_enabled": False,
+        }
+        response = success_response({"live_alpha": payload}, started_at=started)
+        log_api_event("/api/v5/live-alpha/status", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/live-alpha/latest-signals")
+    def v5_live_alpha_latest_signals() -> dict:
+        started = perf_counter()
+        status = get_live_data_status()
+        summary = run_live_paper_alpha_staging(mode=status["live_data_mode"], max_ticks=3)
+        response = success_response({"signals": summary["latest_signals"], "paper_trading": True, "real_trading": False, "broker_connected": False}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/live-alpha/latest-signals", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/live-alpha/summary")
+    def v5_live_alpha_summary() -> dict:
+        started = perf_counter()
+        status = get_live_data_status()
+        summary = run_live_paper_alpha_staging(mode=status["live_data_mode"], max_ticks=10)
+        response = success_response({"summary": summary}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/live-alpha/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/live-alpha/buffer-status")
+    def v5_live_alpha_buffer_status() -> dict:
+        started = perf_counter()
+        status = get_live_data_status()
+        summary = run_live_paper_alpha_staging(mode=status["live_data_mode"], max_ticks=5)
+        response = success_response({"buffer_status": summary["buffer_status"], "paper_trading": True, "real_trading": False, "broker_connected": False}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/live-alpha/buffer-status", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
     return api

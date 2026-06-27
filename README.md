@@ -145,6 +145,16 @@
 - Adds V5 Live Paper frontend page and navigation
 - Staging only: live market data can be consumed, but execution remains paper-only with no broker connection, no real account, no real money, and no alpha model changes
 
+## 🧠 V5.7 Live Alpha Signal Integration
+
+- Adds live feature buffer for rolling tick windows
+- Adds V5 alpha signal adapter
+- Replaces fixed heartbeat paper order with alpha-driven signal flow
+- Adds live alpha paper runner, report, and CLI
+- Adds `/api/v5/live-alpha/*` endpoints
+- Adds V5 Live Alpha frontend page and navigation
+- Paper-only: no broker connection, no real trading, no real account, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
