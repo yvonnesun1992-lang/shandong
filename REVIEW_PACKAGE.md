@@ -1,3 +1,56 @@
+# V5.3: Long-Run Paper Trading Soak Test System
+
+This update adds a long-run paper trading soak test system to validate that the V5.2 runtime stability layer survives repeated ticks, controlled faults, checkpoints, recovery paths, logging, and consistency checks.
+
+New files:
+
+```text
+runtime/soak_test_runner.py
+runtime/synthetic_market.py
+runtime/fault_injection.py
+runtime/consistency_validator.py
+runtime/soak_report.py
+runtime/security_scan.py
+scripts/run_v53_soak_test.py
+tests/test_v53_long_run_soak_test.py
+docs/V5_LONG_RUN_SOAK_TEST.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Real orders: no
+Real trading API: no
+Real capital: no
+Payment system: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+Production deployment: no
+External AI API: no
+External database dependency: no
+Plaintext API key / secret / token / password: no
+```
+
+Validation:
+
+```text
+python -m py_compile runtime/soak_test_runner.py runtime/synthetic_market.py runtime/fault_injection.py runtime/consistency_validator.py runtime/soak_report.py runtime/security_scan.py scripts/run_v53_soak_test.py: passed
+python scripts/run_v53_soak_test.py --mode synthetic --ticks 1000: exit 0, final_verdict WARNING
+python scripts/run_v53_soak_test.py --mode synthetic --ticks 1000 --faults: exit 0, final_verdict WARNING
+python -m pytest tests/test_v53_long_run_soak_test.py: 9 passed
+python -m pytest: 624 passed
+python scripts/system_doctor.py: OK
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.2: Production Stability Engineering System
 
 This update adds production stability engineering around the V5.1 runtime:

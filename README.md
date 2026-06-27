@@ -102,6 +102,17 @@
 - Enhances `runtime/trading_engine.py` with try/catch, watchdog, health, checkpoint, and safe-mode hooks
 - Stability layer only: no alpha model changes, no factor changes, no new strategy, no broker connection, and no real trading
 
+## 🧪 V5.3 Long-Run Paper Trading Soak Test
+
+- Adds long-run paper trading soak test runner for runtime stability validation
+- Adds deterministic synthetic market generator for trend, sideways, volatile, and crash regimes
+- Adds controlled fault injection for signal errors, execution errors, missing data, price spikes, latency spikes, memory warnings, and forced exceptions
+- Adds consistency validator for cash, positions, equity identity, PnL, checkpoint state, and open orders
+- Adds runtime security scan for logs, checkpoints, and reports
+- Adds markdown soak report at `reports/v5_3_soak_test_report.md`
+- Adds CLI: `python scripts/run_v53_soak_test.py --mode synthetic --ticks 1000`
+- Paper-only validation: no broker connection, no real trading, no real account, no payment, no alpha model changes, no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
