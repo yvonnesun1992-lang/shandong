@@ -1,3 +1,69 @@
+# V5.5: Production Deployment Dry Run System
+
+This update adds a production deployment dry run layer for the V5 paper trading system. It validates deployment shape only and does not perform a real production launch.
+
+New files:
+
+```text
+config/v5_deployment_config.py
+scripts/v55_deployment_dry_run_check.py
+scripts/run_v55_deployment_dry_run.py
+runtime/v55_deployment_report.py
+web/frontend/app/v5-deployment/page.tsx
+tests/test_v55_production_deployment_dry_run.py
+docs/V5_PRODUCTION_DEPLOYMENT_DRY_RUN.md
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+runtime/security_scan.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Real orders: no
+Real trading API: no
+Real capital: no
+Payment system: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+Production deployment: no
+Real cloud service: no
+Production database: no
+Production credentials committed: no
+External AI API: no
+External log upload: no
+```
+
+Validation:
+
+```text
+python -m py_compile config/v5_deployment_config.py runtime/v55_deployment_report.py scripts/v55_deployment_dry_run_check.py scripts/run_v55_deployment_dry_run.py src/api/v2/server.py: passed
+python scripts/v55_deployment_dry_run_check.py: exit 0, dry_run_ready true, deployment_ready false
+python scripts/run_v55_deployment_dry_run.py: exit 0, verdict WARNING
+python -m pytest tests/test_v55_production_deployment_dry_run.py: 6 passed
+python -m pytest: 636 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.5 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.4: Live Paper Trading Dashboard / Monitoring API
 
 This update adds V5.4 monitoring API and dashboard-ready monitoring layer for the paper trading runtime.

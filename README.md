@@ -125,6 +125,16 @@
 - Adds `scripts/run_v54_monitoring_snapshot.py`
 - Monitoring layer only: paper trading visibility, no real trading, no broker connection, no external log upload, and no alpha model changes
 
+## 🧪 V5.5 Production Deployment Dry Run
+
+- Adds V5 deployment configuration planning layer
+- Adds production deployment dry run checker
+- Adds `/api/v5/deployment/dry-run` and `/api/v5/deployment/readiness`
+- Adds V5 Deployment dashboard page
+- Adds deployment dry run report export to `reports/v5_5_deployment_dry_run_report.md`
+- Adds `scripts/run_v55_deployment_dry_run.py`
+- Dry run only: no real deployment, no real trading, no broker connection, no real account, no payment, no production database, and no alpha model changes
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

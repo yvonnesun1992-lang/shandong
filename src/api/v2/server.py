@@ -40,6 +40,7 @@ from src.security.policy import get_security_policy
 from src.workspace.workspace_service import create_workspace, ensure_default_workspace, get_user_workspaces, require_workspace_role
 from live.pipeline import get_live_state
 from runtime.monitoring_summary import build_monitoring_summary
+from scripts.v55_deployment_dry_run_check import build_v55_deployment_payload
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -896,6 +897,22 @@ def create_v2_api_app() -> FastAPI:
             warning=summary.get("warnings", []),
         )
         log_api_event("/api/v5/monitoring/soak-report", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/deployment/dry-run")
+    def v5_deployment_dry_run() -> dict:
+        started = perf_counter()
+        deployment = build_v55_deployment_payload()
+        response = success_response({"deployment": deployment}, started_at=started, warning=deployment.get("warnings", []))
+        log_api_event("/api/v5/deployment/dry-run", "default", "ok", response["meta"]["latency_ms"], len(deployment.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/deployment/readiness")
+    def v5_deployment_readiness() -> dict:
+        started = perf_counter()
+        deployment = build_v55_deployment_payload()
+        response = success_response({"deployment": deployment}, started_at=started, warning=deployment.get("warnings", []))
+        log_api_event("/api/v5/deployment/readiness", "default", "ok", response["meta"]["latency_ms"], len(deployment.get("warnings", [])))
         return response
 
     return api

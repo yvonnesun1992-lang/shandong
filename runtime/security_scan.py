@@ -5,7 +5,7 @@ from pathlib import Path
 import json
 
 
-SENSITIVE_PATTERN = re.compile(r"(api_key|secret|token|password|authorization|sk-[A-Za-z0-9])", re.IGNORECASE)
+SENSITIVE_PATTERN = re.compile(r"(api_key|secret|token|password|authorization|database_url|sk-[A-Za-z0-9])", re.IGNORECASE)
 
 
 def scan_runtime_outputs(paths: list[str | Path]) -> dict:
@@ -31,3 +31,11 @@ def scan_payload(payload: dict | list | str) -> dict:
         findings.append({"kind": "sensitive-pattern", "match": match.group(0)})
     return {"safe": not findings, "findings": findings}
 
+
+def scan_deployment_outputs(payload: dict | list | str, report_path: str | Path | None = None) -> dict:
+    findings = scan_payload(payload)["findings"]
+    if report_path:
+        report = Path(report_path)
+        if report.exists():
+            findings.extend(scan_runtime_outputs([report])["findings"])
+    return {"safe": not findings, "findings": findings}
