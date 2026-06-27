@@ -5,6 +5,7 @@ class RuntimeMonitor:
     def __init__(self) -> None:
         self.signal_count = 0
         self.execution_count = 0
+        self.error_count = 0
         self.latencies: list[float] = []
         self.last_snapshot: dict = {}
 
@@ -24,9 +25,15 @@ class RuntimeMonitor:
             "execution_latency": sum(self.latencies) / len(self.latencies) if self.latencies else 0.0,
             "trade_count": self.execution_count,
             "signal_count": self.signal_count,
+            "error_count": self.error_count,
         }
 
     def snapshot(self) -> dict:
-        return dict(self.last_snapshot or {"signal_count": self.signal_count, "trade_count": self.execution_count})
-
-
+        snapshot = dict(
+            self.last_snapshot
+            or {"signal_count": self.signal_count, "trade_count": self.execution_count, "error_count": self.error_count}
+        )
+        snapshot["error_count"] = self.error_count
+        snapshot["signal_count"] = self.signal_count
+        snapshot["trade_count"] = self.execution_count
+        return snapshot

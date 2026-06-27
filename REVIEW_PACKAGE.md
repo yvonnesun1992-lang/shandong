@@ -1,3 +1,63 @@
+# V5.2: Production Stability Engineering System
+
+This update adds production stability engineering around the V5.1 runtime:
+
+Live Trading System -> 24/7 Stability -> No Crash -> Auto Recovery -> Risk Safe Operation
+
+New files:
+
+```text
+runtime/watchdog.py
+runtime/recovery_engine.py
+runtime/state_checkpoint.py
+runtime/health_monitor.py
+runtime/error_handler.py
+runtime/mode_manager.py
+runtime/logger.py
+tests/test_v52_production_stability_engineering.py
+docs/V5_PRODUCTION_STABILITY_ENGINEERING.md
+```
+
+Updated files:
+
+```text
+runtime/trading_engine.py
+runtime/monitor.py
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+Trading logic changed: no
+Real trading: no
+Broker connection: no
+Real account: no
+Payment system: no
+External database dependency: no
+Plaintext API key / secret / token / password: no
+```
+
+Validation:
+
+```text
+python -m py_compile runtime/watchdog.py runtime/recovery_engine.py runtime/state_checkpoint.py runtime/health_monitor.py runtime/error_handler.py runtime/mode_manager.py runtime/logger.py runtime/trading_engine.py runtime/monitor.py: passed
+python -m pytest tests/test_v52_production_stability_engineering.py: 6 passed
+python -m pytest: 615 passed
+python scripts/system_doctor.py: OK
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.1: Trading Engine Runtime System
 
 This update adds the runtime system that turns V5.0 paper trading components into a continuous engine loop:
