@@ -78,6 +78,18 @@
 - `trading/risk_limits.py` enforces max order value, max asset exposure, daily loss, and drawdown stops
 - This is paper trading only: no broker connection, no real orders, no real account, no payment, no production deployment, and no alpha model changes
 
+## 🔁 V5.1 Trading Engine Runtime
+
+- Adds a continuous runtime heartbeat: Market Data Tick → Signal Engine → Signal to Order → Risk Check → Execution → Portfolio Update → PnL Update → Log → Next Tick
+- `runtime/trading_engine.py` coordinates the runtime loop without changing the alpha model or factor logic
+- `runtime/market_simulator.py` supports market open / close and synchronized historical replay
+- `runtime/event_bus.py` records MARKET_TICK, SIGNAL_GENERATED, ORDER_PLACED, ORDER_FILLED, POSITION_UPDATED, and RISK_TRIGGERED events
+- `runtime/state_manager.py` tracks cash, positions, active orders, open trades, and regime state
+- `runtime/pnl_engine.py` updates live equity, realized/unrealized PnL, and drawdown
+- `runtime/risk_gate.py` embeds pre-trade checks, post-trade validation, and kill switch behavior
+- `runtime/system_controller.py` provides start, stop, pause, resume, safe shutdown, and emergency stop controls
+- This remains paper trading only: no broker connection, no real orders, no new strategy, and no alpha model changes
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
