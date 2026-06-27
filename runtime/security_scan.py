@@ -39,3 +39,15 @@ def scan_deployment_outputs(payload: dict | list | str, report_path: str | Path 
         if report.exists():
             findings.extend(scan_runtime_outputs([report])["findings"])
     return {"safe": not findings, "findings": findings}
+
+
+def scan_live_paper_outputs(payload: dict | list | str, report_path: str | Path | None = None) -> dict:
+    findings = scan_payload(payload)["findings"]
+    text = json.dumps(payload, default=str).lower() if not isinstance(payload, str) else payload.lower()
+    if "broker credential" in text or "/users/apple" in text:
+        findings.append({"kind": "sensitive-pattern", "match": "blocked-live-paper-output"})
+    if report_path:
+        report = Path(report_path)
+        if report.exists():
+            findings.extend(scan_runtime_outputs([report])["findings"])
+    return {"safe": not findings, "findings": findings}

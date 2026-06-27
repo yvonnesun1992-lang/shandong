@@ -135,6 +135,16 @@
 - Adds `scripts/run_v55_deployment_dry_run.py`
 - Dry run only: no real deployment, no real trading, no broker connection, no real account, no payment, no production database, and no alpha model changes
 
+## 📡 V5.6 Live Paper Trading Staging
+
+- Adds V5 live data configuration
+- Adds live market data adapters for mock live and optional yfinance polling
+- Adds live data normalizer for safe OHLCV ticks
+- Adds live paper staging runner and report
+- Adds `/api/v5/live-paper/*` endpoints
+- Adds V5 Live Paper frontend page and navigation
+- Staging only: live market data can be consumed, but execution remains paper-only with no broker connection, no real account, no real money, and no alpha model changes
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

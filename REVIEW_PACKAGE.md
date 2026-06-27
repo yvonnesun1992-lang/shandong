@@ -1,3 +1,70 @@
+# V5.6: Live Paper Trading Staging System
+
+This update adds a live market data paper trading staging layer. It allows market-data-like ticks to feed the V5 paper runtime shape while all order, execution, account, and portfolio state remains simulated.
+
+New files:
+
+```text
+config/v5_live_data_config.py
+runtime/live_market_data.py
+runtime/live_data_normalizer.py
+runtime/live_paper_staging_runner.py
+runtime/live_paper_report.py
+scripts/run_v56_live_paper_staging.py
+web/frontend/app/v5-live-paper/page.tsx
+tests/test_v56_live_paper_trading_staging.py
+docs/V5_LIVE_PAPER_TRADING_STAGING.md
+```
+
+Updated files:
+
+```text
+src/api/v2/server.py
+runtime/security_scan.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Real orders: no
+Real trading API: no
+Real capital: no
+Payment system: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+Production live trading: no
+Live market data: mock_live by default, yfinance_polling optional
+Production credentials committed: no
+External AI API: no
+External log upload: no
+```
+
+Validation:
+
+```text
+python -m py_compile config/v5_live_data_config.py runtime/live_market_data.py runtime/live_data_normalizer.py runtime/live_paper_staging_runner.py runtime/live_paper_report.py scripts/run_v56_live_paper_staging.py src/api/v2/server.py: passed
+python scripts/run_v56_live_paper_staging.py --mode mock_live --ticks 20: exit 0, verdict PASS
+python scripts/run_v56_live_paper_staging.py --mode yfinance_polling --ticks 5: exit 0, verdict WARNING with mock_live fallback
+python -m pytest tests/test_v56_live_paper_trading_staging.py: 8 passed
+python -m pytest: 644 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.6 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.5: Production Deployment Dry Run System
 
 This update adds a production deployment dry run layer for the V5 paper trading system. It validates deployment shape only and does not perform a real production launch.
