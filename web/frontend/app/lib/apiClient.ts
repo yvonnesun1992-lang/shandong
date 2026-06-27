@@ -161,3 +161,11 @@ export function fetchV5MonitoringRisk() {
 export function fetchV5MonitoringSoakReport() {
   return apiGet<Record<string, unknown>>('/api/v5/monitoring/soak-report');
 }
+
+export function fetchV5DeploymentDryRun() {
+  return apiGet<Record<string, unknown>>('/api/v5/deployment/dry-run');
+}
+
+export function fetchV5DeploymentReadiness() {
+  return apiGet<Record<string, unknown>>('/api/v5/deployment/readiness');
+}
