@@ -8,7 +8,6 @@ from config.v5_live_data_config import get_live_data_poll_interval, get_live_dat
 from runtime.live_data_normalizer import normalize_live_ticks
 from runtime.live_market_data import MockLiveMarketDataAdapter, YFinancePollingAdapter, build_live_market_data_adapter
 from runtime.state_checkpoint import StateCheckpoint
-from trading.order import Order
 from trading.paper_broker import PaperBroker
 
 
@@ -29,13 +28,8 @@ def run_live_paper_once(mode: str = "mock_live", symbols: list[str] | None = Non
     warnings = list(normalized.get("warnings", []))
     if isinstance(adapter, YFinancePollingAdapter) and adapter.warning:
         warnings.append(adapter.warning)
-    fills = []
     for tick in normalized["valid_ticks"]:
         broker.account.update_market_price(tick["symbol"], tick["close"])
-        order = _paper_observation_order(tick)
-        if order:
-            result = broker.execute_order(order, market_price=tick["close"])
-            fills.append(result.as_dict())
     summary = broker.get_account_summary()
     return {
         "success": True,
@@ -50,7 +44,7 @@ def run_live_paper_once(mode: str = "mock_live", symbols: list[str] | None = Non
         "real_money_enabled": False,
         "final_equity": float(summary["equity"]),
         "portfolio": summary,
-        "fills": fills,
+        "fills": [],
         "health_status": "HEALTHY" if normalized["valid_ticks"] else "DEGRADED",
         "risk_kill_switch_triggered": False,
         "warnings": warnings,
@@ -73,7 +67,6 @@ def run_live_paper_staging(
     poll_interval = get_live_data_poll_interval()
     target_iterations = 1 if dry_run_once else max(1, int(max_ticks))
     all_ticks = []
-    all_fills = []
     warnings = []
     errors = []
     for _ in range(target_iterations):
@@ -84,10 +77,6 @@ def run_live_paper_staging(
                 warnings.append(adapter.warning)
             for tick in normalized["valid_ticks"]:
                 broker.account.update_market_price(tick["symbol"], tick["close"])
-                order = _paper_observation_order(tick)
-                if order:
-                    execution = broker.execute_order(order, market_price=tick["close"])
-                    all_fills.append(execution.as_dict())
                 all_ticks.append(tick)
                 _append_log(log_path, {"event_type": "MARKET_TICK", "timestamp": tick["datetime"], "symbol": tick["symbol"], "price": tick["close"], "source": tick["source"]})
         except Exception as exc:
@@ -108,7 +97,7 @@ def run_live_paper_staging(
         "real_money_enabled": False,
         "final_equity": float(summary["equity"]),
         "portfolio": summary,
-        "fills": all_fills[-20:],
+        "fills": [],
         "health_status": "HEALTHY" if all_ticks and not errors else "DEGRADED" if all_ticks else "FAILED",
         "risk_kill_switch_triggered": False,
         "warnings": warnings,
@@ -126,13 +115,6 @@ def run_live_paper_staging(
         force=True,
     )
     return result
-
-
-def _paper_observation_order(tick: dict) -> Order | None:
-    # Minimal paper-only heartbeat order for runtime plumbing; not a new strategy.
-    if tick["symbol"] != "AAPL":
-        return None
-    return Order(symbol=tick["symbol"], side="BUY", quantity=1, price=tick["close"], timestamp=tick["datetime"])
 
 
 def _append_log(path: str | Path, payload: dict) -> None:
