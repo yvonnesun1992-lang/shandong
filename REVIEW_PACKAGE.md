@@ -1,3 +1,86 @@
+# V5.15: Broker Adapter Skeleton + Sandbox Bridge
+
+This update adds a skeleton-only broker adapter layer for future provider integrations. It defines the base adapter interface, registry, factory, provider skeleton adapters, V5.14 mock bridge, capability matrix, compatibility checks, safety guard, API endpoints, CLI/report, frontend page, documentation, and tests without enabling broker runtime or external provider access.
+
+New files:
+
+```text
+broker_adapter/__init__.py
+broker_adapter/base_adapter.py
+broker_adapter/adapter_registry.py
+broker_adapter/adapter_factory.py
+broker_adapter/ibkr_skeleton_adapter.py
+broker_adapter/alpaca_skeleton_adapter.py
+broker_adapter/skeleton_adapters.py
+broker_adapter/mock_adapter.py
+broker_adapter/compatibility_layer.py
+broker_adapter/capability_matrix.py
+broker_adapter/safety_guard.py
+broker_adapter/broker_adapter_report.py
+scripts/run_v515_broker_adapter_skeleton.py
+web/frontend/app/v5-broker-adapter/page.tsx
+tests/test_v515_broker_adapter_skeleton.py
+docs/V5_BROKER_ADAPTER_SKELETON.md
+reports/v5_15_broker_adapter_skeleton_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Sandbox API connection: no
+Real orders: no
+Sandbox orders: no
+Real trading API: no
+Real account read: no
+Real position read: no
+Real balance read: no
+Broker credential read/save: no
+Connector runtime enabled: no
+Real capital: no
+Payment system: no
+Production live trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is adapter skeleton only: yes
+Production credentials committed: no
+External AI API: no
+External log upload: no
+```
+
+Validation:
+
+```text
+python -m py_compile broker_adapter/base_adapter.py broker_adapter/adapter_registry.py broker_adapter/adapter_factory.py broker_adapter/ibkr_skeleton_adapter.py broker_adapter/alpaca_skeleton_adapter.py broker_adapter/skeleton_adapters.py broker_adapter/mock_adapter.py broker_adapter/compatibility_layer.py broker_adapter/capability_matrix.py broker_adapter/safety_guard.py broker_adapter/broker_adapter_report.py scripts/run_v515_broker_adapter_skeleton.py src/api/v2/server.py: passed
+python scripts/run_v515_broker_adapter_skeleton.py --list: exit 0, verdict PASS
+python scripts/run_v515_broker_adapter_skeleton.py --test ibkr_skeleton: exit 0, verdict PASS
+python scripts/run_v515_broker_adapter_skeleton.py --test alpaca_skeleton: exit 0, verdict PASS
+python -m pytest tests/test_v515_broker_adapter_skeleton.py: 8 passed
+python -m pytest: 738 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.15 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.14: Sandbox Connector Mock Implementation
 
 This update adds a local-only mock implementation for the V5.13 sandbox connector contract. It supports safe connector demos, API integration checks, frontend status display, deterministic mock order lifecycle scenarios, safety validation, CLI/report output, and local tests without enabling connector runtime or external broker access.

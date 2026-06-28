@@ -373,3 +373,23 @@ export function fetchV5SandboxConnectorMockSafety() {
 export function fetchV5SandboxConnectorMockSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector-mock/summary');
 }
+
+export function fetchV5BrokerAdapterList() {
+  return apiGet<Record<string, unknown>>('/api/v5/broker-adapter/list');
+}
+
+export function fetchV5BrokerAdapterCapabilities() {
+  return apiGet<Record<string, unknown>>('/api/v5/broker-adapter/capabilities');
+}
+
+export function fetchV5BrokerAdapterRegistry() {
+  return apiGet<Record<string, unknown>>('/api/v5/broker-adapter/registry');
+}
+
+export function fetchV5BrokerAdapterFactory() {
+  return apiGet<Record<string, unknown>>('/api/v5/broker-adapter/factory');
+}
+
+export function fetchV5BrokerAdapterSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/broker-adapter/safety');
+}

@@ -86,6 +86,12 @@ from sandbox_connector.rate_limit_policy import build_rate_limit_policy
 from sandbox_connector.request_schema_contract import build_request_schema_contract
 from sandbox_connector.response_schema_contract import build_response_schema_contract
 from sandbox_connector.retry_policy import build_retry_policy
+from broker_adapter.adapter_factory import build_factory_status
+from broker_adapter.adapter_registry import build_default_registry
+from broker_adapter.broker_adapter_report import build_broker_adapter_summary
+from broker_adapter.capability_matrix import build_capability_matrix
+from broker_adapter.compatibility_layer import validate_contract_alignment, validate_interface_compatibility
+from broker_adapter.safety_guard import build_safety_guard_status
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -1393,6 +1399,49 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/sandbox-connector-mock/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/broker-adapter/list")
+    def v5_broker_adapter_list() -> dict:
+        started = perf_counter()
+        registry = build_default_registry()
+        response = success_response({"adapters": registry.list_adapters(), **_broker_adapter_boundary()}, started_at=started)
+        log_api_event("/api/v5/broker-adapter/list", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/broker-adapter/capabilities")
+    def v5_broker_adapter_capabilities() -> dict:
+        started = perf_counter()
+        matrix = build_capability_matrix()
+        response = success_response({"capability_matrix": matrix, **_broker_adapter_boundary()}, started_at=started)
+        log_api_event("/api/v5/broker-adapter/capabilities", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/broker-adapter/registry")
+    def v5_broker_adapter_registry() -> dict:
+        started = perf_counter()
+        registry = build_default_registry()
+        compatibility = validate_interface_compatibility()
+        alignment = validate_contract_alignment()
+        response = success_response({"registry": registry.as_dict(), "compatibility": compatibility, "alignment": alignment, **_broker_adapter_boundary()}, started_at=started)
+        log_api_event("/api/v5/broker-adapter/registry", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/broker-adapter/factory")
+    def v5_broker_adapter_factory(provider: str = "mock") -> dict:
+        started = perf_counter()
+        factory = build_factory_status(provider)
+        response = success_response({"factory": factory, **_broker_adapter_boundary()}, started_at=started)
+        log_api_event("/api/v5/broker-adapter/factory", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/broker-adapter/safety")
+    def v5_broker_adapter_safety() -> dict:
+        started = perf_counter()
+        safety = build_safety_guard_status()
+        summary = build_broker_adapter_summary()
+        response = success_response({"safety": safety, "summary": summary, **_broker_adapter_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/broker-adapter/safety", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -1430,5 +1479,14 @@ def _mock_connector_boundary() -> dict:
         "broker_connected": False,
         "real_orders_enabled": False,
         "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _broker_adapter_boundary() -> dict:
+    return {
+        "skeleton_only": True,
+        "real_connection": False,
+        "real_orders": False,
         "paper_trading": True,
     }
