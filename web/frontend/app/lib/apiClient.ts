@@ -305,3 +305,43 @@ export function fetchV5SandboxRobustnessLongRun() {
 export function fetchV5SandboxRobustnessSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/sandbox-robustness/summary');
 }
+
+export function fetchV5SandboxConnectorStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector/status');
+}
+
+export function fetchV5SandboxConnectorInterfaceContract() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector/interface-contract');
+}
+
+export function fetchV5SandboxConnectorRequestSchema() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector/request-schema');
+}
+
+export function fetchV5SandboxConnectorResponseSchema() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector/response-schema');
+}
+
+export function fetchV5SandboxConnectorErrorCodes() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector/error-codes');
+}
+
+export function fetchV5SandboxConnectorIdempotency() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector/idempotency');
+}
+
+export function fetchV5SandboxConnectorRateLimit() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector/rate-limit');
+}
+
+export function fetchV5SandboxConnectorRetryPolicy() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector/retry-policy');
+}
+
+export function fetchV5SandboxConnectorCredentialBoundary() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector/credential-boundary');
+}
+
+export function fetchV5SandboxConnectorReadiness() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector/readiness');
+}

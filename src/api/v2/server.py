@@ -71,6 +71,16 @@ from sandbox_sim.long_run_robustness_runner import run_long_run_robustness
 from sandbox_sim.multi_symbol_simulator import run_multi_symbol_simulation
 from sandbox_sim.robustness_scenario_matrix import build_robustness_scenario_matrix
 from sandbox_sim.sandbox_robustness_report import build_sandbox_robustness_summary
+from config.v5_sandbox_connector_contract_config import get_connector_contract_status
+from sandbox_connector.connector_interface_contract import build_interface_contract
+from sandbox_connector.connector_safety_validator import build_connector_readiness_summary
+from sandbox_connector.credential_boundary_contract import build_credential_boundary_contract
+from sandbox_connector.error_code_contract import list_error_codes
+from sandbox_connector.idempotency_policy import build_idempotency_policy
+from sandbox_connector.rate_limit_policy import build_rate_limit_policy
+from sandbox_connector.request_schema_contract import build_request_schema_contract
+from sandbox_connector.response_schema_contract import build_response_schema_contract
+from sandbox_connector.retry_policy import build_retry_policy
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -1248,6 +1258,78 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/sandbox-robustness/summary", "default", "ok", response["meta"]["latency_ms"], 0 if summary["verdict"] == "PASS" else 1)
         return response
 
+    @api.get("/api/v5/sandbox-connector/status")
+    def v5_sandbox_connector_status() -> dict:
+        started = perf_counter()
+        status = get_connector_contract_status()
+        response = success_response({"sandbox_connector": status}, started_at=started)
+        log_api_event("/api/v5/sandbox-connector/status", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-connector/interface-contract")
+    def v5_sandbox_connector_interface_contract() -> dict:
+        started = perf_counter()
+        response = success_response({"interface_contract": build_interface_contract(), **_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-connector/interface-contract", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-connector/request-schema")
+    def v5_sandbox_connector_request_schema() -> dict:
+        started = perf_counter()
+        response = success_response({"request_schema": build_request_schema_contract(), **_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-connector/request-schema", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-connector/response-schema")
+    def v5_sandbox_connector_response_schema() -> dict:
+        started = perf_counter()
+        response = success_response({"response_schema": build_response_schema_contract(), **_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-connector/response-schema", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-connector/error-codes")
+    def v5_sandbox_connector_error_codes() -> dict:
+        started = perf_counter()
+        response = success_response({"error_codes": list_error_codes(), **_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-connector/error-codes", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-connector/idempotency")
+    def v5_sandbox_connector_idempotency() -> dict:
+        started = perf_counter()
+        response = success_response({"idempotency": build_idempotency_policy(), **_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-connector/idempotency", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-connector/rate-limit")
+    def v5_sandbox_connector_rate_limit() -> dict:
+        started = perf_counter()
+        response = success_response({"rate_limit": build_rate_limit_policy(), **_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-connector/rate-limit", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-connector/retry-policy")
+    def v5_sandbox_connector_retry_policy() -> dict:
+        started = perf_counter()
+        response = success_response({"retry_policy": build_retry_policy(), **_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-connector/retry-policy", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-connector/credential-boundary")
+    def v5_sandbox_connector_credential_boundary() -> dict:
+        started = perf_counter()
+        response = success_response({"credential_boundary": build_credential_boundary_contract(), **_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-connector/credential-boundary", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-connector/readiness")
+    def v5_sandbox_connector_readiness() -> dict:
+        started = perf_counter()
+        readiness = build_connector_readiness_summary()
+        response = success_response({"readiness": readiness, **_connector_boundary()}, started_at=started, warning=readiness.get("warnings", []))
+        log_api_event("/api/v5/sandbox-connector/readiness", "default", "ok", response["meta"]["latency_ms"], len(readiness.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -1257,6 +1339,18 @@ app = create_v2_api_app()
 def _sandbox_sim_boundary() -> dict:
     return {
         "simulation_only": True,
+        "real_sandbox_api_enabled": False,
+        "broker_connected": False,
+        "real_orders_enabled": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _connector_boundary() -> dict:
+    return {
+        "contract_only": True,
+        "connector_runtime_enabled": False,
         "real_sandbox_api_enabled": False,
         "broker_connected": False,
         "real_orders_enabled": False,
