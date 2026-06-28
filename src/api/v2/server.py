@@ -72,11 +72,16 @@ from sandbox_sim.multi_symbol_simulator import run_multi_symbol_simulation
 from sandbox_sim.robustness_scenario_matrix import build_robustness_scenario_matrix
 from sandbox_sim.sandbox_robustness_report import build_sandbox_robustness_summary
 from config.v5_sandbox_connector_contract_config import get_connector_contract_status
+from config.v5_sandbox_connector_mock_config import get_mock_connector_status
 from sandbox_connector.connector_interface_contract import build_interface_contract
 from sandbox_connector.connector_safety_validator import build_connector_readiness_summary
 from sandbox_connector.credential_boundary_contract import build_credential_boundary_contract
 from sandbox_connector.error_code_contract import list_error_codes
 from sandbox_connector.idempotency_policy import build_idempotency_policy
+from sandbox_connector.mock_connector_report import build_mock_connector_summary
+from sandbox_connector.mock_connector_safety_validator import validate_mock_connector_safety
+from sandbox_connector.mock_connector_scenario_runner import run_all_mock_connector_scenarios
+from sandbox_connector.mock_sandbox_connector import MockSandboxConnector
 from sandbox_connector.rate_limit_policy import build_rate_limit_policy
 from sandbox_connector.request_schema_contract import build_request_schema_contract
 from sandbox_connector.response_schema_contract import build_response_schema_contract
@@ -1330,6 +1335,64 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/sandbox-connector/readiness", "default", "ok", response["meta"]["latency_ms"], len(readiness.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/sandbox-connector-mock/status")
+    def v5_sandbox_connector_mock_status() -> dict:
+        started = perf_counter()
+        status = get_mock_connector_status()
+        response = success_response({"sandbox_connector_mock": status, **_mock_connector_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/sandbox-connector-mock/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-connector-mock/account")
+    def v5_sandbox_connector_mock_account() -> dict:
+        started = perf_counter()
+        account = MockSandboxConnector().get_account()
+        response = success_response({"account": account, **_mock_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-connector-mock/account", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-connector-mock/positions")
+    def v5_sandbox_connector_mock_positions() -> dict:
+        started = perf_counter()
+        positions = MockSandboxConnector().get_positions()
+        response = success_response({"positions": positions, **_mock_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-connector-mock/positions", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-connector-mock/recent-orders")
+    def v5_sandbox_connector_mock_recent_orders() -> dict:
+        started = perf_counter()
+        connector = MockSandboxConnector()
+        connector.submit_order({"client_order_id": "mock-client-api", "idempotency_key": "mock-idem-api", "symbol": "AAPL", "side": "BUY", "quantity": 1, "order_type": "MARKET", "created_at": datetime.now(UTC).replace(microsecond=0).isoformat()})
+        orders = connector.get_recent_orders()
+        response = success_response({"recent_orders": orders, **_mock_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-connector-mock/recent-orders", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-connector-mock/scenarios")
+    def v5_sandbox_connector_mock_scenarios() -> dict:
+        started = perf_counter()
+        scenarios = run_all_mock_connector_scenarios()
+        response = success_response({"scenarios": scenarios, **_mock_connector_boundary()}, started_at=started, warning=[] if scenarios["summary"]["verdict"] == "PASS" else ["mock scenario warning"])
+        log_api_event("/api/v5/sandbox-connector-mock/scenarios", "default", "ok", response["meta"]["latency_ms"], 0 if scenarios["summary"]["verdict"] == "PASS" else 1)
+        return response
+
+    @api.get("/api/v5/sandbox-connector-mock/safety")
+    def v5_sandbox_connector_mock_safety() -> dict:
+        started = perf_counter()
+        safety = validate_mock_connector_safety()
+        response = success_response({"safety": safety, **_mock_connector_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/sandbox-connector-mock/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-connector-mock/summary")
+    def v5_sandbox_connector_mock_summary() -> dict:
+        started = perf_counter()
+        summary = build_mock_connector_summary(all_scenarios=True)
+        response = success_response({"summary": summary, **_mock_connector_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/sandbox-connector-mock/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -1351,6 +1414,18 @@ def _connector_boundary() -> dict:
     return {
         "contract_only": True,
         "connector_runtime_enabled": False,
+        "real_sandbox_api_enabled": False,
+        "broker_connected": False,
+        "real_orders_enabled": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _mock_connector_boundary() -> dict:
+    return {
+        "mock_only": True,
+        "real_connector_runtime_enabled": False,
         "real_sandbox_api_enabled": False,
         "broker_connected": False,
         "real_orders_enabled": False,

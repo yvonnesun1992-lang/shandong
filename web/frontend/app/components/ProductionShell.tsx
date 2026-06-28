@@ -22,6 +22,7 @@ const links = [
   ['V5 Sandbox Sim', '/v5-sandbox-sim'],
   ['V5 Sandbox Robustness', '/v5-sandbox-robustness'],
   ['V5 Sandbox Connector', '/v5-sandbox-connector'],
+  ['V5 Sandbox Connector Mock', '/v5-sandbox-connector-mock'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

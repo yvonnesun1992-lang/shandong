@@ -345,3 +345,31 @@ export function fetchV5SandboxConnectorCredentialBoundary() {
 export function fetchV5SandboxConnectorReadiness() {
   return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector/readiness');
 }
+
+export function fetchV5SandboxConnectorMockStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector-mock/status');
+}
+
+export function fetchV5SandboxConnectorMockAccount() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector-mock/account');
+}
+
+export function fetchV5SandboxConnectorMockPositions() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector-mock/positions');
+}
+
+export function fetchV5SandboxConnectorMockRecentOrders() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector-mock/recent-orders');
+}
+
+export function fetchV5SandboxConnectorMockScenarios() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector-mock/scenarios');
+}
+
+export function fetchV5SandboxConnectorMockSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector-mock/safety');
+}
+
+export function fetchV5SandboxConnectorMockSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-connector-mock/summary');
+}
