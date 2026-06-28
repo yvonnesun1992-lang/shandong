@@ -246,6 +246,16 @@
 - Adds V5 Broker Adapter frontend page and navigation
 - Skeleton-only: no broker API connection, no sandbox API connection, no real orders, no real account read, no real money, no alpha model changes, and no new strategy
 
+## 🌉 V5.16 Sandbox Connector Bridge
+
+- Adds sandbox bridge core abstraction
+- Adds request transformation and response normalization layers
+- Adds error translation, retry orchestration, and idempotency enforcement
+- Adds simulated sandbox session lifecycle and bridge routing layer
+- Adds bridge safety gate, report, CLI, and `/api/v5/sandbox-bridge/*` endpoints
+- Adds V5 Sandbox Bridge frontend page and navigation
+- Bridge-only: no sandbox API connection, no broker API connection, no real orders, no real account read, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

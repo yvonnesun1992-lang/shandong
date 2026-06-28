@@ -1,0 +1,32 @@
+from __future__ import annotations
+
+BLOCKED_KEYS = {"account_id", "broker_order_id", "real_order_id", "raw_provider_response", "authorization"}
+BLOCKED_MARKERS = ("secret=", "token=", "password=", "api_key=", "authorization:")
+
+
+def sanitize_bridge_payload(payload: object) -> object:
+    if isinstance(payload, dict):
+        clean = {}
+        for key, value in payload.items():
+            if str(key).lower() in BLOCKED_KEYS:
+                continue
+            clean[key] = sanitize_bridge_payload(value)
+        return clean
+    if isinstance(payload, list):
+        return [sanitize_bridge_payload(item) for item in payload]
+    if isinstance(payload, str):
+        lowered = payload.lower()
+        if any(marker in lowered for marker in BLOCKED_MARKERS):
+            return "[redacted]"
+    return payload
+
+
+def bridge_boundary() -> dict:
+    return {
+        "bridge_only": True,
+        "real_connection": False,
+        "network_call_attempted": False,
+        "real_orders": False,
+        "paper_trading": True,
+        "sanitized": True,
+    }

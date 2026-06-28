@@ -1,3 +1,87 @@
+# V5.16: Sandbox Connector Bridge
+
+This update adds a bridge-only sandbox connector abstraction layer between the V5.15 broker adapter skeleton and any future sandbox connector. It includes request transformation, response normalization, error translation, retry orchestration, idempotency enforcement, simulated session lifecycle, routing, safety gate, API endpoints, CLI/report, frontend page, documentation, and tests without enabling external runtime access.
+
+New files:
+
+```text
+sandbox_bridge/__init__.py
+sandbox_bridge/sanitizer.py
+sandbox_bridge/sandbox_bridge_core.py
+sandbox_bridge/request_transformer.py
+sandbox_bridge/response_normalizer.py
+sandbox_bridge/error_translation_layer.py
+sandbox_bridge/retry_orchestrator.py
+sandbox_bridge/idempotency_enforcer.py
+sandbox_bridge/sandbox_session.py
+sandbox_bridge/sandbox_router.py
+sandbox_bridge/bridge_safety_gate.py
+sandbox_bridge/sandbox_bridge_report.py
+scripts/run_v516_sandbox_bridge.py
+web/frontend/app/v5-sandbox-bridge/page.tsx
+tests/test_v516_sandbox_bridge.py
+docs/V5_SANDBOX_CONNECTOR_BRIDGE.md
+reports/v5_16_sandbox_connector_bridge_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Sandbox API connection: no
+Real orders: no
+Sandbox orders: no
+Real trading API: no
+Real account read: no
+Real position read: no
+Real balance read: no
+Broker credential read/save: no
+Connector runtime enabled: no
+Network calls: no
+Real capital: no
+Payment system: no
+Production live trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is sandbox bridge abstraction only: yes
+Production credentials committed: no
+External AI API: no
+External log upload: no
+```
+
+Validation:
+
+```text
+python -m py_compile sandbox_bridge/sandbox_bridge_core.py sandbox_bridge/request_transformer.py sandbox_bridge/response_normalizer.py sandbox_bridge/error_translation_layer.py sandbox_bridge/retry_orchestrator.py sandbox_bridge/idempotency_enforcer.py sandbox_bridge/sandbox_session.py sandbox_bridge/sandbox_router.py sandbox_bridge/bridge_safety_gate.py sandbox_bridge/sandbox_bridge_report.py scripts/run_v516_sandbox_bridge.py src/api/v2/server.py: passed
+python scripts/run_v516_sandbox_bridge.py --test route: exit 0, verdict PASS
+python scripts/run_v516_sandbox_bridge.py --test transform: exit 0, verdict PASS
+python scripts/run_v516_sandbox_bridge.py --test normalize: exit 0, verdict PASS
+python -m pytest tests/test_v516_sandbox_bridge.py: 8 passed
+python -m pytest: 746 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.16 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.15: Broker Adapter Skeleton + Sandbox Bridge
 
 This update adds a skeleton-only broker adapter layer for future provider integrations. It defines the base adapter interface, registry, factory, provider skeleton adapters, V5.14 mock bridge, capability matrix, compatibility checks, safety guard, API endpoints, CLI/report, frontend page, documentation, and tests without enabling broker runtime or external provider access.

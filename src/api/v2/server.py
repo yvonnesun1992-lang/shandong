@@ -92,6 +92,16 @@ from broker_adapter.broker_adapter_report import build_broker_adapter_summary
 from broker_adapter.capability_matrix import build_capability_matrix
 from broker_adapter.compatibility_layer import validate_contract_alignment, validate_interface_compatibility
 from broker_adapter.safety_guard import build_safety_guard_status
+from sandbox_bridge.bridge_safety_gate import validate_bridge_safety
+from sandbox_bridge.error_translation_layer import translate_error
+from sandbox_bridge.idempotency_enforcer import IdempotencyEnforcer
+from sandbox_bridge.request_transformer import transform_submit_order
+from sandbox_bridge.response_normalizer import normalize_order_response
+from sandbox_bridge.retry_orchestrator import schedule_retry
+from sandbox_bridge.sandbox_bridge_core import SandboxBridgeCore
+from sandbox_bridge.sandbox_bridge_report import build_sandbox_bridge_summary
+from sandbox_bridge.sandbox_router import route_request
+from sandbox_bridge.sandbox_session import SandboxSession
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -1442,6 +1452,74 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/broker-adapter/safety", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/sandbox-bridge/status")
+    def v5_sandbox_bridge_status() -> dict:
+        started = perf_counter()
+        bridge = SandboxBridgeCore()
+        response = success_response({"status": bridge.status(), **_sandbox_bridge_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-bridge/status", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-bridge/session")
+    def v5_sandbox_bridge_session() -> dict:
+        started = perf_counter()
+        session = SandboxSession()
+        response = success_response({"session": session.start_session(), **_sandbox_bridge_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-bridge/session", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-bridge/routing")
+    def v5_sandbox_bridge_routing() -> dict:
+        started = perf_counter()
+        routing = route_request({"backend": "bridge", "symbol": "AAPL", "side": "BUY", "quantity": 1})
+        response = success_response({"routing": routing, **_sandbox_bridge_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-bridge/routing", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-bridge/transform")
+    def v5_sandbox_bridge_transform() -> dict:
+        started = perf_counter()
+        transformed = transform_submit_order({"symbol": "AAPL", "side": "BUY", "quantity": 1})
+        response = success_response({"transform": transformed, **_sandbox_bridge_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-bridge/transform", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-bridge/normalize")
+    def v5_sandbox_bridge_normalize() -> dict:
+        started = perf_counter()
+        normalized = normalize_order_response({"status": "accepted"})
+        response = success_response({"normalize": normalized, **_sandbox_bridge_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-bridge/normalize", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-bridge/retry")
+    def v5_sandbox_bridge_retry() -> dict:
+        started = perf_counter()
+        retry = schedule_retry("TIMEOUT", 1)
+        error = translate_error({"type": "timeout"})
+        response = success_response({"retry": retry, "error_translation": error, **_sandbox_bridge_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-bridge/retry", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-bridge/idempotency")
+    def v5_sandbox_bridge_idempotency() -> dict:
+        started = perf_counter()
+        enforcer = IdempotencyEnforcer()
+        request = {"symbol": "AAPL", "side": "BUY", "quantity": 1}
+        enforcer.record_request(request, {"status": "MOCK_ACCEPTED"})
+        response = success_response({"idempotency": enforcer.check_duplicate(request), **_sandbox_bridge_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-bridge/idempotency", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-bridge/safety")
+    def v5_sandbox_bridge_safety() -> dict:
+        started = perf_counter()
+        safety = validate_bridge_safety({"bridge_only": True})
+        summary = build_sandbox_bridge_summary()
+        response = success_response({"safety": safety, "summary": summary, **_sandbox_bridge_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/sandbox-bridge/safety", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -1486,6 +1564,15 @@ def _mock_connector_boundary() -> dict:
 def _broker_adapter_boundary() -> dict:
     return {
         "skeleton_only": True,
+        "real_connection": False,
+        "real_orders": False,
+        "paper_trading": True,
+    }
+
+
+def _sandbox_bridge_boundary() -> dict:
+    return {
+        "bridge_only": True,
         "real_connection": False,
         "real_orders": False,
         "paper_trading": True,
