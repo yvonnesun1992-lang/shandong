@@ -235,6 +235,17 @@
 - Adds V5 Sandbox Connector Mock frontend page and navigation
 - Local mock only: no connector runtime, no sandbox API connection, no sandbox orders, no broker connection, no real orders, no real money, no alpha model changes, and no new strategy
 
+## 🧱 V5.15 Broker Adapter Skeleton + Sandbox Bridge
+
+- Adds broker adapter base class for future provider adapters
+- Adds adapter registry and factory for mock, IBKR skeleton, Alpaca skeleton, Futu skeleton, Tiger skeleton, and Schwab skeleton
+- Adds skeleton adapters that reject operational behavior and never connect
+- Adds V5.14 mock connector bridge as the only mock-capable adapter
+- Adds capability matrix and compatibility layer for V5.13/V5.14 alignment
+- Adds safety guard, report, CLI, and `/api/v5/broker-adapter/*` endpoints
+- Adds V5 Broker Adapter frontend page and navigation
+- Skeleton-only: no broker API connection, no sandbox API connection, no real orders, no real account read, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
