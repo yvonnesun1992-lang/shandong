@@ -1,3 +1,81 @@
+# V5.14: Sandbox Connector Mock Implementation
+
+This update adds a local-only mock implementation for the V5.13 sandbox connector contract. It supports safe connector demos, API integration checks, frontend status display, deterministic mock order lifecycle scenarios, safety validation, CLI/report output, and local tests without enabling connector runtime or external broker access.
+
+New files:
+
+```text
+config/v5_sandbox_connector_mock_config.py
+sandbox_connector/mock_sandbox_connector.py
+sandbox_connector/mock_connector_state_store.py
+sandbox_connector/mock_order_lifecycle.py
+sandbox_connector/mock_response_factory.py
+sandbox_connector/mock_connector_scenario_runner.py
+sandbox_connector/mock_connector_safety_validator.py
+sandbox_connector/mock_connector_report.py
+scripts/run_v514_sandbox_connector_mock.py
+web/frontend/app/v5-sandbox-connector-mock/page.tsx
+tests/test_v514_sandbox_connector_mock.py
+docs/V5_SANDBOX_CONNECTOR_MOCK.md
+reports/v5_14_sandbox_connector_mock_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Sandbox API connection: no
+Sandbox orders: no
+Real orders: no
+Real trading API: no
+Real account read: no
+Real position read: no
+Real balance read: no
+Credential read/save: no
+Connector runtime enabled: no
+Real capital: no
+Payment system: no
+Production live trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is local mock only: yes
+Production credentials committed: no
+External AI API: no
+External log upload: no
+```
+
+Validation:
+
+```text
+python -m py_compile config/v5_sandbox_connector_mock_config.py sandbox_connector/mock_sandbox_connector.py sandbox_connector/mock_connector_state_store.py sandbox_connector/mock_order_lifecycle.py sandbox_connector/mock_response_factory.py sandbox_connector/mock_connector_scenario_runner.py sandbox_connector/mock_connector_safety_validator.py sandbox_connector/mock_connector_report.py scripts/run_v514_sandbox_connector_mock.py src/api/v2/server.py: passed
+python scripts/run_v514_sandbox_connector_mock.py --scenario accepted: exit 0, verdict PASS
+python scripts/run_v514_sandbox_connector_mock.py --all-scenarios: exit 0, verdict PASS
+python -m pytest tests/test_v514_sandbox_connector_mock.py: 12 passed
+python -m pytest: 730 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.14 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.13: Sandbox Connector Contract Planning
 
 This update adds a contract-only planning layer for a future broker sandbox connector. It defines the interface contract, request/response schemas, error code contract, idempotency policy, rate limit policy, retry policy, credential boundary, safety validator, API endpoints, CLI/report, and frontend page without enabling connector runtime or external broker access.
