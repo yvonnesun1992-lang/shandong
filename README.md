@@ -177,6 +177,17 @@
 - Adds V5 Approval frontend page and navigation
 - Planning-only: no auto approval, no real orders after approval, no broker connection, no real money, no production live trading, no alpha model changes, and no new strategy
 
+## 🧪 V5.10 Broker Sandbox Readiness Planning
+
+- Adds broker sandbox configuration with sandbox connection disabled by default
+- Adds sandbox provider plan and credential isolation plan
+- Adds sandbox order lifecycle plan and safety checklist
+- Adds sandbox rollback plan
+- Adds `/api/v5/sandbox/*` readiness endpoints
+- Adds sandbox readiness report and CLI
+- Adds V5 Sandbox frontend page and navigation
+- Planning-only: no sandbox API connection, no sandbox orders, no broker connection, no real orders, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

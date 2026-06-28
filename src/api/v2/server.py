@@ -54,6 +54,13 @@ from approval.approval_audit_trail import build_approval_audit_summary
 from approval.manual_approval_gate import approval_readiness_summary
 from approval.manual_approval_report import build_manual_approval_summary
 from config.v5_manual_approval_config import get_manual_approval_policy, get_manual_approval_status
+from config.v5_broker_sandbox_config import get_sandbox_readiness_status
+from sandbox.credential_isolation_plan import build_credential_isolation_plan
+from sandbox.sandbox_order_lifecycle_plan import build_sandbox_order_lifecycle_plan
+from sandbox.sandbox_provider_plan import build_sandbox_provider_plan, list_sandbox_provider_plans
+from sandbox.sandbox_readiness_report import build_sandbox_readiness_summary
+from sandbox.sandbox_rollback_plan import build_sandbox_rollback_plan
+from sandbox.sandbox_safety_checklist import build_sandbox_safety_checklist
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -1082,6 +1089,55 @@ def create_v2_api_app() -> FastAPI:
         payload = {**summary, "manual_approval_required": True, "auto_approval_enabled": False, "real_orders_enabled": False, "real_money_enabled": False, "paper_trading": True}
         response = success_response({"audit_summary": payload}, started_at=started)
         log_api_event("/api/v5/approval/audit-summary", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox/status")
+    def v5_sandbox_status() -> dict:
+        started = perf_counter()
+        status = get_sandbox_readiness_status()
+        response = success_response({"sandbox": status}, started_at=started, warning=status.get("warning", []))
+        log_api_event("/api/v5/sandbox/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warning", [])))
+        return response
+
+    @api.get("/api/v5/sandbox/provider-plan")
+    def v5_sandbox_provider_plan() -> dict:
+        started = perf_counter()
+        status = get_sandbox_readiness_status()
+        plan = build_sandbox_provider_plan(status["sandbox_provider"])
+        response = success_response({"provider_plan": plan, "all_provider_plans": list_sandbox_provider_plans()}, started_at=started, warning=plan.get("warnings", []))
+        log_api_event("/api/v5/sandbox/provider-plan", "default", "ok", response["meta"]["latency_ms"], len(plan.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox/credential-policy")
+    def v5_sandbox_credential_policy() -> dict:
+        started = perf_counter()
+        policy = build_credential_isolation_plan()
+        response = success_response({"credential_policy": policy}, started_at=started)
+        log_api_event("/api/v5/sandbox/credential-policy", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox/order-lifecycle")
+    def v5_sandbox_order_lifecycle() -> dict:
+        started = perf_counter()
+        lifecycle = build_sandbox_order_lifecycle_plan()
+        response = success_response({"order_lifecycle": lifecycle}, started_at=started, warning=lifecycle.get("warnings", []))
+        log_api_event("/api/v5/sandbox/order-lifecycle", "default", "ok", response["meta"]["latency_ms"], len(lifecycle.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox/safety-checklist")
+    def v5_sandbox_safety_checklist() -> dict:
+        started = perf_counter()
+        checklist = build_sandbox_safety_checklist()
+        response = success_response({"safety_checklist": checklist}, started_at=started, warning=checklist.get("warnings", []))
+        log_api_event("/api/v5/sandbox/safety-checklist", "default", "ok", response["meta"]["latency_ms"], len(checklist.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox/rollback-plan")
+    def v5_sandbox_rollback_plan() -> dict:
+        started = perf_counter()
+        rollback = build_sandbox_rollback_plan()
+        response = success_response({"rollback_plan": rollback, "readiness": build_sandbox_readiness_summary()}, started_at=started, warning=rollback.get("warnings", []))
+        log_api_event("/api/v5/sandbox/rollback-plan", "default", "ok", response["meta"]["latency_ms"], len(rollback.get("warnings", [])))
         return response
 
     return api

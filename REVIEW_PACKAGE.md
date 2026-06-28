@@ -1,3 +1,79 @@
+# V5.10: Broker Sandbox Readiness Planning System
+
+This update adds a planning-only broker sandbox readiness layer. It documents sandbox provider options, credential isolation, sandbox order lifecycle, safety checklist, rollback plan, readiness API endpoints, CLI/report, and frontend page without connecting to any sandbox API or submitting sandbox orders.
+
+New files:
+
+```text
+config/v5_broker_sandbox_config.py
+sandbox/__init__.py
+sandbox/sandbox_provider_plan.py
+sandbox/credential_isolation_plan.py
+sandbox/sandbox_order_lifecycle_plan.py
+sandbox/sandbox_safety_checklist.py
+sandbox/sandbox_rollback_plan.py
+sandbox/sandbox_readiness_report.py
+scripts/run_v510_broker_sandbox_readiness.py
+web/frontend/app/v5-sandbox/page.tsx
+tests/test_v510_broker_sandbox_readiness.py
+docs/V5_BROKER_SANDBOX_READINESS.md
+reports/v5_10_broker_sandbox_readiness_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Sandbox API connection: no
+Real orders: no
+Sandbox orders: no
+Real trading API: no
+Real account read: no
+Real position read: no
+Real balance read: no
+Credential read/save: no
+Real capital: no
+Payment system: no
+Production live trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+Sandbox order submission rejected by default: yes
+Production credentials committed: no
+External AI API: no
+External log upload: no
+```
+
+Validation:
+
+```text
+python -m py_compile config/v5_broker_sandbox_config.py sandbox/sandbox_provider_plan.py sandbox/credential_isolation_plan.py sandbox/sandbox_order_lifecycle_plan.py sandbox/sandbox_safety_checklist.py sandbox/sandbox_rollback_plan.py sandbox/sandbox_readiness_report.py scripts/run_v510_broker_sandbox_readiness.py src/api/v2/server.py: passed
+python scripts/run_v510_broker_sandbox_readiness.py: exit 0, verdict WARNING
+python -m pytest tests/test_v510_broker_sandbox_readiness.py: 11 passed
+python -m pytest: 683 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.10 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.9: Manual Approval Gate Planning System
 
 This update adds a planning-only manual approval safety gate. It models approval requests, state transitions, reject-by-default behavior, local audit trail, paper-only risk summaries, API endpoints, CLI/report, and frontend page without enabling real broker order release.
