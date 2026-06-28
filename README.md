@@ -256,6 +256,16 @@
 - Adds V5 Sandbox Bridge frontend page and navigation
 - Bridge-only: no sandbox API connection, no broker API connection, no real orders, no real account read, no real money, no alpha model changes, and no new strategy
 
+## 🧪 V5.17 Sandbox Connector Integration Test Harness
+
+- Adds full-chain integration test harness for Alpha Signal → Paper Trading → Manual Approval → Broker Adapter Skeleton → Mock Connector → Sandbox Bridge → Execution Simulation → Monitoring / Risk / Audit
+- Adds layer-by-layer pipeline tester
+- Adds failure injection engine and deterministic scenario matrix
+- Adds cross-layer consistency validator and integration safety gate
+- Adds integration orchestrator, report, CLI, and `/api/v5/integration-test/*` endpoints
+- Adds V5 Integration Test frontend page and navigation
+- Integration harness only: no sandbox API connection, no broker API connection, no real orders, no real account read, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
