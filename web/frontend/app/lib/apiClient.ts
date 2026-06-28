@@ -233,3 +233,27 @@ export function fetchV5ApprovalPolicy() {
 export function fetchV5ApprovalAuditSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/approval/audit-summary');
 }
+
+export function fetchV5SandboxStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox/status');
+}
+
+export function fetchV5SandboxProviderPlan() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox/provider-plan');
+}
+
+export function fetchV5SandboxCredentialPolicy() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox/credential-policy');
+}
+
+export function fetchV5SandboxOrderLifecycle() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox/order-lifecycle');
+}
+
+export function fetchV5SandboxSafetyChecklist() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox/safety-checklist');
+}
+
+export function fetchV5SandboxRollbackPlan() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox/rollback-plan');
+}
