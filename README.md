@@ -188,6 +188,18 @@
 - Adds V5 Sandbox frontend page and navigation
 - Planning-only: no sandbox API connection, no sandbox orders, no broker connection, no real orders, no real money, no alpha model changes, and no new strategy
 
+## 🧪 V5.11 Sandbox Simulation Harness
+
+- Adds local sandbox simulation configuration
+- Adds simulated sandbox account, order, and fill models
+- Adds local sandbox simulation broker
+- Adds order lifecycle simulator for fill, partial fill, reject, cancel, latency, and disconnect scenarios
+- Adds sandbox simulation faults and runner
+- Adds `/api/v5/sandbox-sim/*` simulation endpoints
+- Adds sandbox simulation report and CLI
+- Adds V5 Sandbox Sim frontend page and navigation
+- Local simulation only: no sandbox API connection, no sandbox orders, no broker connection, no real orders, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

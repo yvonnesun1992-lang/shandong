@@ -1,3 +1,81 @@
+# V5.11: Sandbox Simulation Harness
+
+This update adds a local-only sandbox simulation harness. It models simulated sandbox account state, simulated orders and fills, lifecycle transitions, local fault scenarios, API endpoints, CLI/report, and a frontend page without connecting to any broker or sandbox API.
+
+New files:
+
+```text
+config/v5_sandbox_simulation_config.py
+sandbox_sim/__init__.py
+sandbox_sim/simulated_sandbox_account.py
+sandbox_sim/simulated_sandbox_order.py
+sandbox_sim/sandbox_simulation_broker.py
+sandbox_sim/order_lifecycle_simulator.py
+sandbox_sim/sandbox_simulation_faults.py
+sandbox_sim/sandbox_simulation_runner.py
+sandbox_sim/sandbox_simulation_report.py
+scripts/run_v511_sandbox_simulation.py
+web/frontend/app/v5-sandbox-sim/page.tsx
+tests/test_v511_sandbox_simulation_harness.py
+docs/V5_SANDBOX_SIMULATION_HARNESS.md
+reports/v5_11_sandbox_simulation_harness_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Sandbox API connection: no
+Real orders: no
+Sandbox orders: no
+Real trading API: no
+Real account read: no
+Real position read: no
+Real balance read: no
+Credential read/save: no
+Real capital: no
+Payment system: no
+Production live trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+All orders are local simulated orders: yes
+Production credentials committed: no
+External AI API: no
+External log upload: no
+```
+
+Validation:
+
+```text
+python -m py_compile config/v5_sandbox_simulation_config.py sandbox_sim/simulated_sandbox_account.py sandbox_sim/simulated_sandbox_order.py sandbox_sim/sandbox_simulation_broker.py sandbox_sim/order_lifecycle_simulator.py sandbox_sim/sandbox_simulation_faults.py sandbox_sim/sandbox_simulation_runner.py sandbox_sim/sandbox_simulation_report.py scripts/run_v511_sandbox_simulation.py src/api/v2/server.py: passed
+python scripts/run_v511_sandbox_simulation.py --scenario full_fill --ticks 100: exit 0, verdict PASS
+python scripts/run_v511_sandbox_simulation.py --scenario reject --ticks 100: exit 0, verdict WARNING
+python -m pytest tests/test_v511_sandbox_simulation_harness.py: 11 passed
+python -m pytest: 694 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.11 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.10: Broker Sandbox Readiness Planning System
 
 This update adds a planning-only broker sandbox readiness layer. It documents sandbox provider options, credential isolation, sandbox order lifecycle, safety checklist, rollback plan, readiness API endpoints, CLI/report, and frontend page without connecting to any sandbox API or submitting sandbox orders.

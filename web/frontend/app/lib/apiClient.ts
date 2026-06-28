@@ -257,3 +257,27 @@ export function fetchV5SandboxSafetyChecklist() {
 export function fetchV5SandboxRollbackPlan() {
   return apiGet<Record<string, unknown>>('/api/v5/sandbox/rollback-plan');
 }
+
+export function fetchV5SandboxSimStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-sim/status');
+}
+
+export function fetchV5SandboxSimAccount() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-sim/account');
+}
+
+export function fetchV5SandboxSimOrders() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-sim/orders');
+}
+
+export function fetchV5SandboxSimFills() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-sim/fills');
+}
+
+export function fetchV5SandboxSimScenarios() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-sim/scenarios');
+}
+
+export function fetchV5SandboxSimSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-sim/summary');
+}

@@ -61,6 +61,10 @@ from sandbox.sandbox_provider_plan import build_sandbox_provider_plan, list_sand
 from sandbox.sandbox_readiness_report import build_sandbox_readiness_summary
 from sandbox.sandbox_rollback_plan import build_sandbox_rollback_plan
 from sandbox.sandbox_safety_checklist import build_sandbox_safety_checklist
+from config.v5_sandbox_simulation_config import get_sandbox_simulation_status
+from sandbox_sim.sandbox_simulation_broker import SUPPORTED_SCENARIOS, SandboxSimulationBroker
+from sandbox_sim.sandbox_simulation_report import build_sandbox_simulation_summary
+from sandbox_sim.sandbox_simulation_runner import run_sandbox_simulation_session
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -1140,7 +1144,68 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/sandbox/rollback-plan", "default", "ok", response["meta"]["latency_ms"], len(rollback.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/sandbox-sim/status")
+    def v5_sandbox_sim_status() -> dict:
+        started = perf_counter()
+        status = get_sandbox_simulation_status()
+        response = success_response({"sandbox_simulation": status}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/sandbox-sim/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-sim/account")
+    def v5_sandbox_sim_account() -> dict:
+        started = perf_counter()
+        broker = SandboxSimulationBroker()
+        broker.submit_order({"symbol": "AAPL", "side": "BUY", "quantity": 1})
+        broker.step_market({"symbol": "AAPL", "price": 100.0})
+        payload = {"account": broker.get_account(), "positions": broker.get_positions(), **_sandbox_sim_boundary()}
+        response = success_response(payload, started_at=started)
+        log_api_event("/api/v5/sandbox-sim/account", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-sim/orders")
+    def v5_sandbox_sim_orders() -> dict:
+        started = perf_counter()
+        run = run_sandbox_simulation_session(scenario="partial_fill", max_ticks=2)
+        response = success_response({"orders": run["orders"], **_sandbox_sim_boundary()}, started_at=started, warning=run.get("warnings", []))
+        log_api_event("/api/v5/sandbox-sim/orders", "default", "ok", response["meta"]["latency_ms"], len(run.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-sim/fills")
+    def v5_sandbox_sim_fills() -> dict:
+        started = perf_counter()
+        run = run_sandbox_simulation_session(scenario="full_fill", max_ticks=2)
+        response = success_response({"fills": run["fills"], **_sandbox_sim_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-sim/fills", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-sim/scenarios")
+    def v5_sandbox_sim_scenarios() -> dict:
+        started = perf_counter()
+        response = success_response({"scenarios": SUPPORTED_SCENARIOS, **_sandbox_sim_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-sim/scenarios", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-sim/summary")
+    def v5_sandbox_sim_summary(scenario: str = "full_fill", ticks: int = 10) -> dict:
+        started = perf_counter()
+        summary = build_sandbox_simulation_summary(scenario=scenario, max_ticks=min(max(ticks, 1), 100))
+        response = success_response({"sandbox_simulation": summary, **_sandbox_sim_boundary()}, started_at=started, warning=summary["summary"].get("warnings", []))
+        log_api_event("/api/v5/sandbox-sim/summary", "default", "ok", response["meta"]["latency_ms"], len(summary["summary"].get("warnings", [])))
+        return response
+
     return api
 
 
 app = create_v2_api_app()
+
+
+def _sandbox_sim_boundary() -> dict:
+    return {
+        "simulation_only": True,
+        "real_sandbox_api_enabled": False,
+        "broker_connected": False,
+        "real_orders_enabled": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
