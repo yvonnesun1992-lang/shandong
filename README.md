@@ -200,6 +200,18 @@
 - Adds V5 Sandbox Sim frontend page and navigation
 - Local simulation only: no sandbox API connection, no sandbox orders, no broker connection, no real orders, no real money, no alpha model changes, and no new strategy
 
+## 🧪 V5.12 Sandbox Simulation Robustness Suite
+
+- Adds sandbox robustness configuration
+- Adds scenario matrix with base and combined local fault scenarios
+- Adds multi-symbol simulation for AAPL, MSFT, NVDA, SPY, and QQQ
+- Adds fault combination runner and consistency validator
+- Adds long-run robustness runner
+- Adds `/api/v5/sandbox-robustness/*` robustness endpoints
+- Adds sandbox robustness report and CLI
+- Adds V5 Sandbox Robustness frontend page and navigation
+- Local robustness only: no sandbox API connection, no sandbox orders, no broker connection, no real orders, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

@@ -281,3 +281,27 @@ export function fetchV5SandboxSimScenarios() {
 export function fetchV5SandboxSimSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/sandbox-sim/summary');
 }
+
+export function fetchV5SandboxRobustnessStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-robustness/status');
+}
+
+export function fetchV5SandboxRobustnessScenarioMatrix() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-robustness/scenario-matrix');
+}
+
+export function fetchV5SandboxRobustnessMultiSymbol() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-robustness/multi-symbol');
+}
+
+export function fetchV5SandboxRobustnessFaultCombinations() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-robustness/fault-combinations');
+}
+
+export function fetchV5SandboxRobustnessLongRun() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-robustness/long-run');
+}
+
+export function fetchV5SandboxRobustnessSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-robustness/summary');
+}

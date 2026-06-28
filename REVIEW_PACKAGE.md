@@ -1,3 +1,79 @@
+# V5.12: Sandbox Simulation Robustness Suite
+
+This update adds a local-only robustness suite for the V5.11 sandbox simulation harness. It covers scenario matrix validation, multi-symbol simulation, combined fault testing, long-run robustness, consistency validation, API endpoints, CLI/report, and a frontend page without connecting to any broker or sandbox API.
+
+New files:
+
+```text
+config/v5_sandbox_robustness_config.py
+sandbox_sim/robustness_scenario_matrix.py
+sandbox_sim/multi_symbol_simulator.py
+sandbox_sim/fault_combination_runner.py
+sandbox_sim/robustness_consistency_validator.py
+sandbox_sim/long_run_robustness_runner.py
+sandbox_sim/sandbox_robustness_report.py
+scripts/run_v512_sandbox_robustness.py
+web/frontend/app/v5-sandbox-robustness/page.tsx
+tests/test_v512_sandbox_simulation_robustness.py
+docs/V5_SANDBOX_SIMULATION_ROBUSTNESS.md
+reports/v5_12_sandbox_simulation_robustness_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Sandbox API connection: no
+Real orders: no
+Sandbox orders: no
+Real trading API: no
+Real account read: no
+Real position read: no
+Real balance read: no
+Credential read/save: no
+Real capital: no
+Payment system: no
+Production live trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+All tests are local simulated robustness tests: yes
+Production credentials committed: no
+External AI API: no
+External log upload: no
+```
+
+Validation:
+
+```text
+python -m py_compile config/v5_sandbox_robustness_config.py sandbox_sim/robustness_scenario_matrix.py sandbox_sim/multi_symbol_simulator.py sandbox_sim/fault_combination_runner.py sandbox_sim/robustness_consistency_validator.py sandbox_sim/long_run_robustness_runner.py sandbox_sim/sandbox_robustness_report.py scripts/run_v512_sandbox_robustness.py src/api/v2/server.py: passed
+python scripts/run_v512_sandbox_robustness.py --scenario full_fill --ticks 500: exit 0, verdict PASS
+python scripts/run_v512_sandbox_robustness.py --all-scenarios --ticks 1000: exit 0, verdict WARNING
+python -m pytest tests/test_v512_sandbox_simulation_robustness.py: 11 passed
+python -m pytest: 705 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.12 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.11: Sandbox Simulation Harness
 
 This update adds a local-only sandbox simulation harness. It models simulated sandbox account state, simulated orders and fills, lifecycle transitions, local fault scenarios, API endpoints, CLI/report, and a frontend page without connecting to any broker or sandbox API.
