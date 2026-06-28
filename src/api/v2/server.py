@@ -65,6 +65,12 @@ from config.v5_sandbox_simulation_config import get_sandbox_simulation_status
 from sandbox_sim.sandbox_simulation_broker import SUPPORTED_SCENARIOS, SandboxSimulationBroker
 from sandbox_sim.sandbox_simulation_report import build_sandbox_simulation_summary
 from sandbox_sim.sandbox_simulation_runner import run_sandbox_simulation_session
+from config.v5_sandbox_robustness_config import get_sandbox_robustness_status
+from sandbox_sim.fault_combination_runner import run_all_fault_combinations
+from sandbox_sim.long_run_robustness_runner import run_long_run_robustness
+from sandbox_sim.multi_symbol_simulator import run_multi_symbol_simulation
+from sandbox_sim.robustness_scenario_matrix import build_robustness_scenario_matrix
+from sandbox_sim.sandbox_robustness_report import build_sandbox_robustness_summary
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -1192,6 +1198,54 @@ def create_v2_api_app() -> FastAPI:
         summary = build_sandbox_simulation_summary(scenario=scenario, max_ticks=min(max(ticks, 1), 100))
         response = success_response({"sandbox_simulation": summary, **_sandbox_sim_boundary()}, started_at=started, warning=summary["summary"].get("warnings", []))
         log_api_event("/api/v5/sandbox-sim/summary", "default", "ok", response["meta"]["latency_ms"], len(summary["summary"].get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-robustness/status")
+    def v5_sandbox_robustness_status() -> dict:
+        started = perf_counter()
+        status = get_sandbox_robustness_status()
+        response = success_response({"sandbox_robustness": status}, started_at=started)
+        log_api_event("/api/v5/sandbox-robustness/status", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-robustness/scenario-matrix")
+    def v5_sandbox_robustness_scenario_matrix() -> dict:
+        started = perf_counter()
+        matrix = build_robustness_scenario_matrix()
+        response = success_response({"scenario_matrix": matrix, **_sandbox_sim_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-robustness/scenario-matrix", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-robustness/multi-symbol")
+    def v5_sandbox_robustness_multi_symbol(ticks: int = 20) -> dict:
+        started = perf_counter()
+        result = run_multi_symbol_simulation(ticks=min(max(ticks, 1), 100), seed=42)
+        response = success_response({"multi_symbol": result, **_sandbox_sim_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-robustness/multi-symbol", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-robustness/fault-combinations")
+    def v5_sandbox_robustness_fault_combinations(ticks: int = 20) -> dict:
+        started = perf_counter()
+        result = run_all_fault_combinations(ticks=min(max(ticks, 1), 100), seed=42)
+        response = success_response({"fault_combinations": result, **_sandbox_sim_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-robustness/fault-combinations", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-robustness/long-run")
+    def v5_sandbox_robustness_long_run(ticks: int = 1000) -> dict:
+        started = perf_counter()
+        result = run_long_run_robustness(ticks=min(max(ticks, 1), 1000), scenarios=["full_fill", "reject"], seed=42)
+        response = success_response({"long_run": result, **_sandbox_sim_boundary()}, started_at=started, warning=[] if result["final_verdict"] == "PASS" else ["local robustness warning scenarios present"])
+        log_api_event("/api/v5/sandbox-robustness/long-run", "default", "ok", response["meta"]["latency_ms"], 0 if result["final_verdict"] == "PASS" else 1)
+        return response
+
+    @api.get("/api/v5/sandbox-robustness/summary")
+    def v5_sandbox_robustness_summary(scenario: str = "full_fill", ticks: int = 100) -> dict:
+        started = perf_counter()
+        summary = build_sandbox_robustness_summary(scenario=scenario, ticks=min(max(ticks, 1), 1000), all_scenarios=False)
+        response = success_response({"sandbox_robustness": summary, **_sandbox_sim_boundary()}, started_at=started, warning=[] if summary["verdict"] == "PASS" else ["local robustness warning scenarios present"])
+        log_api_event("/api/v5/sandbox-robustness/summary", "default", "ok", response["meta"]["latency_ms"], 0 if summary["verdict"] == "PASS" else 1)
         return response
 
     return api
