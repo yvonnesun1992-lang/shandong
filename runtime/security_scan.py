@@ -136,6 +136,30 @@ def scan_sandbox_outputs(payload: dict | list | str, report_path: str | Path | N
     return {"safe": not findings, "findings": findings}
 
 
+def scan_sandbox_simulation_outputs(payload: dict | list | str, report_path: str | Path | None = None) -> dict:
+    text = json.dumps(payload, default=str).lower() if not isinstance(payload, str) else payload.lower()
+    findings = _scan_sandbox_sensitive_text(text)
+    blocked_terms = [
+        "broker credential",
+        "account_id",
+        "real_order_id",
+        "authorization",
+        "/users/apple",
+    ]
+    for term in blocked_terms:
+        if term in text:
+            findings.append({"kind": "sensitive-pattern", "match": "blocked-sandbox-simulation-output"})
+            break
+    if report_path:
+        report = Path(report_path)
+        if report.exists():
+            report_text = report.read_text(encoding="utf-8", errors="ignore").lower()
+            findings.extend(_scan_sandbox_sensitive_text(report_text))
+            if any(term in report_text for term in blocked_terms):
+                findings.append({"kind": "sensitive-pattern", "match": "blocked-sandbox-simulation-report"})
+    return {"safe": not findings, "findings": findings}
+
+
 def _scan_sandbox_sensitive_text(text: str) -> list[dict]:
     findings = []
     patterns = [
