@@ -24,6 +24,7 @@ const links = [
   ['V5 Sandbox Connector', '/v5-sandbox-connector'],
   ['V5 Sandbox Connector Mock', '/v5-sandbox-connector-mock'],
   ['V5 Broker Adapter', '/v5-broker-adapter'],
+  ['V5 Sandbox Bridge', '/v5-sandbox-bridge'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

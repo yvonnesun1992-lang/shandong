@@ -393,3 +393,35 @@ export function fetchV5BrokerAdapterFactory() {
 export function fetchV5BrokerAdapterSafety() {
   return apiGet<Record<string, unknown>>('/api/v5/broker-adapter/safety');
 }
+
+export function fetchV5SandboxBridgeStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-bridge/status');
+}
+
+export function fetchV5SandboxBridgeSession() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-bridge/session');
+}
+
+export function fetchV5SandboxBridgeRouting() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-bridge/routing');
+}
+
+export function fetchV5SandboxBridgeTransform() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-bridge/transform');
+}
+
+export function fetchV5SandboxBridgeNormalize() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-bridge/normalize');
+}
+
+export function fetchV5SandboxBridgeRetry() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-bridge/retry');
+}
+
+export function fetchV5SandboxBridgeIdempotency() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-bridge/idempotency');
+}
+
+export function fetchV5SandboxBridgeSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-bridge/safety');
+}
