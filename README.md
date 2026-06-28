@@ -212,6 +212,18 @@
 - Adds V5 Sandbox Robustness frontend page and navigation
 - Local robustness only: no sandbox API connection, no sandbox orders, no broker connection, no real orders, no real money, no alpha model changes, and no new strategy
 
+## 🧪 V5.13 Sandbox Connector Contract Planning
+
+- Adds sandbox connector contract configuration
+- Adds connector interface contract
+- Adds request and response schema contracts
+- Adds error code contract, idempotency policy, rate limit policy, and retry policy
+- Adds credential boundary contract and connector safety validator
+- Adds `/api/v5/sandbox-connector/*` contract endpoints
+- Adds sandbox connector contract report and CLI
+- Adds V5 Sandbox Connector frontend page and navigation
+- Contract-only: no connector runtime, no sandbox API connection, no sandbox orders, no broker connection, no real orders, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
