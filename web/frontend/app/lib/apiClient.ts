@@ -485,3 +485,43 @@ export function fetchV5TransitionRollback() {
 export function fetchV5TransitionSafety() {
   return apiGet<Record<string, unknown>>('/api/v5/transition/safety');
 }
+
+export function fetchV5ProviderSelectionStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-selection/status');
+}
+
+export function fetchV5ProviderSelectionUniverse() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-selection/universe');
+}
+
+export function fetchV5ProviderSelectionCapabilityMatrix() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-selection/capability-matrix');
+}
+
+export function fetchV5ProviderSelectionRiskMatrix() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-selection/risk-matrix');
+}
+
+export function fetchV5ProviderSelectionAccountChecklist() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-selection/account-checklist');
+}
+
+export function fetchV5ProviderSelectionApiPermissions() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-selection/api-permissions');
+}
+
+export function fetchV5ProviderSelectionMarketData() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-selection/market-data');
+}
+
+export function fetchV5ProviderSelectionCompliance() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-selection/compliance');
+}
+
+export function fetchV5ProviderSelectionRanking() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-selection/ranking');
+}
+
+export function fetchV5ProviderSelectionSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-selection/safety');
+}

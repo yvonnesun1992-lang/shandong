@@ -274,6 +274,14 @@
 - Adds `/api/v5/transition/*` endpoints, CLI report, documentation, and V5 Transition frontend page
 - Blueprint only: no real broker connection, no sandbox API connection, no real orders, no real account read, no real money, no alpha model changes, and no new strategy
 
+## 🧾 V5.19 Broker Sandbox Provider Selection
+
+- Adds provider universe for Alpaca, IBKR, Futu, Tiger, and Schwab
+- Adds capability matrix, risk matrix, account checklist, API permission checklist, market data checklist, and compliance checklist
+- Adds provider ranking and recommended provider based on static scoring
+- Adds `/api/v5/provider-selection/*` endpoints, CLI report, documentation, and V5 Provider Selection frontend page
+- Selection only: no real broker connection, no sandbox API connection, no real orders, no real account read, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

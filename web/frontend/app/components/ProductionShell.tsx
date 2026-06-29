@@ -27,6 +27,7 @@ const links = [
   ['V5 Sandbox Bridge', '/v5-sandbox-bridge'],
   ['V5 Integration Test', '/v5-integration-test'],
   ['V5 Transition', '/v5-transition'],
+  ['V5 Provider Selection', '/v5-provider-selection'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

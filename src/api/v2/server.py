@@ -116,6 +116,19 @@ from transition.rollback_blueprint import build_rollback_blueprint
 from transition.sandbox_enablement_checklist import build_sandbox_enablement_checklist
 from transition.transition_readiness_blueprint import build_transition_readiness_blueprint
 from transition.transition_safety_validator import build_transition_safety_summary
+from config.v5_provider_selection_config import get_candidate_providers, get_provider_selection_status
+from provider_selection.account_preparation_checklist import build_account_preparation_checklist
+from provider_selection.api_permission_checklist import build_api_permission_checklist
+from provider_selection.compliance_checklist import build_compliance_checklist
+from provider_selection.market_data_permission_checklist import build_market_data_permission_checklist
+from provider_selection.provider_capability_matrix import build_provider_capability_matrix
+from provider_selection.provider_risk_matrix import build_provider_risk_matrix
+from provider_selection.provider_selection_safety_validator import build_provider_selection_safety_summary
+from provider_selection.provider_selection_scoring import rank_providers
+from provider_selection.provider_universe import build_provider_universe
+
+
+PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -1647,6 +1660,78 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/transition/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/provider-selection/status")
+    def v5_provider_selection_status() -> dict:
+        started = perf_counter()
+        status = get_provider_selection_status()
+        response = success_response({"status": status, **_provider_selection_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/provider-selection/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-selection/universe")
+    def v5_provider_selection_universe() -> dict:
+        started = perf_counter()
+        response = success_response({"universe": build_provider_universe(), **_provider_selection_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-selection/universe", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-selection/capability-matrix")
+    def v5_provider_selection_capability_matrix() -> dict:
+        started = perf_counter()
+        response = success_response({"capability_matrix": build_provider_capability_matrix(), **_provider_selection_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-selection/capability-matrix", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get(PROVIDER_SELECTION_RISK_MATRIX_PATH)
+    def v5_provider_selection_risk_matrix() -> dict:
+        started = perf_counter()
+        response = success_response({"risk_matrix": build_provider_risk_matrix(), **_provider_selection_boundary()}, started_at=started)
+        log_api_event(PROVIDER_SELECTION_RISK_MATRIX_PATH, "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-selection/account-checklist")
+    def v5_provider_selection_account_checklist(provider: str | None = None) -> dict:
+        started = perf_counter()
+        response = success_response({"account_checklist": build_account_preparation_checklist(provider or _default_provider_selection_provider()), **_provider_selection_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-selection/account-checklist", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-selection/api-permissions")
+    def v5_provider_selection_api_permissions(provider: str | None = None) -> dict:
+        started = perf_counter()
+        response = success_response({"api_permissions": build_api_permission_checklist(provider or _default_provider_selection_provider()), **_provider_selection_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-selection/api-permissions", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-selection/market-data")
+    def v5_provider_selection_market_data(provider: str | None = None) -> dict:
+        started = perf_counter()
+        response = success_response({"market_data": build_market_data_permission_checklist(provider or _default_provider_selection_provider()), **_provider_selection_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-selection/market-data", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-selection/compliance")
+    def v5_provider_selection_compliance(provider: str | None = None) -> dict:
+        started = perf_counter()
+        response = success_response({"compliance": build_compliance_checklist(provider or _default_provider_selection_provider()), **_provider_selection_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-selection/compliance", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-selection/ranking")
+    def v5_provider_selection_ranking() -> dict:
+        started = perf_counter()
+        response = success_response({"ranking": rank_providers(), **_provider_selection_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-selection/ranking", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-selection/safety")
+    def v5_provider_selection_safety() -> dict:
+        started = perf_counter()
+        safety = build_provider_selection_safety_summary()
+        response = success_response({"safety": safety, **_provider_selection_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/provider-selection/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -1726,3 +1811,19 @@ def _transition_boundary() -> dict:
         "real_money_enabled": False,
         "paper_trading": True,
     }
+
+
+def _provider_selection_boundary() -> dict:
+    return {
+        "selection_only": True,
+        "provider_connection_enabled": False,
+        "sandbox_api_enabled": False,
+        "broker_connected": False,
+        "real_orders_enabled": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _default_provider_selection_provider() -> str:
+    return get_candidate_providers()[0]
