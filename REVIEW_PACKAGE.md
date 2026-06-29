@@ -1,3 +1,92 @@
+# V5.21: Provider-Specific Sandbox Connector Design
+
+This update adds a provider-specific sandbox connector design layer for the selected provider. It defines placeholder field mappings, order request/response mappings, account and position mappings, error mappings, rate limit policy, idempotency policy, order state machine, and safety boundary without enabling connector runtime or any broker/sandbox API path.
+
+New files:
+
+```text
+config/v5_provider_connector_design_config.py
+provider_connector_design/__init__.py
+provider_connector_design/provider_field_mapping.py
+provider_connector_design/order_request_mapping.py
+provider_connector_design/order_response_mapping.py
+provider_connector_design/account_position_mapping.py
+provider_connector_design/provider_error_mapping.py
+provider_connector_design/rate_limit_policy.py
+provider_connector_design/idempotency_policy.py
+provider_connector_design/order_state_machine_design.py
+provider_connector_design/connector_safety_boundary.py
+provider_connector_design/provider_connector_design_report.py
+scripts/run_v521_provider_connector_design.py
+web/frontend/app/v5-provider-connector-design/page.tsx
+tests/test_v521_provider_connector_design.py
+docs/V5_PROVIDER_CONNECTOR_DESIGN.md
+reports/v5_21_provider_connector_design_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Connector runtime: no
+Provider portal access: no
+Real broker connection: no
+Sandbox API connection: no
+Broker SDK imports: no
+API key creation: no
+Credential storage: no
+OAuth: no
+Real account read: no
+Sandbox account read: no
+Real balance read: no
+Real position read: no
+Order submission: no
+Real orders: no
+Sandbox orders: no
+Real funds: no
+External network requests: no
+External log upload: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is provider-specific connector design only: yes
+No real path can be enabled in V5.21: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v521_provider_connector_design.py: passed, verdict WARNING because connector design is design-only and runtime prerequisites remain incomplete by design
+run_v521_provider_connector_design.py --provider alpaca: passed, verdict WARNING by design
+run_v521_provider_connector_design.py --provider ibkr: passed, verdict WARNING by design
+run_v521_provider_connector_design.py --check safety: passed, verdict WARNING by design
+run_v521_provider_connector_design.py --check state-machine: passed, verdict WARNING by design
+pytest tests/test_v521_provider_connector_design.py: 8 passed
+pytest full suite: 786 passed
+system_doctor: OK
+frontend structure check: passed
+security scan: no broker SDK imports, no network calls, no sandbox endpoint, no account read, no order submission, no credential handling in provider connector design modules
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.20: Selected Provider Sandbox Onboarding Runbook
 
 This update adds a runbook-only onboarding layer for the selected provider from V5.19. It prepares account opening, sandbox access, API key handling, market data, approval/risk, and dry-run checklists without accessing any provider portal, connecting to sandbox APIs, creating keys, reading accounts, or placing orders.

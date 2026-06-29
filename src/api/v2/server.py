@@ -134,6 +134,16 @@ from provider_onboarding.onboarding_safety_validator import build_onboarding_saf
 from provider_onboarding.sandbox_access_runbook import build_sandbox_access_runbook
 from provider_onboarding.sandbox_dry_run_runbook import build_sandbox_dry_run_runbook
 from provider_onboarding.selected_provider_resolver import build_selected_provider_summary
+from config.v5_provider_connector_design_config import get_connector_design_status, get_design_provider
+from provider_connector_design.account_position_mapping import build_account_position_mapping
+from provider_connector_design.connector_safety_boundary import build_connector_safety_boundary
+from provider_connector_design.idempotency_policy import build_idempotency_policy as build_provider_connector_idempotency_policy
+from provider_connector_design.order_request_mapping import build_order_request_mapping
+from provider_connector_design.order_response_mapping import build_order_response_mapping
+from provider_connector_design.order_state_machine_design import build_order_state_machine_design
+from provider_connector_design.provider_error_mapping import build_provider_error_mapping
+from provider_connector_design.provider_field_mapping import build_provider_field_mapping
+from provider_connector_design.rate_limit_policy import build_rate_limit_policy as build_provider_connector_rate_limit_policy
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
@@ -1814,6 +1824,86 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/provider-onboarding/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/provider-connector-design/status")
+    def v5_provider_connector_design_status() -> dict:
+        started = perf_counter()
+        status = get_connector_design_status()
+        response = success_response({"status": status, **_provider_connector_design_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/provider-connector-design/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-connector-design/field-mapping")
+    def v5_provider_connector_design_field_mapping(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_design_provider()
+        response = success_response({"field_mapping": build_provider_field_mapping(selected), **_provider_connector_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-connector-design/field-mapping", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-connector-design/order-request")
+    def v5_provider_connector_design_order_request(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_design_provider()
+        response = success_response({"order_request": build_order_request_mapping(selected), **_provider_connector_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-connector-design/order-request", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-connector-design/order-response")
+    def v5_provider_connector_design_order_response(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_design_provider()
+        response = success_response({"order_response": build_order_response_mapping(selected), **_provider_connector_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-connector-design/order-response", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-connector-design/account-position")
+    def v5_provider_connector_design_account_position(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_design_provider()
+        response = success_response({"account_position": build_account_position_mapping(selected), **_provider_connector_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-connector-design/account-position", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-connector-design/error-mapping")
+    def v5_provider_connector_design_error_mapping(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_design_provider()
+        response = success_response({"error_mapping": build_provider_error_mapping(selected), **_provider_connector_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-connector-design/error-mapping", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-connector-design/rate-limit")
+    def v5_provider_connector_design_rate_limit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_design_provider()
+        response = success_response({"rate_limit": build_provider_connector_rate_limit_policy(selected), **_provider_connector_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-connector-design/rate-limit", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-connector-design/idempotency")
+    def v5_provider_connector_design_idempotency(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_design_provider()
+        response = success_response({"idempotency": build_provider_connector_idempotency_policy(selected), **_provider_connector_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-connector-design/idempotency", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-connector-design/state-machine")
+    def v5_provider_connector_design_state_machine(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_design_provider()
+        response = success_response({"state_machine": build_order_state_machine_design(selected), **_provider_connector_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-connector-design/state-machine", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-connector-design/safety")
+    def v5_provider_connector_design_safety() -> dict:
+        started = perf_counter()
+        safety = build_connector_safety_boundary()
+        response = success_response({"safety": safety, **_provider_connector_design_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/provider-connector-design/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -1915,6 +2005,20 @@ def _provider_onboarding_boundary() -> dict:
         "api" + "_key_creation_enabled": False,
         "broker_connected": False,
         "real_orders_enabled": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _provider_connector_design_boundary() -> dict:
+    return {
+        "version": "V5.21",
+        "design_only": True,
+        "connector_runtime_enabled": False,
+        "sandbox_api_enabled": False,
+        "account_read_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
         "real_money_enabled": False,
         "paper_trading": True,
     }
