@@ -289,6 +289,12 @@
 - Adds onboarding safety validator, CLI report, `/api/v5/provider-onboarding/*` endpoints, documentation, and V5 Provider Onboarding frontend page
 - Runbook only: no provider portal access, no broker connection, no sandbox API, no API key creation, no account read, no real or sandbox orders, no real money, no alpha model changes, and no new strategy
 
+## 🧩 V5.21 Provider-Specific Sandbox Connector Design
+
+- Adds provider-specific field, order request, order response, account/position, error, rate limit, idempotency, and state-machine design layers
+- Adds connector safety boundary, CLI report, `/api/v5/provider-connector-design/*` endpoints, documentation, and V5 Connector Design frontend page
+- Design only: no connector runtime, no broker connection, no sandbox API, no account read, no order submission, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

@@ -29,6 +29,7 @@ const links = [
   ['V5 Transition', '/v5-transition'],
   ['V5 Provider Selection', '/v5-provider-selection'],
   ['V5 Provider Onboarding', '/v5-provider-onboarding'],
+  ['V5 Connector Design', '/v5-provider-connector-design'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

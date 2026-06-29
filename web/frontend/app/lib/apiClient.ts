@@ -561,3 +561,43 @@ export function fetchV5ProviderOnboardingSandboxDryRun() {
 export function fetchV5ProviderOnboardingSafety() {
   return apiGet<Record<string, unknown>>('/api/v5/provider-onboarding/safety');
 }
+
+export function fetchV5ProviderConnectorDesignStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-connector-design/status');
+}
+
+export function fetchV5ProviderConnectorDesignFieldMapping() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-connector-design/field-mapping');
+}
+
+export function fetchV5ProviderConnectorDesignOrderRequest() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-connector-design/order-request');
+}
+
+export function fetchV5ProviderConnectorDesignOrderResponse() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-connector-design/order-response');
+}
+
+export function fetchV5ProviderConnectorDesignAccountPosition() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-connector-design/account-position');
+}
+
+export function fetchV5ProviderConnectorDesignErrorMapping() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-connector-design/error-mapping');
+}
+
+export function fetchV5ProviderConnectorDesignRateLimit() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-connector-design/rate-limit');
+}
+
+export function fetchV5ProviderConnectorDesignIdempotency() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-connector-design/idempotency');
+}
+
+export function fetchV5ProviderConnectorDesignStateMachine() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-connector-design/state-machine');
+}
+
+export function fetchV5ProviderConnectorDesignSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-connector-design/safety');
+}
