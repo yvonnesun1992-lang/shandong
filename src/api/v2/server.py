@@ -144,6 +144,16 @@ from provider_connector_design.order_state_machine_design import build_order_sta
 from provider_connector_design.provider_error_mapping import build_provider_error_mapping
 from provider_connector_design.provider_field_mapping import build_provider_field_mapping
 from provider_connector_design.rate_limit_policy import build_rate_limit_policy as build_provider_connector_rate_limit_policy
+from config.v5_provider_mock_contract_config import get_mock_contract_status, get_mock_contract_provider
+from provider_mock_contract.contract_schema_validator import validate_all_mock_payloads
+from provider_mock_contract.error_mapping_contract_test import test_error_mapping as run_mock_error_mapping_contract
+from provider_mock_contract.idempotency_contract_test import test_idempotency_policy as run_mock_idempotency_contract
+from provider_mock_contract.mock_contract_safety_validator import build_mock_contract_safety_summary
+from provider_mock_contract.mock_contract_test_orchestrator import run_mock_contract_tests, summarize_mock_contract_results
+from provider_mock_contract.mock_provider_payloads import build_all_mock_payloads
+from provider_mock_contract.order_state_machine_contract_test import test_order_state_machine as run_mock_order_state_machine_contract
+from provider_mock_contract.request_mapping_contract_test import test_order_request_mapping as run_mock_request_mapping_contract
+from provider_mock_contract.response_normalization_contract_test import test_response_normalization as run_mock_response_normalization_contract
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
@@ -1904,6 +1914,87 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/provider-connector-design/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/provider-mock-contract/status")
+    def v5_provider_mock_contract_status() -> dict:
+        started = perf_counter()
+        status = get_mock_contract_status()
+        response = success_response({"status": status, **_provider_mock_contract_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/provider-mock-contract/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-mock-contract/payloads")
+    def v5_provider_mock_contract_payloads(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_mock_contract_provider()
+        response = success_response({"payloads": build_all_mock_payloads(selected), **_provider_mock_contract_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-mock-contract/payloads", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-mock-contract/schema-validation")
+    def v5_provider_mock_contract_schema_validation(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_mock_contract_provider()
+        response = success_response({"schema_validation": validate_all_mock_payloads(selected), **_provider_mock_contract_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-mock-contract/schema-validation", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-mock-contract/request-mapping")
+    def v5_provider_mock_contract_request_mapping(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_mock_contract_provider()
+        response = success_response({"request_mapping": run_mock_request_mapping_contract(selected), **_provider_mock_contract_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-mock-contract/request-mapping", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-mock-contract/response-normalization")
+    def v5_provider_mock_contract_response_normalization(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_mock_contract_provider()
+        response = success_response({"response_normalization": run_mock_response_normalization_contract(selected), **_provider_mock_contract_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-mock-contract/response-normalization", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-mock-contract/error-mapping")
+    def v5_provider_mock_contract_error_mapping(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_mock_contract_provider()
+        response = success_response({"error_mapping": run_mock_error_mapping_contract(selected), **_provider_mock_contract_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-mock-contract/error-mapping", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-mock-contract/idempotency")
+    def v5_provider_mock_contract_idempotency(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_mock_contract_provider()
+        response = success_response({"idempotency": run_mock_idempotency_contract(selected), **_provider_mock_contract_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-mock-contract/idempotency", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-mock-contract/state-machine")
+    def v5_provider_mock_contract_state_machine(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_mock_contract_provider()
+        response = success_response({"state_machine": run_mock_order_state_machine_contract(selected), **_provider_mock_contract_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-mock-contract/state-machine", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-mock-contract/safety")
+    def v5_provider_mock_contract_safety() -> dict:
+        started = perf_counter()
+        safety = build_mock_contract_safety_summary()
+        response = success_response({"safety": safety, **_provider_mock_contract_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/provider-mock-contract/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-mock-contract/summary")
+    def v5_provider_mock_contract_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_mock_contract_provider()
+        summary = summarize_mock_contract_results(run_mock_contract_tests(selected))
+        response = success_response({"summary": summary, **_provider_mock_contract_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/provider-mock-contract/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -2015,6 +2106,20 @@ def _provider_connector_design_boundary() -> dict:
         "version": "V5.21",
         "design_only": True,
         "connector_runtime_enabled": False,
+        "sandbox_api_enabled": False,
+        "account_read_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _provider_mock_contract_boundary() -> dict:
+    return {
+        "version": "V5.22",
+        "mock_contract_only": True,
+        "mock_contract_runtime_enabled": False,
         "sandbox_api_enabled": False,
         "account_read_enabled": False,
         "order_submission_enabled": False,

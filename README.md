@@ -295,6 +295,14 @@
 - Adds connector safety boundary, CLI report, `/api/v5/provider-connector-design/*` endpoints, documentation, and V5 Connector Design frontend page
 - Design only: no connector runtime, no broker connection, no sandbox API, no account read, no order submission, no real money, no alpha model changes, and no new strategy
 
+## 🧪 V5.22 Provider Sandbox Mock Contract Test
+
+- Adds offline mock provider payload catalog for selected sandbox connector contract review
+- Adds schema validation, request mapping, response normalization, error mapping, idempotency, and order state-machine contract tests
+- Adds mock contract safety validator, report generator, CLI, and `/api/v5/provider-mock-contract/*` endpoints
+- Adds V5 Mock Contract frontend page, navigation, documentation, and security scan hook
+- Mock contract only: no provider portal, no sandbox API, no broker connection, no API key creation, no account read, no order submission, no raw provider payload storage, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
