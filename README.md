@@ -266,6 +266,14 @@
 - Adds V5 Integration Test frontend page and navigation
 - Integration harness only: no sandbox API connection, no broker API connection, no real orders, no real account read, no real money, no alpha model changes, and no new strategy
 
+## 🧭 V5.18 Sandbox to Real Broker Transition Blueprint
+
+- Adds final transition blueprint before any future broker sandbox provider work
+- Adds transition status config with all real path flags disabled by default
+- Adds readiness, credential vault, environment separation, feature flag, sandbox checklist, real order blocker, kill switch, rollback, and safety blueprints
+- Adds `/api/v5/transition/*` endpoints, CLI report, documentation, and V5 Transition frontend page
+- Blueprint only: no real broker connection, no sandbox API connection, no real orders, no real account read, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
