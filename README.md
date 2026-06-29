@@ -282,6 +282,13 @@
 - Adds `/api/v5/provider-selection/*` endpoints, CLI report, documentation, and V5 Provider Selection frontend page
 - Selection only: no real broker connection, no sandbox API connection, no real orders, no real account read, no real money, no alpha model changes, and no new strategy
 
+## 🧭 V5.20 Selected Provider Sandbox Onboarding Runbook
+
+- Adds selected provider resolver based on the local V5.19 provider selection report, config, or fallback provider
+- Adds account opening, sandbox access, API key preparation, market data, approval/risk, and sandbox dry-run runbooks
+- Adds onboarding safety validator, CLI report, `/api/v5/provider-onboarding/*` endpoints, documentation, and V5 Provider Onboarding frontend page
+- Runbook only: no provider portal access, no broker connection, no sandbox API, no API key creation, no account read, no real or sandbox orders, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
