@@ -1,3 +1,88 @@
+# V5.19: Broker Sandbox Provider Selection & Account Preparation
+
+This update adds a provider selection and account preparation layer for future broker sandbox review. It ranks candidate providers with static metadata and produces account, API, market data, and compliance preparation checklists without enabling provider connections.
+
+New files:
+
+```text
+config/v5_provider_selection_config.py
+provider_selection/__init__.py
+provider_selection/provider_universe.py
+provider_selection/provider_capability_matrix.py
+provider_selection/provider_risk_matrix.py
+provider_selection/account_preparation_checklist.py
+provider_selection/api_permission_checklist.py
+provider_selection/market_data_permission_checklist.py
+provider_selection/compliance_checklist.py
+provider_selection/provider_selection_scoring.py
+provider_selection/provider_selection_safety_validator.py
+provider_selection/provider_selection_report.py
+scripts/run_v519_provider_selection.py
+web/frontend/app/v5-provider-selection/page.tsx
+tests/test_v519_provider_selection.py
+docs/V5_PROVIDER_SELECTION.md
+reports/v5_19_provider_selection_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Sandbox API connection: no
+Broker SDK imports: no
+Real orders: no
+Sandbox orders: no
+Real account read: no
+Real balance read: no
+Real position read: no
+Real funds: no
+Credential storage: no
+OAuth: no
+External network requests: no
+External log upload: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is provider selection and account preparation only: yes
+Provider connection env vars are ignored and blocked as warnings: yes
+No real path can be enabled in V5.19: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v519_provider_selection.py: passed, verdict WARNING because future account/API/market data/compliance preparation remains incomplete by design
+run_v519_provider_selection.py --provider alpaca: passed, verdict WARNING by design
+run_v519_provider_selection.py --provider ibkr: passed, verdict WARNING by design
+run_v519_provider_selection.py --ranking: passed, verdict WARNING by design
+run_v519_provider_selection.py --check safety: passed, verdict WARNING by design
+pytest tests/test_v519_provider_selection.py: 8 passed
+pytest full suite: 770 passed
+system_doctor: OK
+frontend structure check: passed
+security scan: no broker SDK imports, no network calls, no order/account runtime calls in provider selection modules
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.18: Sandbox to Real Broker Transition Blueprint
 
 This update adds the final transition blueprint before any future broker sandbox provider selection or account preparation work. It does not enable any real broker, sandbox API, account read, order submission, or real-money path.
