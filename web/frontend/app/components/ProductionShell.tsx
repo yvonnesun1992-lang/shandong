@@ -30,6 +30,7 @@ const links = [
   ['V5 Provider Selection', '/v5-provider-selection'],
   ['V5 Provider Onboarding', '/v5-provider-onboarding'],
   ['V5 Connector Design', '/v5-provider-connector-design'],
+  ['V5 Mock Contract', '/v5-provider-mock-contract'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

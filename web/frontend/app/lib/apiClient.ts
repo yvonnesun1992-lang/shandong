@@ -601,3 +601,43 @@ export function fetchV5ProviderConnectorDesignStateMachine() {
 export function fetchV5ProviderConnectorDesignSafety() {
   return apiGet<Record<string, unknown>>('/api/v5/provider-connector-design/safety');
 }
+
+export function fetchV5ProviderMockContractStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-mock-contract/status');
+}
+
+export function fetchV5ProviderMockContractPayloads() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-mock-contract/payloads');
+}
+
+export function fetchV5ProviderMockContractSchemaValidation() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-mock-contract/schema-validation');
+}
+
+export function fetchV5ProviderMockContractRequestMapping() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-mock-contract/request-mapping');
+}
+
+export function fetchV5ProviderMockContractResponseNormalization() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-mock-contract/response-normalization');
+}
+
+export function fetchV5ProviderMockContractErrorMapping() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-mock-contract/error-mapping');
+}
+
+export function fetchV5ProviderMockContractIdempotency() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-mock-contract/idempotency');
+}
+
+export function fetchV5ProviderMockContractStateMachine() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-mock-contract/state-machine');
+}
+
+export function fetchV5ProviderMockContractSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-mock-contract/safety');
+}
+
+export function fetchV5ProviderMockContractSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-mock-contract/summary');
+}

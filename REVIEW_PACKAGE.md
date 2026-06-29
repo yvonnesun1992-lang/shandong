@@ -1,3 +1,94 @@
+# V5.22: Provider Sandbox Connector Mock Contract Test
+
+This update adds an offline provider sandbox connector mock contract test layer for the selected provider. It validates placeholder payload shape, request mapping, response normalization, error mapping, idempotency policy, and order state-machine behavior without enabling any connector runtime, sandbox API, provider portal, account read, or order submission path.
+
+New files:
+
+```text
+config/v5_provider_mock_contract_config.py
+provider_mock_contract/__init__.py
+provider_mock_contract/mock_provider_payloads.py
+provider_mock_contract/contract_schema_validator.py
+provider_mock_contract/request_mapping_contract_test.py
+provider_mock_contract/response_normalization_contract_test.py
+provider_mock_contract/error_mapping_contract_test.py
+provider_mock_contract/idempotency_contract_test.py
+provider_mock_contract/order_state_machine_contract_test.py
+provider_mock_contract/mock_contract_safety_validator.py
+provider_mock_contract/mock_contract_test_orchestrator.py
+provider_mock_contract/provider_mock_contract_report.py
+scripts/run_v522_provider_mock_contract.py
+web/frontend/app/v5-provider-mock-contract/page.tsx
+tests/test_v522_provider_mock_contract.py
+docs/V5_PROVIDER_MOCK_CONTRACT.md
+reports/v5_22_provider_mock_contract_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Mock contract runtime: no
+Provider portal access: no
+Real broker connection: no
+Sandbox API connection: no
+Broker SDK imports: no
+API key creation: no
+Credential storage: no
+OAuth: no
+Real account read: no
+Sandbox account read: no
+Real balance read: no
+Real position read: no
+Order submission: no
+Real orders: no
+Sandbox orders: no
+Raw provider payload storage: no
+Real funds: no
+External network requests: no
+External log upload: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is provider sandbox connector mock contract test only: yes
+No real path can be enabled in V5.22: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v522_provider_mock_contract.py: passed, verdict WARNING because mock contract tests are offline only and runtime validation remains future work
+run_v522_provider_mock_contract.py --provider alpaca: passed, verdict WARNING by design
+run_v522_provider_mock_contract.py --provider ibkr: passed, verdict WARNING by design
+run_v522_provider_mock_contract.py --check safety: passed, verdict WARNING by design
+run_v522_provider_mock_contract.py --check schema: passed, verdict WARNING by design
+run_v522_provider_mock_contract.py --check state-machine: passed, verdict WARNING by design
+pytest tests/test_v522_provider_mock_contract.py: 9 passed
+pytest full suite: 795 passed
+system_doctor: OK
+frontend structure check: passed
+security scan: no broker SDK imports, no network calls, no sandbox endpoint, no account read, no order submission, no raw provider payload storage, no credential handling in provider mock contract modules
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.21: Provider-Specific Sandbox Connector Design
 
 This update adds a provider-specific sandbox connector design layer for the selected provider. It defines placeholder field mappings, order request/response mappings, account and position mappings, error mappings, rate limit policy, idempotency policy, order state machine, and safety boundary without enabling connector runtime or any broker/sandbox API path.
