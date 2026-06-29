@@ -102,6 +102,10 @@ from sandbox_bridge.sandbox_bridge_core import SandboxBridgeCore
 from sandbox_bridge.sandbox_bridge_report import build_sandbox_bridge_summary
 from sandbox_bridge.sandbox_router import route_request
 from sandbox_bridge.sandbox_session import SandboxSession
+from integration_test.integration_scenario_matrix import build_integration_scenario_matrix
+from integration_test.integration_test_core import IntegrationTestCore
+from integration_test.integration_test_orchestrator import run_all_tests, run_scenario, summarize_results
+from integration_test.integration_test_report import build_integration_test_summary
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -1520,6 +1524,48 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/sandbox-bridge/safety", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/integration-test/status")
+    def v5_integration_test_status() -> dict:
+        started = perf_counter()
+        core = IntegrationTestCore(seed=42)
+        status = core.run_full_pipeline_test()
+        response = success_response({"status": status, **_integration_test_boundary()}, started_at=started)
+        log_api_event("/api/v5/integration-test/status", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/integration-test/scenarios")
+    def v5_integration_test_scenarios() -> dict:
+        started = perf_counter()
+        matrix = build_integration_scenario_matrix(seed=42)
+        response = success_response({"scenarios": matrix, **_integration_test_boundary()}, started_at=started)
+        log_api_event("/api/v5/integration-test/scenarios", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/integration-test/run")
+    def v5_integration_test_run(scenario: str = "normal_flow") -> dict:
+        started = perf_counter()
+        result = run_scenario(scenario)
+        response = success_response({"run": result, **_integration_test_boundary()}, started_at=started)
+        log_api_event("/api/v5/integration-test/run", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/integration-test/layers")
+    def v5_integration_test_layers() -> dict:
+        started = perf_counter()
+        layers = IntegrationTestCore(seed=42).run_layered_test()
+        response = success_response({"layers": layers, **_integration_test_boundary()}, started_at=started)
+        log_api_event("/api/v5/integration-test/layers", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/integration-test/summary")
+    def v5_integration_test_summary() -> dict:
+        started = perf_counter()
+        results = run_all_tests()
+        summary = build_integration_test_summary(all_scenarios=True)
+        response = success_response({"summary": summary, "orchestrator": summarize_results(results), **_integration_test_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/integration-test/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -1575,5 +1621,15 @@ def _sandbox_bridge_boundary() -> dict:
         "bridge_only": True,
         "real_connection": False,
         "real_orders": False,
+        "paper_trading": True,
+    }
+
+
+def _integration_test_boundary() -> dict:
+    return {
+        "integration_only": True,
+        "simulation_only": True,
+        "broker_connected": False,
+        "real_orders_enabled": False,
         "paper_trading": True,
     }

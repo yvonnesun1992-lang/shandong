@@ -425,3 +425,23 @@ export function fetchV5SandboxBridgeIdempotency() {
 export function fetchV5SandboxBridgeSafety() {
   return apiGet<Record<string, unknown>>('/api/v5/sandbox-bridge/safety');
 }
+
+export function fetchV5IntegrationStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/integration-test/status');
+}
+
+export function fetchV5IntegrationScenarios() {
+  return apiGet<Record<string, unknown>>('/api/v5/integration-test/scenarios');
+}
+
+export function fetchV5IntegrationRun() {
+  return apiGet<Record<string, unknown>>('/api/v5/integration-test/run');
+}
+
+export function fetchV5IntegrationLayers() {
+  return apiGet<Record<string, unknown>>('/api/v5/integration-test/layers');
+}
+
+export function fetchV5IntegrationSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/integration-test/summary');
+}

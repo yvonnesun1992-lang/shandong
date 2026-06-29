@@ -1,3 +1,85 @@
+# V5.17: Sandbox Connector Integration Test Harness
+
+This update adds an end-to-end integration test harness for the simulated future broker path. It validates Alpha Signal to Paper Trading Engine to Manual Approval to Broker Adapter Skeleton to Mock Connector to Sandbox Bridge to execution simulation, monitoring, risk, and audit outputs without enabling external runtime access.
+
+New files:
+
+```text
+integration_test/__init__.py
+integration_test/sanitizer.py
+integration_test/integration_test_core.py
+integration_test/layered_pipeline_tester.py
+integration_test/failure_injection_engine.py
+integration_test/cross_layer_consistency_validator.py
+integration_test/integration_scenario_matrix.py
+integration_test/integration_test_orchestrator.py
+integration_test/integration_safety_gate.py
+integration_test/integration_test_report.py
+scripts/run_v517_integration_test_harness.py
+web/frontend/app/v5-integration-test/page.tsx
+tests/test_v517_integration_test_harness.py
+docs/V5_INTEGRATION_TEST_HARNESS.md
+reports/v5_17_integration_test_harness_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Sandbox API connection: no
+Real orders: no
+Sandbox orders: no
+Real trading API: no
+Real account read: no
+Real position read: no
+Real balance read: no
+Broker credential read/save: no
+Connector runtime enabled: no
+Network calls: no
+Real capital: no
+Payment system: no
+Production live trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is integration test harness only: yes
+Production credentials committed: no
+External AI API: no
+External log upload: no
+```
+
+Validation:
+
+```text
+python -m py_compile integration_test/integration_test_core.py integration_test/layered_pipeline_tester.py integration_test/failure_injection_engine.py integration_test/cross_layer_consistency_validator.py integration_test/integration_scenario_matrix.py integration_test/integration_test_orchestrator.py integration_test/integration_safety_gate.py integration_test/integration_test_report.py scripts/run_v517_integration_test_harness.py src/api/v2/server.py: passed
+python scripts/run_v517_integration_test_harness.py --scenario normal_flow: exit 0, verdict PASS
+python scripts/run_v517_integration_test_harness.py --scenario full_failure_chain: exit 0, verdict PASS
+python scripts/run_v517_integration_test_harness.py --all: exit 0, verdict PASS
+python -m pytest tests/test_v517_integration_test_harness.py: 8 passed
+python -m pytest: 754 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+web/frontend pnpm run build: blocked by local pnpm supply-chain policy requiring interactive approval for sharp build scripts; no V5.17 TypeScript/runtime error was emitted before that policy stop
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.16: Sandbox Connector Bridge
 
 This update adds a bridge-only sandbox connector abstraction layer between the V5.15 broker adapter skeleton and any future sandbox connector. It includes request transformation, response normalization, error translation, retry orchestration, idempotency enforcement, simulated session lifecycle, routing, safety gate, API endpoints, CLI/report, frontend page, documentation, and tests without enabling external runtime access.
