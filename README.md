@@ -310,6 +310,13 @@
 - Adds `/api/v5/provider-offline-replay/*` endpoints, V5 Offline Replay frontend page, navigation, documentation, and security scan hook
 - Offline replay only: no provider portal, no sandbox API, no broker connection, no API key creation, no account read, no order submission, no raw provider payload storage, no provider endpoint URL field, no real money, no alpha model changes, and no new strategy
 
+## 🧯 V5.24 Provider Sandbox Fault Injection Suite
+
+- Adds local fault scenario catalog for connector timeout, provider reject, duplicate order, stale response, out-of-order event, partial fill mismatch, rate limit storm, audit loss, state corruption, rollback, kill switch, and idempotency collision
+- Adds fault injector, replay runner, detection validation, recovery validation, kill switch simulation, audit trail, safety validation, report, and CLI
+- Adds `/api/v5/provider-fault-injection/*` endpoints, V5 Fault Injection frontend page, navigation, documentation, and security scan hook
+- Fault injection only: no provider portal, no sandbox API, no broker connection, no API key creation, no account read, no order submission, no raw provider payload storage, no provider endpoint URL field, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

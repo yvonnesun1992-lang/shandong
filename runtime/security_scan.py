@@ -539,6 +539,43 @@ def scan_provider_offline_replay_outputs(payload: dict | list | str, report_path
     return {"safe": not findings, "findings": findings}
 
 
+def scan_provider_fault_injection_outputs(payload: dict | list | str, report_path: str | Path | None = None) -> dict:
+    text = json.dumps(payload, default=str).lower() if not isinstance(payload, str) else payload.lower()
+    findings = _scan_sandbox_sensitive_text(text)
+    blocked_terms = [
+        "broker credential",
+        "account_id",
+        "real_order_id",
+        "raw provider payload:",
+        "raw provider response:",
+        "provider_endpoint_url",
+        "authorization",
+        "/users/apple",
+    ]
+    runtime_terms = [
+        "alpaca_trade_api",
+        "ib_insync",
+        "tigeropen",
+        "robin_stocks",
+        "oauthlib",
+        "https://sandbox",
+        "paper-api.",
+        "provider portal login",
+    ]
+    for term in blocked_terms + runtime_terms:
+        if term in text:
+            findings.append({"kind": "sensitive-pattern", "match": "blocked-provider-fault-injection-output"})
+            break
+    if report_path:
+        report = Path(report_path)
+        if report.exists():
+            report_text = report.read_text(encoding="utf-8", errors="ignore").lower()
+            findings.extend(_scan_sandbox_sensitive_text(report_text))
+            if any(term in report_text for term in blocked_terms + runtime_terms):
+                findings.append({"kind": "sensitive-pattern", "match": "blocked-provider-fault-injection-report"})
+    return {"safe": not findings, "findings": findings}
+
+
 def _scan_sandbox_sensitive_text(text: str) -> list[dict]:
     findings = []
     patterns = [

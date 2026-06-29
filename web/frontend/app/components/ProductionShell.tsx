@@ -32,6 +32,7 @@ const links = [
   ['V5 Connector Design', '/v5-provider-connector-design'],
   ['V5 Mock Contract', '/v5-provider-mock-contract'],
   ['V5 Offline Replay', '/v5-provider-offline-replay'],
+  ['V5 Fault Injection', '/v5-provider-fault-injection'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

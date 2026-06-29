@@ -1,3 +1,91 @@
+# V5.24: Provider Sandbox Connector Fault Injection Suite
+
+This update adds an offline fault injection suite for the selected provider sandbox connector path. It validates connector timeout handling, provider rejection handling, duplicate order idempotency, stale responses, out-of-order events, partial fill mismatches, rate limit storms, audit loss, state-machine corruption, recovery rollback, kill switch triggering, and idempotency collisions without enabling any connector runtime, sandbox API, provider portal, account read, or order submission path.
+
+New files:
+
+```text
+config/v5_provider_fault_injection_config.py
+provider_fault_injection/__init__.py
+provider_fault_injection/fault_scenario_catalog.py
+provider_fault_injection/fault_injector.py
+provider_fault_injection/fault_replay_runner.py
+provider_fault_injection/fault_detection_validator.py
+provider_fault_injection/fault_recovery_validator.py
+provider_fault_injection/kill_switch_simulation.py
+provider_fault_injection/fault_audit_trail.py
+provider_fault_injection/fault_safety_validator.py
+provider_fault_injection/fault_injection_orchestrator.py
+provider_fault_injection/provider_fault_injection_report.py
+scripts/run_v524_provider_fault_injection.py
+web/frontend/app/v5-provider-fault-injection/page.tsx
+tests/test_v524_provider_fault_injection.py
+docs/V5_PROVIDER_FAULT_INJECTION.md
+docs/superpowers/plans/2026-06-30-v524-provider-fault-injection-suite.md
+reports/v5_24_provider_fault_injection_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Fault injection runtime: no
+Provider portal access: no
+Real broker connection: no
+Sandbox API connection: no
+Broker SDK imports: no
+API key creation: no
+Credential storage: no
+OAuth: no
+Real account read: no
+Sandbox account read: no
+Real balance read: no
+Real position read: no
+Order submission: no
+Real orders: no
+Sandbox orders: no
+Raw provider payload storage: no
+Provider endpoint URL field: no
+Real funds: no
+External network requests: no
+External log upload: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is provider sandbox connector offline fault injection only: yes
+No real path can be enabled in V5.24: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+provider_fault_injection_report safety check: passed, verdict PASS
+pytest tests/test_v523_provider_offline_replay.py tests/test_v524_provider_fault_injection.py: 13 passed
+pytest tests/test_v524_provider_fault_injection.py: 6 passed
+pytest full suite: 808 passed
+system_doctor: OK
+security scan: no broker SDK imports, no network calls, no sandbox endpoint, no account read, no order submission, no raw provider payload storage, no provider_endpoint_url field, no credential handling in provider fault injection modules
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.23: Provider Sandbox Connector Offline Replay Harness
 
 This update adds an offline replay harness for the selected provider mock connector. It validates placeholder event sequencing, order lifecycle replay, partial fill replay, rejection replay, timeout recovery, duplicate order replay, rate limit backoff, consistency validation, audit trail generation, and replay safety boundaries without enabling any replay runtime, sandbox API, provider portal, account read, or order submission path.
