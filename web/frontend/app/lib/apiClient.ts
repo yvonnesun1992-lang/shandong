@@ -641,3 +641,39 @@ export function fetchV5ProviderMockContractSafety() {
 export function fetchV5ProviderMockContractSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/provider-mock-contract/summary');
 }
+
+export function fetchV5ProviderOfflineReplayStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-replay/status');
+}
+
+export function fetchV5ProviderOfflineReplayCatalog() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-replay/catalog');
+}
+
+export function fetchV5ProviderOfflineReplayLoad() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-replay/load');
+}
+
+export function fetchV5ProviderOfflineReplayRun() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-replay/run');
+}
+
+export function fetchV5ProviderOfflineReplayConsistency() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-replay/consistency');
+}
+
+export function fetchV5ProviderOfflineReplayRecovery() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-replay/recovery');
+}
+
+export function fetchV5ProviderOfflineReplayAudit() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-replay/audit');
+}
+
+export function fetchV5ProviderOfflineReplaySafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-replay/safety');
+}
+
+export function fetchV5ProviderOfflineReplaySummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-replay/summary');
+}

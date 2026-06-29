@@ -154,6 +154,15 @@ from provider_mock_contract.mock_provider_payloads import build_all_mock_payload
 from provider_mock_contract.order_state_machine_contract_test import test_order_state_machine as run_mock_order_state_machine_contract
 from provider_mock_contract.request_mapping_contract_test import test_order_request_mapping as run_mock_request_mapping_contract
 from provider_mock_contract.response_normalization_contract_test import test_response_normalization as run_mock_response_normalization_contract
+from config.v5_provider_offline_replay_config import get_offline_replay_provider, get_offline_replay_status
+from provider_offline_replay.offline_replay_orchestrator import run_offline_replay
+from provider_offline_replay.replay_audit_trail import build_all_replay_audit_trails
+from provider_offline_replay.replay_consistency_validator import validate_all_replay_consistency
+from provider_offline_replay.replay_event_catalog import build_replay_event_catalog
+from provider_offline_replay.replay_event_loader import load_all_replay_scenarios, load_replay_scenario
+from provider_offline_replay.replay_failure_recovery_validator import validate_failure_recovery
+from provider_offline_replay.replay_runner import run_all_replay_scenarios, run_replay_scenario
+from provider_offline_replay.replay_safety_validator import build_replay_safety_summary
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
@@ -1995,6 +2004,84 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/provider-mock-contract/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/provider-offline-replay/status")
+    def v5_provider_offline_replay_status() -> dict:
+        started = perf_counter()
+        status = get_offline_replay_status()
+        response = success_response({"status": status, **_provider_offline_replay_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/provider-offline-replay/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-offline-replay/catalog")
+    def v5_provider_offline_replay_catalog(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_replay_provider()
+        response = success_response({"catalog": build_replay_event_catalog(selected), **_provider_offline_replay_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-offline-replay/catalog", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-offline-replay/load")
+    def v5_provider_offline_replay_load(provider: str | None = None, scenario: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_replay_provider()
+        loaded = load_replay_scenario(selected, scenario) if scenario else load_all_replay_scenarios(selected)
+        response = success_response({"load": loaded, **_provider_offline_replay_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-offline-replay/load", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-offline-replay/run")
+    def v5_provider_offline_replay_run(provider: str | None = None, scenario: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_replay_provider()
+        replay = run_replay_scenario(selected, scenario) if scenario else run_all_replay_scenarios(selected)
+        response = success_response({"run": replay, **_provider_offline_replay_boundary()}, started_at=started, warning=replay.get("warnings", []))
+        log_api_event("/api/v5/provider-offline-replay/run", "default", "ok", response["meta"]["latency_ms"], len(replay.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-offline-replay/consistency")
+    def v5_provider_offline_replay_consistency(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_replay_provider()
+        consistency = validate_all_replay_consistency(selected)
+        response = success_response({"consistency": consistency, **_provider_offline_replay_boundary()}, started_at=started, warning=consistency.get("warnings", []))
+        log_api_event("/api/v5/provider-offline-replay/consistency", "default", "ok", response["meta"]["latency_ms"], len(consistency.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-offline-replay/recovery")
+    def v5_provider_offline_replay_recovery(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_replay_provider()
+        recovery = validate_failure_recovery(selected)
+        response = success_response({"recovery": recovery, **_provider_offline_replay_boundary()}, started_at=started, warning=recovery.get("warnings", []))
+        log_api_event("/api/v5/provider-offline-replay/recovery", "default", "ok", response["meta"]["latency_ms"], len(recovery.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-offline-replay/audit")
+    def v5_provider_offline_replay_audit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_replay_provider()
+        audit = build_all_replay_audit_trails(selected)
+        response = success_response({"audit": audit, **_provider_offline_replay_boundary()}, started_at=started, warning=audit.get("warnings", []))
+        log_api_event("/api/v5/provider-offline-replay/audit", "default", "ok", response["meta"]["latency_ms"], len(audit.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-offline-replay/safety")
+    def v5_provider_offline_replay_safety() -> dict:
+        started = perf_counter()
+        safety = build_replay_safety_summary()
+        response = success_response({"safety": safety, **_provider_offline_replay_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/provider-offline-replay/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-offline-replay/summary")
+    def v5_provider_offline_replay_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_replay_provider()
+        summary = run_offline_replay(selected)
+        response = success_response({"summary": summary, **_provider_offline_replay_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/provider-offline-replay/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -2120,6 +2207,20 @@ def _provider_mock_contract_boundary() -> dict:
         "version": "V5.22",
         "mock_contract_only": True,
         "mock_contract_runtime_enabled": False,
+        "sandbox_api_enabled": False,
+        "account_read_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _provider_offline_replay_boundary() -> dict:
+    return {
+        "version": "V5.23",
+        "offline_replay_only": True,
+        "replay_runtime_enabled": False,
         "sandbox_api_enabled": False,
         "account_read_enabled": False,
         "order_submission_enabled": False,

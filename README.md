@@ -303,6 +303,13 @@
 - Adds V5 Mock Contract frontend page, navigation, documentation, and security scan hook
 - Mock contract only: no provider portal, no sandbox API, no broker connection, no API key creation, no account read, no order submission, no raw provider payload storage, no real money, no alpha model changes, and no new strategy
 
+## 🔁 V5.23 Provider Sandbox Offline Replay Harness
+
+- Adds local replay event catalog for selected provider mock connector event sequencing
+- Adds replay loader, runner, state machine, consistency validation, failure recovery validation, audit trail, safety validation, report, and CLI
+- Adds `/api/v5/provider-offline-replay/*` endpoints, V5 Offline Replay frontend page, navigation, documentation, and security scan hook
+- Offline replay only: no provider portal, no sandbox API, no broker connection, no API key creation, no account read, no order submission, no raw provider payload storage, no provider endpoint URL field, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
