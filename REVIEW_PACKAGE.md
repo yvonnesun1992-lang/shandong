@@ -1,3 +1,85 @@
+# V5.18: Sandbox to Real Broker Transition Blueprint
+
+This update adds the final transition blueprint before any future broker sandbox provider selection or account preparation work. It does not enable any real broker, sandbox API, account read, order submission, or real-money path.
+
+New files:
+
+```text
+config/v5_transition_blueprint_config.py
+transition/__init__.py
+transition/transition_readiness_blueprint.py
+transition/credential_vault_blueprint.py
+transition/environment_separation_blueprint.py
+transition/feature_flag_blueprint.py
+transition/sandbox_enablement_checklist.py
+transition/real_order_blocker_policy.py
+transition/kill_switch_blueprint.py
+transition/rollback_blueprint.py
+transition/transition_safety_validator.py
+transition/transition_blueprint_report.py
+scripts/run_v518_transition_blueprint.py
+web/frontend/app/v5-transition/page.tsx
+tests/test_v518_transition_blueprint.py
+docs/V5_TRANSITION_BLUEPRINT.md
+reports/v5_18_transition_blueprint_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Real broker connection: no
+Sandbox API connection: no
+Broker SDK imports: no
+Real orders: no
+Sandbox orders: no
+Real account read: no
+Real balance read: no
+Real position read: no
+Real funds: no
+Credential storage: no
+OAuth: no
+External network requests: no
+External log upload: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is transition blueprint only: yes
+```
+
+Validation:
+
+```text
+python -m py_compile config/v5_transition_blueprint_config.py transition/transition_readiness_blueprint.py transition/credential_vault_blueprint.py transition/environment_separation_blueprint.py transition/feature_flag_blueprint.py transition/sandbox_enablement_checklist.py transition/real_order_blocker_policy.py transition/kill_switch_blueprint.py transition/rollback_blueprint.py transition/transition_safety_validator.py transition/transition_blueprint_report.py scripts/run_v518_transition_blueprint.py src/api/v2/server.py: passed
+python scripts/run_v518_transition_blueprint.py: exit 0, verdict WARNING because future sandbox enablement checklist intentionally has blocking items
+python scripts/run_v518_transition_blueprint.py --check safety: exit 0, verdict WARNING
+python scripts/run_v518_transition_blueprint.py --check sandbox-checklist: exit 0, verdict WARNING
+python scripts/run_v518_transition_blueprint.py --check real-order-blocker: exit 0, verdict WARNING
+python -m pytest tests/test_v518_transition_blueprint.py: 7 passed
+python -m pytest: 761 passed
+python scripts/system_doctor.py: OK
+web/frontend node scripts/verify-build.mjs: passed
+Safety scan: no transition module imports broker SDKs or performs network/order/account runtime calls; matches only blocked-term lists in runtime/security_scan.py
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.17: Sandbox Connector Integration Test Harness
 
 This update adds an end-to-end integration test harness for the simulated future broker path. It validates Alpha Signal to Paper Trading Engine to Manual Approval to Broker Adapter Skeleton to Mock Connector to Sandbox Bridge to execution simulation, monitoring, risk, and audit outputs without enabling external runtime access.

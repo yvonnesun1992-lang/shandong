@@ -106,6 +106,16 @@ from integration_test.integration_scenario_matrix import build_integration_scena
 from integration_test.integration_test_core import IntegrationTestCore
 from integration_test.integration_test_orchestrator import run_all_tests, run_scenario, summarize_results
 from integration_test.integration_test_report import build_integration_test_summary
+from config.v5_transition_blueprint_config import get_transition_status
+from transition.credential_vault_blueprint import build_credential_vault_blueprint
+from transition.environment_separation_blueprint import build_environment_separation_blueprint
+from transition.feature_flag_blueprint import build_feature_flag_blueprint
+from transition.kill_switch_blueprint import build_kill_switch_blueprint
+from transition.real_order_blocker_policy import build_real_order_blocker_policy
+from transition.rollback_blueprint import build_rollback_blueprint
+from transition.sandbox_enablement_checklist import build_sandbox_enablement_checklist
+from transition.transition_readiness_blueprint import build_transition_readiness_blueprint
+from transition.transition_safety_validator import build_transition_safety_summary
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -1566,6 +1576,77 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/integration-test/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/transition/status")
+    def v5_transition_status() -> dict:
+        started = perf_counter()
+        response = success_response({"status": get_transition_status(), **_transition_boundary()}, started_at=started)
+        log_api_event("/api/v5/transition/status", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/transition/readiness")
+    def v5_transition_readiness() -> dict:
+        started = perf_counter()
+        response = success_response({"readiness": build_transition_readiness_blueprint(), **_transition_boundary()}, started_at=started)
+        log_api_event("/api/v5/transition/readiness", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/transition/credential-vault")
+    def v5_transition_credential_vault() -> dict:
+        started = perf_counter()
+        response = success_response({"credential_vault": build_credential_vault_blueprint(), **_transition_boundary()}, started_at=started)
+        log_api_event("/api/v5/transition/credential-vault", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/transition/environments")
+    def v5_transition_environments() -> dict:
+        started = perf_counter()
+        response = success_response({"environments": build_environment_separation_blueprint(), **_transition_boundary()}, started_at=started)
+        log_api_event("/api/v5/transition/environments", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/transition/feature-flags")
+    def v5_transition_feature_flags() -> dict:
+        started = perf_counter()
+        response = success_response({"feature_flags": build_feature_flag_blueprint(), **_transition_boundary()}, started_at=started)
+        log_api_event("/api/v5/transition/feature-flags", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/transition/sandbox-checklist")
+    def v5_transition_sandbox_checklist() -> dict:
+        started = perf_counter()
+        response = success_response({"sandbox_checklist": build_sandbox_enablement_checklist(), **_transition_boundary()}, started_at=started)
+        log_api_event("/api/v5/transition/sandbox-checklist", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/transition/real-order-blocker")
+    def v5_transition_real_order_blocker() -> dict:
+        started = perf_counter()
+        response = success_response({"real_order_blocker": build_real_order_blocker_policy(), **_transition_boundary()}, started_at=started)
+        log_api_event("/api/v5/transition/real-order-blocker", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/transition/kill-switch")
+    def v5_transition_kill_switch() -> dict:
+        started = perf_counter()
+        response = success_response({"kill_switch": build_kill_switch_blueprint(), **_transition_boundary()}, started_at=started)
+        log_api_event("/api/v5/transition/kill-switch", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/transition/rollback")
+    def v5_transition_rollback() -> dict:
+        started = perf_counter()
+        response = success_response({"rollback": build_rollback_blueprint(), **_transition_boundary()}, started_at=started)
+        log_api_event("/api/v5/transition/rollback", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/transition/safety")
+    def v5_transition_safety() -> dict:
+        started = perf_counter()
+        safety = build_transition_safety_summary()
+        response = success_response({"safety": safety, **_transition_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/transition/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -1631,5 +1712,17 @@ def _integration_test_boundary() -> dict:
         "simulation_only": True,
         "broker_connected": False,
         "real_orders_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _transition_boundary() -> dict:
+    return {
+        "blueprint_only": True,
+        "transition_enabled": False,
+        "sandbox_api_enabled": False,
+        "broker_connected": False,
+        "real_orders_enabled": False,
+        "real_money_enabled": False,
         "paper_trading": True,
     }

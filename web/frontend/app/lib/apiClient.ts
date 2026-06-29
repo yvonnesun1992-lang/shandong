@@ -445,3 +445,43 @@ export function fetchV5IntegrationLayers() {
 export function fetchV5IntegrationSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/integration-test/summary');
 }
+
+export function fetchV5TransitionStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/transition/status');
+}
+
+export function fetchV5TransitionReadiness() {
+  return apiGet<Record<string, unknown>>('/api/v5/transition/readiness');
+}
+
+export function fetchV5TransitionCredentialVault() {
+  return apiGet<Record<string, unknown>>('/api/v5/transition/credential-vault');
+}
+
+export function fetchV5TransitionEnvironments() {
+  return apiGet<Record<string, unknown>>('/api/v5/transition/environments');
+}
+
+export function fetchV5TransitionFeatureFlags() {
+  return apiGet<Record<string, unknown>>('/api/v5/transition/feature-flags');
+}
+
+export function fetchV5TransitionSandboxChecklist() {
+  return apiGet<Record<string, unknown>>('/api/v5/transition/sandbox-checklist');
+}
+
+export function fetchV5TransitionRealOrderBlocker() {
+  return apiGet<Record<string, unknown>>('/api/v5/transition/real-order-blocker');
+}
+
+export function fetchV5TransitionKillSwitch() {
+  return apiGet<Record<string, unknown>>('/api/v5/transition/kill-switch');
+}
+
+export function fetchV5TransitionRollback() {
+  return apiGet<Record<string, unknown>>('/api/v5/transition/rollback');
+}
+
+export function fetchV5TransitionSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/transition/safety');
+}
