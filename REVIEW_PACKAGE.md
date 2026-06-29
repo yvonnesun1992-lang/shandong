@@ -1,3 +1,89 @@
+# V5.20: Selected Provider Sandbox Onboarding Runbook
+
+This update adds a runbook-only onboarding layer for the selected provider from V5.19. It prepares account opening, sandbox access, API key handling, market data, approval/risk, and dry-run checklists without accessing any provider portal, connecting to sandbox APIs, creating keys, reading accounts, or placing orders.
+
+New files:
+
+```text
+config/v5_provider_onboarding_config.py
+provider_onboarding/__init__.py
+provider_onboarding/selected_provider_resolver.py
+provider_onboarding/account_opening_runbook.py
+provider_onboarding/sandbox_access_runbook.py
+provider_onboarding/api_key_preparation_runbook.py
+provider_onboarding/market_data_onboarding_runbook.py
+provider_onboarding/approval_risk_runbook.py
+provider_onboarding/sandbox_dry_run_runbook.py
+provider_onboarding/onboarding_safety_validator.py
+provider_onboarding/provider_onboarding_report.py
+scripts/run_v520_provider_onboarding.py
+web/frontend/app/v5-provider-onboarding/page.tsx
+tests/test_v520_provider_onboarding.py
+docs/V5_PROVIDER_ONBOARDING.md
+reports/v5_20_provider_onboarding_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Provider portal access: no
+Real broker connection: no
+Sandbox API connection: no
+Broker SDK imports: no
+API key creation: no
+Credential storage: no
+OAuth: no
+Real account read: no
+Sandbox account read: no
+Real balance read: no
+Real position read: no
+Real orders: no
+Sandbox orders: no
+Real funds: no
+External network requests: no
+External log upload: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is provider onboarding runbook only: yes
+No real path can be enabled in V5.20: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v520_provider_onboarding.py: passed, verdict WARNING because onboarding is runbook-only and production prerequisites remain incomplete by design
+run_v520_provider_onboarding.py --provider alpaca: passed, verdict WARNING by design
+run_v520_provider_onboarding.py --provider ibkr: passed, verdict WARNING by design
+run_v520_provider_onboarding.py --check safety: passed, verdict WARNING by design
+run_v520_provider_onboarding.py --check dry-run: passed, verdict WARNING by design
+pytest tests/test_v520_provider_onboarding.py: 8 passed
+pytest full suite: 778 passed
+system_doctor: OK
+frontend structure check: passed
+security scan: no broker SDK imports, no network calls, no portal access, no key creation, no account/order runtime calls in provider onboarding modules
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for human review
+```
+
 # V5.19: Broker Sandbox Provider Selection & Account Preparation
 
 This update adds a provider selection and account preparation layer for future broker sandbox review. It ranks candidate providers with static metadata and produces account, API, market data, and compliance preparation checklists without enabling provider connections.

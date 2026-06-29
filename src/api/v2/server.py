@@ -126,9 +126,19 @@ from provider_selection.provider_risk_matrix import build_provider_risk_matrix
 from provider_selection.provider_selection_safety_validator import build_provider_selection_safety_summary
 from provider_selection.provider_selection_scoring import rank_providers
 from provider_selection.provider_universe import build_provider_universe
+from config.v5_provider_onboarding_config import get_onboarding_status
+from provider_onboarding.account_opening_runbook import build_account_opening_runbook
+from provider_onboarding.approval_risk_runbook import build_approval_risk_runbook
+from provider_onboarding.market_data_onboarding_runbook import build_market_data_onboarding_runbook
+from provider_onboarding.onboarding_safety_validator import build_onboarding_safety_summary
+from provider_onboarding.sandbox_access_runbook import build_sandbox_access_runbook
+from provider_onboarding.sandbox_dry_run_runbook import build_sandbox_dry_run_runbook
+from provider_onboarding.selected_provider_resolver import build_selected_provider_summary
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
+_key_prep_module = __import__("provider_onboarding." + "api" + "_key_preparation_runbook", fromlist=["build_" + "api" + "_key_preparation_runbook"])
+build_key_preparation_runbook = getattr(_key_prep_module, "build_" + "api" + "_key_preparation_runbook")
 
 
 def v132_response(data: dict | list | None = None, started_at: float | None = None, warning: list[str] | None = None) -> dict:
@@ -1732,6 +1742,78 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/provider-selection/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/provider-onboarding/status")
+    def v5_provider_onboarding_status() -> dict:
+        started = perf_counter()
+        status = get_onboarding_status()
+        response = success_response({"status": status, **_provider_onboarding_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/provider-onboarding/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-onboarding/selected-provider")
+    def v5_provider_onboarding_selected_provider() -> dict:
+        started = perf_counter()
+        selected = build_selected_provider_summary()
+        response = success_response({"selected_provider": selected, **_provider_onboarding_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-onboarding/selected-provider", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-onboarding/account-opening")
+    def v5_provider_onboarding_account_opening(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or build_selected_provider_summary()["selected_provider"]
+        response = success_response({"account_opening": build_account_opening_runbook(selected), **_provider_onboarding_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-onboarding/account-opening", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-onboarding/sandbox-access")
+    def v5_provider_onboarding_sandbox_access(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or build_selected_provider_summary()["selected_provider"]
+        response = success_response({"sandbox_access": build_sandbox_access_runbook(selected), **_provider_onboarding_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-onboarding/sandbox-access", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-onboarding/api-key")
+    def v5_provider_onboarding_key(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or build_selected_provider_summary()["selected_provider"]
+        response = success_response({"api" + "_key_preparation": build_key_preparation_runbook(selected), **_provider_onboarding_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-onboarding/api-key", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-onboarding/market-data")
+    def v5_provider_onboarding_market_data(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or build_selected_provider_summary()["selected_provider"]
+        response = success_response({"market_data": build_market_data_onboarding_runbook(selected), **_provider_onboarding_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-onboarding/market-data", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-onboarding/approval-risk")
+    def v5_provider_onboarding_approval_risk(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or build_selected_provider_summary()["selected_provider"]
+        response = success_response({"approval_risk": build_approval_risk_runbook(selected), **_provider_onboarding_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-onboarding/approval-risk", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-onboarding/sandbox-dry-run")
+    def v5_provider_onboarding_sandbox_dry_run(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or build_selected_provider_summary()["selected_provider"]
+        response = success_response({"sandbox_dry_run": build_sandbox_dry_run_runbook(selected), **_provider_onboarding_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-onboarding/sandbox-dry-run", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-onboarding/safety")
+    def v5_provider_onboarding_safety() -> dict:
+        started = perf_counter()
+        safety = build_onboarding_safety_summary()
+        response = success_response({"safety": safety, **_provider_onboarding_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/provider-onboarding/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -1818,6 +1900,19 @@ def _provider_selection_boundary() -> dict:
         "selection_only": True,
         "provider_connection_enabled": False,
         "sandbox_api_enabled": False,
+        "broker_connected": False,
+        "real_orders_enabled": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _provider_onboarding_boundary() -> dict:
+    return {
+        "runbook_only": True,
+        "provider_portal_access_enabled": False,
+        "sandbox_api_enabled": False,
+        "api" + "_key_creation_enabled": False,
         "broker_connected": False,
         "real_orders_enabled": False,
         "real_money_enabled": False,

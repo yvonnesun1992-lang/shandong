@@ -525,3 +525,39 @@ export function fetchV5ProviderSelectionRanking() {
 export function fetchV5ProviderSelectionSafety() {
   return apiGet<Record<string, unknown>>('/api/v5/provider-selection/safety');
 }
+
+export function fetchV5ProviderOnboardingStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-onboarding/status');
+}
+
+export function fetchV5ProviderOnboardingSelectedProvider() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-onboarding/selected-provider');
+}
+
+export function fetchV5ProviderOnboardingAccountOpening() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-onboarding/account-opening');
+}
+
+export function fetchV5ProviderOnboardingSandboxAccess() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-onboarding/sandbox-access');
+}
+
+export function fetchV5ProviderOnboardingApiKey() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-onboarding/api-key');
+}
+
+export function fetchV5ProviderOnboardingMarketData() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-onboarding/market-data');
+}
+
+export function fetchV5ProviderOnboardingApprovalRisk() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-onboarding/approval-risk');
+}
+
+export function fetchV5ProviderOnboardingSandboxDryRun() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-onboarding/sandbox-dry-run');
+}
+
+export function fetchV5ProviderOnboardingSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-onboarding/safety');
+}
