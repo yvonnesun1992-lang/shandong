@@ -31,6 +31,31 @@ def test_transition_config_defaults_are_blueprint_only():
     assert _is_safe(status)
 
 
+def test_transition_config_blocks_real_path_env_enablement(monkeypatch):
+    from config.v5_transition_blueprint_config import get_transition_status
+
+    monkeypatch.setenv("SHANDONG_V5_ENABLE_REAL_BROKER_TRANSITION", "true")
+    monkeypatch.setenv("SHANDONG_V5_ENABLE_SANDBOX_API", "true")
+    monkeypatch.setenv("SHANDONG_V5_ENABLE_REAL_ORDERS", "true")
+    monkeypatch.setenv("SHANDONG_V5_ENABLE_REAL_MONEY", "true")
+
+    status = get_transition_status()
+
+    assert status["blueprint_only"] is True
+    assert status["paper_trading"] is True
+    assert status["transition_enabled"] is False
+    assert status["sandbox_api_enabled"] is False
+    assert status["broker_connected"] is False
+    assert status["real_orders_enabled"] is False
+    assert status["real_money_enabled"] is False
+    warnings = " | ".join(status["warnings"]).lower()
+    assert "real broker transition requested but blocked in v5.18" in warnings
+    assert "sandbox api requested but blocked in v5.18" in warnings
+    assert "real orders requested but blocked in v5.18" in warnings
+    assert "real money requested but blocked in v5.18" in warnings
+    assert _is_safe(status)
+
+
 def test_blueprints_are_disabled_for_real_transition_paths():
     from transition.credential_vault_blueprint import build_credential_vault_blueprint, validate_no_credentials_present
     from transition.environment_separation_blueprint import build_environment_separation_blueprint

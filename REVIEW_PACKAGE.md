@@ -56,18 +56,22 @@ Alpha model changed: no
 Factor logic changed: no
 New strategy added: no
 This is transition blueprint only: yes
+V5.18 ignores real-path enablement env vars: yes
+Requested real broker / sandbox / real order / real money flags are blocked and reported as warnings: yes
+No real path can be enabled in V5.18: yes
 ```
 
 Validation:
 
 ```text
 python -m py_compile config/v5_transition_blueprint_config.py transition/transition_readiness_blueprint.py transition/credential_vault_blueprint.py transition/environment_separation_blueprint.py transition/feature_flag_blueprint.py transition/sandbox_enablement_checklist.py transition/real_order_blocker_policy.py transition/kill_switch_blueprint.py transition/rollback_blueprint.py transition/transition_safety_validator.py transition/transition_blueprint_report.py scripts/run_v518_transition_blueprint.py src/api/v2/server.py: passed
+python -m py_compile config/v5_transition_blueprint_config.py transition/transition_safety_validator.py scripts/run_v518_transition_blueprint.py src/api/v2/server.py: passed after review fix
 python scripts/run_v518_transition_blueprint.py: exit 0, verdict WARNING because future sandbox enablement checklist intentionally has blocking items
 python scripts/run_v518_transition_blueprint.py --check safety: exit 0, verdict WARNING
 python scripts/run_v518_transition_blueprint.py --check sandbox-checklist: exit 0, verdict WARNING
 python scripts/run_v518_transition_blueprint.py --check real-order-blocker: exit 0, verdict WARNING
-python -m pytest tests/test_v518_transition_blueprint.py: 7 passed
-python -m pytest: 761 passed
+python -m pytest tests/test_v518_transition_blueprint.py: 8 passed
+python -m pytest: 762 passed
 python scripts/system_doctor.py: OK
 web/frontend node scripts/verify-build.mjs: passed
 Safety scan: no transition module imports broker SDKs or performs network/order/account runtime calls; matches only blocked-term lists in runtime/security_scan.py

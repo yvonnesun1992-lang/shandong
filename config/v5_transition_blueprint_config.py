@@ -26,16 +26,27 @@ def get_transition_target_provider() -> str:
 
 def get_transition_status() -> dict:
     mode = get_transition_blueprint_mode()
+    warnings = _blocked_real_path_warnings()
     return {
         "version": "V5.18",
         "transition_blueprint_mode": mode,
         "transition_target_provider": get_transition_target_provider(),
-        "blueprint_only": mode in {"blueprint_only", "readiness_review"},
-        "transition_enabled": _env_bool("SHANDONG_V5_ENABLE_REAL_BROKER_TRANSITION", False),
-        "sandbox_api_enabled": _env_bool("SHANDONG_V5_ENABLE_SANDBOX_API", False),
+        "blueprint_only": True,
+        "transition_enabled": False,
+        "sandbox_api_enabled": False,
         "broker_connected": False,
-        "real_orders_enabled": _env_bool("SHANDONG_V5_ENABLE_REAL_ORDERS", False),
-        "real_money_enabled": _env_bool("SHANDONG_V5_ENABLE_REAL_MONEY", False),
+        "real_orders_enabled": False,
+        "real_money_enabled": False,
         "paper_trading": True,
-        "warnings": [],
+        "warnings": warnings,
     }
+
+
+def _blocked_real_path_warnings() -> list[str]:
+    checks = [
+        ("SHANDONG_V5_ENABLE_REAL_BROKER_TRANSITION", "real broker transition requested but blocked in V5.18"),
+        ("SHANDONG_V5_ENABLE_SANDBOX_API", "sandbox api requested but blocked in V5.18"),
+        ("SHANDONG_V5_ENABLE_REAL_ORDERS", "real orders requested but blocked in V5.18"),
+        ("SHANDONG_V5_ENABLE_REAL_MONEY", "real money requested but blocked in V5.18"),
+    ]
+    return [message for env_name, message in checks if _env_bool(env_name, False)]
