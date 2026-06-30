@@ -1,3 +1,94 @@
+# V5.31: Sandbox Dry-Run Final Preflight Packet
+
+This update adds a design-only final sandbox dry-run preflight packet. It defines the final preflight checklist, artifact manifest, blocking item register, preflight evidence digest, final NO-GO record, preflight audit trail, safety validation, API endpoints, frontend page, and documentation without enabling preflight runtime, packet approval, sandbox API, credential read, account read, broker connection, order submission, or real money paths.
+
+New files:
+
+```text
+config/v5_sandbox_preflight_packet_config.py
+sandbox_preflight_packet/__init__.py
+sandbox_preflight_packet/init.py
+sandbox_preflight_packet/final_preflight_checklist.py
+sandbox_preflight_packet/artifact_manifest.py
+sandbox_preflight_packet/blocking_item_register.py
+sandbox_preflight_packet/preflight_evidence_digest.py
+sandbox_preflight_packet/final_decision_record.py
+sandbox_preflight_packet/preflight_audit_trail.py
+sandbox_preflight_packet/preflight_safety_validator.py
+sandbox_preflight_packet/preflight_packet_orchestrator.py
+sandbox_preflight_packet/sandbox_preflight_packet_report.py
+scripts/run_v531_sandbox_preflight_packet.py
+web/frontend/app/v5-sandbox-preflight-packet/page.tsx
+tests/test_v531_sandbox_preflight_packet.py
+docs/V5_SANDBOX_PREFLIGHT_PACKET.md
+reports/v5_31_sandbox_preflight_packet_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Preflight runtime: no
+Packet approval: no
+Sandbox API connection: no
+Credential read: no
+Account read: no
+Provider portal access: no
+Real broker connection: no
+Broker SDK imports: no
+Account creation: no
+API key creation: no
+Balance/position read: no
+Order submission: no
+Sandbox orders: no
+Real orders: no
+Raw provider payload storage: no
+Provider endpoint URL field: no
+Real funds: no
+External network requests: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is sandbox dry-run final preflight packet only: yes
+Final decision remains NO_GO: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v531_sandbox_preflight_packet.py: passed, WARNING verdict by design because final decision remains NO_GO
+run_v531_sandbox_preflight_packet.py --provider alpaca: passed, WARNING verdict by design
+run_v531_sandbox_preflight_packet.py --provider ibkr: passed, WARNING verdict by design
+run_v531_sandbox_preflight_packet.py --check checklist: passed, WARNING verdict by design
+run_v531_sandbox_preflight_packet.py --check artifacts: passed, WARNING verdict by design
+run_v531_sandbox_preflight_packet.py --check decision: passed, WARNING verdict by design, sandbox_dry_run_allowed false
+run_v531_sandbox_preflight_packet.py --check safety: passed, WARNING verdict by design
+frontend structure check: passed
+pytest tests/test_v531_sandbox_preflight_packet.py: 4 passed
+pytest full suite: 839 passed
+system_doctor: OK
+security scan: safe true, findings 0
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for user review unless explicitly authorized
+```
+
 # V5.30: Sandbox Dry-Run Readiness Review Board
 
 This update adds a design-only sandbox dry-run readiness review board. It defines the review board charter, reviewer role matrix, evidence review matrix, risk acceptance matrix, readiness scoring, Go / No-Go decision record, review audit trail, safety validation, API endpoints, frontend page, and documentation without enabling review runtime, reviewer approval, sandbox API, credential read, account read, broker connection, order submission, or real money paths.

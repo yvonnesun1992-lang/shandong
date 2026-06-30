@@ -39,6 +39,7 @@ const links = [
   ['V5 Pre-Sandbox Approval', '/v5-pre-sandbox-approval'],
   ['V5 Dry-Run Launch', '/v5-sandbox-dry-run-launch'],
   ['V5 Review Board', '/v5-sandbox-review-board'],
+  ['V5 Preflight Packet', '/v5-sandbox-preflight-packet'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],
