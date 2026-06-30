@@ -1149,3 +1149,43 @@ export function fetchV5ReadOnlyFaultInjectionSafety() {
 export function fetchV5ReadOnlyFaultInjectionSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/read-only-fault-injection/summary');
 }
+
+export function fetchV5ReadOnlyStabilityGateStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-stability-gate/status');
+}
+
+export function fetchV5ReadOnlyStabilityGateReplayEvidence() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-stability-gate/replay-evidence');
+}
+
+export function fetchV5ReadOnlyStabilityGateFaultEvidence() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-stability-gate/fault-evidence');
+}
+
+export function fetchV5ReadOnlyStabilityGateRedaction() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-stability-gate/redaction');
+}
+
+export function fetchV5ReadOnlyStabilityGateSchema() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-stability-gate/schema');
+}
+
+export function fetchV5ReadOnlyStabilityGateAudit() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-stability-gate/audit');
+}
+
+export function fetchV5ReadOnlyStabilityGateOrderPath() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-stability-gate/order-path');
+}
+
+export function fetchV5ReadOnlyStabilityGateDecision() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-stability-gate/decision');
+}
+
+export function fetchV5ReadOnlyStabilityGateSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-stability-gate/safety');
+}
+
+export function fetchV5ReadOnlyStabilityGateSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-stability-gate/summary');
+}

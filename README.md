@@ -394,6 +394,14 @@
 - Fault injection only: runtime disabled, sandbox API disabled, secret read disabled, account read disabled, position read disabled, balance read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
 - Injected faults cover malformed payloads, stale snapshots, audit write failure, rate limit exception, account reference exposure, unredacted balance/position values, raw provider payload placeholders, and order path intrusion; all cases must be blocked or warned
 
+## 🚦 V5.36 Sandbox Read-Only Connector Stability Gate
+
+- Adds a stability gate layer that aggregates V5.34 mock replay evidence and V5.35 fault injection evidence without enabling connector access
+- Adds replay evidence, fault evidence, redaction stability, schema stability, audit stability, order path stability, gate decision, safety validation, report, and CLI
+- Adds `/api/v5/read-only-stability-gate/*` endpoints, V5 Read-Only Stability Gate frontend page, navigation, documentation, and security scan hook
+- Stability gate only: runtime disabled, sandbox API disabled, secret read disabled, account read disabled, position read disabled, balance read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
+- The final decision remains `STABILITY_GATE_BLOCKED`; even passing replay and fault evidence cannot set `stability_gate_passed` or `read_only_connector_allowed` to true
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

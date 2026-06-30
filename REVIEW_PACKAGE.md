@@ -1,3 +1,104 @@
+# V5.36: Sandbox Read-Only Connector Stability Gate
+
+This update adds a local-only sandbox read-only connector stability gate. It aggregates V5.34 mock replay evidence and V5.35 fault injection evidence, then keeps the connector gate blocked by design. Even when replay, fault, redaction, schema, audit, and order-path evidence is acceptable, V5.36 cannot enable sandbox API access, credential reads, account reads, balance reads, position reads, order preview, order submission, broker connection, real money, or production trading.
+
+New files:
+
+```text
+config/v5_read_only_stability_gate_config.py
+sandbox_read_only_stability_gate/__init__.py
+sandbox_read_only_stability_gate/init.py
+sandbox_read_only_stability_gate/replay_evidence_collector.py
+sandbox_read_only_stability_gate/fault_evidence_collector.py
+sandbox_read_only_stability_gate/redaction_stability_check.py
+sandbox_read_only_stability_gate/schema_stability_check.py
+sandbox_read_only_stability_gate/audit_stability_check.py
+sandbox_read_only_stability_gate/order_path_stability_check.py
+sandbox_read_only_stability_gate/stability_gate_decision.py
+sandbox_read_only_stability_gate/stability_gate_safety_validator.py
+sandbox_read_only_stability_gate/stability_gate_orchestrator.py
+sandbox_read_only_stability_gate/sandbox_read_only_stability_gate_report.py
+scripts/run_v536_read_only_stability_gate.py
+web/frontend/app/v5-read-only-stability-gate/page.tsx
+tests/test_v536_read_only_stability_gate.py
+docs/V5_READ_ONLY_STABILITY_GATE.md
+reports/v5_36_sandbox_read_only_stability_gate_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Stability gate coverage:
+
+```text
+Replay evidence aggregation: covered
+Fault evidence aggregation: covered
+Redaction stability check: covered
+Schema stability check: covered
+Audit stability check: covered
+Order path stability check: covered
+Gate decision: covered and blocked by design
+Safety validation: covered and warning by design
+API endpoint coverage: covered
+Frontend structure coverage: covered
+```
+
+Safety boundaries:
+
+```text
+Stability gate runtime: no
+Sandbox API connection: no
+Credential read: no
+Account read: no
+Balance read: no
+Position read: no
+Order preview: no
+Order submission: no
+Read-only connector allowed: no
+Stability gate passed: no
+Real broker connection: no
+Broker SDK imports: no
+Provider portal access: no
+Raw real provider payload storage: no
+Real provider endpoint URL field: no
+Unredacted real balances or positions: no
+Real funds: no
+External network requests: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is sandbox read-only stability gate evidence only: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v536_read_only_stability_gate.py: passed, WARNING verdict by design because the stability gate remains blocked
+run_v536_read_only_stability_gate.py --provider alpaca: passed, WARNING verdict by design
+run_v536_read_only_stability_gate.py --provider ibkr: passed, WARNING verdict by design
+run_v536_read_only_stability_gate.py --check replay: passed
+run_v536_read_only_stability_gate.py --check fault: passed
+run_v536_read_only_stability_gate.py --check redaction: passed
+run_v536_read_only_stability_gate.py --check schema: passed
+run_v536_read_only_stability_gate.py --check order-path: passed
+run_v536_read_only_stability_gate.py --check decision: passed, WARNING verdict by design
+run_v536_read_only_stability_gate.py --check safety: passed, WARNING verdict by design
+pytest tests/test_v536_read_only_stability_gate.py: 4 passed
+pytest: 859 passed
+system_doctor: OK
+frontend structure check: passed
+```
+
 # V5.35: Sandbox Read-Only Connector Fault Injection
 
 This update adds a local-only read-only connector fault injection suite. It defines mock fault payloads, schema fault validation, redaction failure detection, stale snapshot detection, audit failure simulation, rate limit fault simulation, order path intrusion detection, fault runner, safety validation, API endpoints, frontend page, documentation, report, CLI, and tests without enabling runtime, sandbox API, credential read, account read, balance read, position read, order preview, order submission, broker connection, or real money paths.
