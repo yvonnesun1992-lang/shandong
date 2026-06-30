@@ -1,3 +1,98 @@
+# V5.32: Sandbox Dry-Run Controlled Enablement Blueprint
+
+This update adds a design-only controlled enablement blueprint for a future path from V5.31 `NO_GO` toward a controlled dry-run process. It defines controlled enablement conditions, staged unlock planning, feature flag dependencies, secret-read conditions, sandbox API conditions, account-read conditions, order-preview conditions, order-submission blocking, emergency stop conditions, decision records, safety validation, API endpoints, frontend page, documentation, report, CLI, and tests without enabling runtime, controlled GO, sandbox API, credential read, account read, order preview, order submission, broker connection, or real money paths.
+
+New files:
+
+```text
+config/v5_controlled_enablement_config.py
+sandbox_controlled_enablement/__init__.py
+sandbox_controlled_enablement/init.py
+sandbox_controlled_enablement/controlled_enablement_conditions.py
+sandbox_controlled_enablement/staged_unlock_plan.py
+sandbox_controlled_enablement/feature_flag_dependency_graph.py
+sandbox_controlled_enablement/secret_read_enablement_conditions.py
+sandbox_controlled_enablement/sandbox_api_enablement_conditions.py
+sandbox_controlled_enablement/account_read_enablement_conditions.py
+sandbox_controlled_enablement/order_preview_enablement_conditions.py
+sandbox_controlled_enablement/order_submission_blocker.py
+sandbox_controlled_enablement/emergency_stop_conditions.py
+sandbox_controlled_enablement/controlled_enablement_decision_record.py
+sandbox_controlled_enablement/controlled_enablement_safety_validator.py
+sandbox_controlled_enablement/controlled_enablement_orchestrator.py
+sandbox_controlled_enablement/sandbox_controlled_enablement_report.py
+scripts/run_v532_controlled_enablement.py
+web/frontend/app/v5-controlled-enablement/page.tsx
+tests/test_v532_controlled_enablement.py
+docs/V5_CONTROLLED_ENABLEMENT_BLUEPRINT.md
+reports/v5_32_sandbox_controlled_enablement_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Controlled enablement runtime: no
+Controlled GO: no
+Sandbox API connection: no
+Secret read: no
+Account read: no
+Order preview: no
+Order submission: no
+Real broker connection: no
+Broker SDK imports: no
+Provider portal access: no
+Credential read or storage: no
+Account, balance, or position read: no
+Sandbox orders: no
+Real orders: no
+Raw provider payload storage: no
+Provider endpoint URL field: no
+Real funds: no
+External network requests: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is sandbox dry-run controlled enablement blueprint only: yes
+Final decision remains CONTROLLED_GO_BLOCKED: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v532_controlled_enablement.py: passed, WARNING verdict by design because controlled GO remains blocked
+run_v532_controlled_enablement.py --provider alpaca: passed, WARNING verdict by design
+run_v532_controlled_enablement.py --provider ibkr: passed, WARNING verdict by design
+run_v532_controlled_enablement.py --check conditions: passed, WARNING verdict by design
+run_v532_controlled_enablement.py --check feature-flags: passed, WARNING verdict by design
+run_v532_controlled_enablement.py --check decision: passed, WARNING verdict by design, controlled_go_enabled false
+run_v532_controlled_enablement.py --check safety: passed, WARNING verdict by design
+frontend structure check: passed
+pytest tests/test_v532_controlled_enablement.py: 4 passed
+pytest full suite: 843 passed
+system_doctor: OK
+security scan: safe true, findings 0
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for user review unless explicitly authorized
+```
+
 # V5.31: Sandbox Dry-Run Final Preflight Packet
 
 This update adds a design-only final sandbox dry-run preflight packet. It defines the final preflight checklist, artifact manifest, blocking item register, preflight evidence digest, final NO-GO record, preflight audit trail, safety validation, API endpoints, frontend page, and documentation without enabling preflight runtime, packet approval, sandbox API, credential read, account read, broker connection, order submission, or real money paths.
