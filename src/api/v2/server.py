@@ -163,6 +163,16 @@ from provider_offline_replay.replay_event_loader import load_all_replay_scenario
 from provider_offline_replay.replay_failure_recovery_validator import validate_failure_recovery
 from provider_offline_replay.replay_runner import run_all_replay_scenarios, run_replay_scenario
 from provider_offline_replay.replay_safety_validator import build_replay_safety_summary
+from config.v5_provider_fault_injection_config import get_fault_injection_provider, get_fault_injection_status
+from provider_fault_injection.fault_audit_trail import build_all_fault_audit_trails
+from provider_fault_injection.fault_detection_validator import validate_all_fault_detections
+from provider_fault_injection.fault_injection_orchestrator import run_fault_injection_suite
+from provider_fault_injection.fault_injector import inject_all_faults, inject_fault
+from provider_fault_injection.fault_recovery_validator import validate_all_fault_recovery
+from provider_fault_injection.fault_replay_runner import run_all_fault_scenarios, run_fault_scenario
+from provider_fault_injection.fault_safety_validator import build_fault_safety_summary
+from provider_fault_injection.fault_scenario_catalog import build_fault_scenario_catalog
+from provider_fault_injection.kill_switch_simulation import simulate_kill_switch_trigger
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
@@ -2082,6 +2092,93 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/provider-offline-replay/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/provider-fault-injection/status")
+    def v5_provider_fault_injection_status() -> dict:
+        started = perf_counter()
+        status = get_fault_injection_status()
+        response = success_response({"status": status, **_provider_fault_injection_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/provider-fault-injection/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-fault-injection/scenarios")
+    def v5_provider_fault_injection_scenarios(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_fault_injection_provider()
+        response = success_response({"scenarios": build_fault_scenario_catalog(selected), **_provider_fault_injection_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-fault-injection/scenarios", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-fault-injection/inject")
+    def v5_provider_fault_injection_inject(provider: str | None = None, scenario: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_fault_injection_provider()
+        injected = inject_fault(selected, scenario) if scenario else inject_all_faults(selected)
+        response = success_response({"inject": injected, **_provider_fault_injection_boundary()}, started_at=started, warning=injected.get("warnings", []))
+        log_api_event("/api/v5/provider-fault-injection/inject", "default", "ok", response["meta"]["latency_ms"], len(injected.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-fault-injection/run")
+    def v5_provider_fault_injection_run(provider: str | None = None, scenario: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_fault_injection_provider()
+        result = run_fault_scenario(selected, scenario) if scenario else run_all_fault_scenarios(selected)
+        response = success_response({"run": result, **_provider_fault_injection_boundary()}, started_at=started, warning=result.get("warnings", []))
+        log_api_event("/api/v5/provider-fault-injection/run", "default", "ok", response["meta"]["latency_ms"], len(result.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-fault-injection/detection")
+    def v5_provider_fault_injection_detection(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_fault_injection_provider()
+        detection = validate_all_fault_detections(selected)
+        response = success_response({"detection": detection, **_provider_fault_injection_boundary()}, started_at=started, warning=detection.get("warnings", []))
+        log_api_event("/api/v5/provider-fault-injection/detection", "default", "ok", response["meta"]["latency_ms"], len(detection.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-fault-injection/recovery")
+    def v5_provider_fault_injection_recovery(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_fault_injection_provider()
+        recovery = validate_all_fault_recovery(selected)
+        response = success_response({"recovery": recovery, **_provider_fault_injection_boundary()}, started_at=started, warning=recovery.get("warnings", []))
+        log_api_event("/api/v5/provider-fault-injection/recovery", "default", "ok", response["meta"]["latency_ms"], len(recovery.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-fault-injection/kill-switch")
+    def v5_provider_fault_injection_kill_switch(provider: str | None = None, scenario: str = "kill_switch_trigger") -> dict:
+        started = perf_counter()
+        selected = provider or get_fault_injection_provider()
+        kill_switch = simulate_kill_switch_trigger(selected, scenario)
+        response = success_response({"kill_switch": kill_switch, **_provider_fault_injection_boundary()}, started_at=started, warning=kill_switch.get("warnings", []))
+        log_api_event("/api/v5/provider-fault-injection/kill-switch", "default", "ok", response["meta"]["latency_ms"], len(kill_switch.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-fault-injection/audit")
+    def v5_provider_fault_injection_audit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_fault_injection_provider()
+        audit = build_all_fault_audit_trails(selected)
+        response = success_response({"audit": audit, **_provider_fault_injection_boundary()}, started_at=started, warning=audit.get("warnings", []))
+        log_api_event("/api/v5/provider-fault-injection/audit", "default", "ok", response["meta"]["latency_ms"], len(audit.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-fault-injection/safety")
+    def v5_provider_fault_injection_safety() -> dict:
+        started = perf_counter()
+        safety = build_fault_safety_summary()
+        response = success_response({"safety": safety, **_provider_fault_injection_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/provider-fault-injection/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-fault-injection/summary")
+    def v5_provider_fault_injection_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_fault_injection_provider()
+        summary = run_fault_injection_suite(selected)
+        response = success_response({"summary": summary, **_provider_fault_injection_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/provider-fault-injection/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -2221,6 +2318,20 @@ def _provider_offline_replay_boundary() -> dict:
         "version": "V5.23",
         "offline_replay_only": True,
         "replay_runtime_enabled": False,
+        "sandbox_api_enabled": False,
+        "account_read_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _provider_fault_injection_boundary() -> dict:
+    return {
+        "version": "V5.24",
+        "fault_injection_only": True,
+        "fault_injection_runtime_enabled": False,
         "sandbox_api_enabled": False,
         "account_read_enabled": False,
         "order_submission_enabled": False,

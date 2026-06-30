@@ -677,3 +677,43 @@ export function fetchV5ProviderOfflineReplaySafety() {
 export function fetchV5ProviderOfflineReplaySummary() {
   return apiGet<Record<string, unknown>>('/api/v5/provider-offline-replay/summary');
 }
+
+export function fetchV5ProviderFaultInjectionStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-fault-injection/status');
+}
+
+export function fetchV5ProviderFaultInjectionScenarios() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-fault-injection/scenarios');
+}
+
+export function fetchV5ProviderFaultInjectionInject() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-fault-injection/inject');
+}
+
+export function fetchV5ProviderFaultInjectionRun() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-fault-injection/run');
+}
+
+export function fetchV5ProviderFaultInjectionDetection() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-fault-injection/detection');
+}
+
+export function fetchV5ProviderFaultInjectionRecovery() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-fault-injection/recovery');
+}
+
+export function fetchV5ProviderFaultInjectionKillSwitch() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-fault-injection/kill-switch');
+}
+
+export function fetchV5ProviderFaultInjectionAudit() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-fault-injection/audit');
+}
+
+export function fetchV5ProviderFaultInjectionSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-fault-injection/safety');
+}
+
+export function fetchV5ProviderFaultInjectionSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-fault-injection/summary');
+}
