@@ -717,3 +717,39 @@ export function fetchV5ProviderFaultInjectionSafety() {
 export function fetchV5ProviderFaultInjectionSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/provider-fault-injection/summary');
 }
+
+export function fetchV5ProviderOfflineSoakStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-soak/status');
+}
+
+export function fetchV5ProviderOfflineSoakPlan() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-soak/plan');
+}
+
+export function fetchV5ProviderOfflineSoakGenerate() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-soak/generate');
+}
+
+export function fetchV5ProviderOfflineSoakRun() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-soak/run');
+}
+
+export function fetchV5ProviderOfflineSoakMetrics() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-soak/metrics');
+}
+
+export function fetchV5ProviderOfflineSoakGate() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-soak/gate');
+}
+
+export function fetchV5ProviderOfflineSoakCoverage() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-soak/coverage');
+}
+
+export function fetchV5ProviderOfflineSoakSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-soak/safety');
+}
+
+export function fetchV5ProviderOfflineSoakSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/provider-offline-soak/summary');
+}

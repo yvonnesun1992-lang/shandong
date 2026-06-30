@@ -1,3 +1,97 @@
+# V5.25: Provider Sandbox Offline Soak & Stability Gate
+
+This update adds an offline soak and stability gate for the selected provider sandbox connector path. It validates replay stability, fault recovery stability, idempotency stability, state-machine stability, audit consistency, memory growth placeholders, error budget checks, scenario coverage, safety boundary stability, and readiness gate behavior without enabling any runtime, sandbox API, provider portal, account read, or order submission path.
+
+New files:
+
+```text
+config/v5_provider_offline_soak_config.py
+provider_offline_soak/__init__.py
+provider_offline_soak/init.py
+provider_offline_soak/soak_scenario_plan.py
+provider_offline_soak/soak_event_generator.py
+provider_offline_soak/soak_runner.py
+provider_offline_soak/stability_metrics.py
+provider_offline_soak/stability_gate.py
+provider_offline_soak/soak_coverage_validator.py
+provider_offline_soak/soak_safety_validator.py
+provider_offline_soak/offline_soak_orchestrator.py
+provider_offline_soak/provider_offline_soak_report.py
+scripts/run_v525_provider_offline_soak.py
+web/frontend/app/v5-provider-offline-soak/page.tsx
+tests/test_v525_provider_offline_soak.py
+docs/V5_PROVIDER_OFFLINE_SOAK.md
+reports/v5_25_provider_offline_soak_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Offline soak runtime: no
+Provider portal access: no
+Real broker connection: no
+Sandbox API connection: no
+Broker SDK imports: no
+Credential creation: no
+Credential storage: no
+OAuth: no
+Real account read: no
+Sandbox account read: no
+Real balance read: no
+Real position read: no
+Order submission: no
+Real orders: no
+Sandbox orders: no
+Raw provider payload storage: no
+Provider endpoint URL field: no
+Real funds: no
+External network requests: no
+External log upload: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is provider sandbox connector offline soak only: yes
+No real path can be enabled in V5.25: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v525_provider_offline_soak.py: passed, verdict PASS
+run_v525_provider_offline_soak.py --provider alpaca: passed, verdict PASS
+run_v525_provider_offline_soak.py --provider ibkr: passed, verdict PASS
+run_v525_provider_offline_soak.py --scenario short_soak_100_events: passed, verdict PASS
+run_v525_provider_offline_soak.py --scenario mixed_replay_fault_soak: passed, verdict PASS
+run_v525_provider_offline_soak.py --check safety: passed, verdict PASS
+run_v525_provider_offline_soak.py --check gate: passed, verdict PASS
+run_v525_provider_offline_soak.py --check coverage: passed, verdict PASS
+pytest tests/test_v525_provider_offline_soak.py: 6 passed
+pytest full suite: 814 passed
+system_doctor: OK
+frontend structure check: passed
+security scan: no broker SDK imports, no network calls, no sandbox endpoint, no account read, no order submission, no raw provider payload storage, no provider_endpoint_url field, no credential handling in provider offline soak modules
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, user requested direct merge after completion
+```
+
 # V5.24: Provider Sandbox Connector Fault Injection Suite
 
 This update adds an offline fault injection suite for the selected provider sandbox connector path. It validates connector timeout handling, provider rejection handling, duplicate order idempotency, stale responses, out-of-order events, partial fill mismatches, rate limit storms, audit loss, state-machine corruption, recovery rollback, kill switch triggering, and idempotency collisions without enabling any connector runtime, sandbox API, provider portal, account read, or order submission path.

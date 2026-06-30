@@ -317,6 +317,13 @@
 - Adds `/api/v5/provider-fault-injection/*` endpoints, V5 Fault Injection frontend page, navigation, documentation, and security scan hook
 - Fault injection only: no provider portal, no sandbox API, no broker connection, no API key creation, no account read, no order submission, no raw provider payload storage, no provider endpoint URL field, no real money, no alpha model changes, and no new strategy
 
+## 🧪 V5.25 Provider Sandbox Offline Soak & Stability Gate
+
+- Adds offline soak scenario plan for short, medium, long, mixed replay/fault, duplicate-heavy, rate-limit-heavy, timeout recovery, audit-heavy, state-machine boundary, and safety boundary scenarios
+- Adds deterministic local event generator, soak runner, stability metrics, stability gate, coverage validator, safety validator, report, and CLI
+- Adds `/api/v5/provider-offline-soak/*` endpoints, V5 Offline Soak frontend page, navigation, documentation, and security scan hook
+- Offline soak only: no provider portal, no sandbox API, no broker connection, no credential creation, no account read, no order submission, no raw provider payload storage, no provider endpoint URL field, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
