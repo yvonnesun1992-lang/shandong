@@ -338,6 +338,13 @@
 - Adds `/api/v5/credential-vault-design/*` endpoints, V5 Credential Vault frontend page, navigation, documentation, and security scan hook
 - Vault design only: no real vault, no credential read/write, no provider portal, no sandbox API, no broker connection, no account read, no order submission, no real money, no alpha model changes, and no new strategy
 
+## 🧑‍⚖️ V5.28 Pre-Sandbox Operator Approval Gate
+
+- Adds pre-sandbox approval request schema, evidence requirement validator, operator role policy, risk acknowledgement policy, approval gate evaluator, audit trail design, safety validator, report, and CLI
+- Adds `/api/v5/pre-sandbox-approval/*` endpoints, V5 Pre-Sandbox Approval frontend page, navigation, documentation, and security scan hook
+- Approval gate only: approval runtime disabled, operator approval false, sandbox API disabled, credential read disabled, broker connected false, order submission disabled, real money disabled, and paper trading only
+- Simulated operator approval and real-path enablement environment variables only produce warnings and cannot unlock sandbox, credential, broker, order, or money paths
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

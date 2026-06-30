@@ -821,3 +821,39 @@ export function fetchV5CredentialVaultDesignSafety() {
 export function fetchV5CredentialVaultDesignSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/credential-vault-design/summary');
 }
+
+export function fetchV5PreSandboxApprovalStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/pre-sandbox-approval/status');
+}
+
+export function fetchV5PreSandboxApprovalRequestSchema() {
+  return apiGet<Record<string, unknown>>('/api/v5/pre-sandbox-approval/request-schema');
+}
+
+export function fetchV5PreSandboxApprovalEvidence() {
+  return apiGet<Record<string, unknown>>('/api/v5/pre-sandbox-approval/evidence');
+}
+
+export function fetchV5PreSandboxApprovalRoles() {
+  return apiGet<Record<string, unknown>>('/api/v5/pre-sandbox-approval/roles');
+}
+
+export function fetchV5PreSandboxApprovalRiskAcknowledgement() {
+  return apiGet<Record<string, unknown>>('/api/v5/pre-sandbox-approval/risk-acknowledgement');
+}
+
+export function fetchV5PreSandboxApprovalGate() {
+  return apiGet<Record<string, unknown>>('/api/v5/pre-sandbox-approval/gate');
+}
+
+export function fetchV5PreSandboxApprovalAudit() {
+  return apiGet<Record<string, unknown>>('/api/v5/pre-sandbox-approval/audit');
+}
+
+export function fetchV5PreSandboxApprovalSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/pre-sandbox-approval/safety');
+}
+
+export function fetchV5PreSandboxApprovalSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/pre-sandbox-approval/summary');
+}

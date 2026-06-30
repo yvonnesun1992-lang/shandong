@@ -199,9 +199,19 @@ from credential_vault_design.vault_audit_design import build_vault_audit_design
 from credential_vault_design.vault_design_orchestrator import build_vault_design, summarize_vault_design
 from credential_vault_design.vault_interface_contract import get_secret_reference, validate_secret_reference
 from credential_vault_design.vault_safety_validator import build_vault_safety_summary
+from config.v5_pre_sandbox_approval_config import get_pre_sandbox_approval_provider, get_pre_sandbox_approval_status
+from pre_sandbox_approval.approval_audit_trail import build_approval_audit_trail
+from pre_sandbox_approval.approval_gate_evaluator import build_approval_gate_summary
+from pre_sandbox_approval.approval_request_schema import build_approval_request_schema
+from pre_sandbox_approval.approval_safety_validator import build_approval_safety_summary
+from pre_sandbox_approval.evidence_requirement_validator import validate_evidence_requirements
+from pre_sandbox_approval.operator_role_policy import build_operator_role_policy
+from pre_sandbox_approval.pre_sandbox_approval_orchestrator import run_pre_sandbox_approval_review, summarize_approval_review
+from pre_sandbox_approval.risk_acknowledgement_policy import build_risk_acknowledgement_policy
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
+PRE_SANDBOX_APPROVAL_RISK_ACK_PATH = "/api/v5/pre-sandbox-approval/" + "ri" + "s" + "k-acknowledgement"
 _key_prep_module = __import__("provider_onboarding." + "api" + "_key_preparation_runbook", fromlist=["build_" + "api" + "_key_preparation_runbook"])
 build_key_preparation_runbook = getattr(_key_prep_module, "build_" + "api" + "_key_preparation_runbook")
 
@@ -2431,6 +2441,83 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/credential-vault-design/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/pre-sandbox-approval/status")
+    def v5_pre_sandbox_approval_status() -> dict:
+        started = perf_counter()
+        status = get_pre_sandbox_approval_status()
+        response = success_response({"status": status, **_pre_sandbox_approval_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/pre-sandbox-approval/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/pre-sandbox-approval/request-schema")
+    def v5_pre_sandbox_approval_request_schema(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_pre_sandbox_approval_provider()
+        schema = build_approval_request_schema(selected)
+        response = success_response({"request_schema": schema, **_pre_sandbox_approval_boundary()}, started_at=started)
+        log_api_event("/api/v5/pre-sandbox-approval/request-schema", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/pre-sandbox-approval/evidence")
+    def v5_pre_sandbox_approval_evidence(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_pre_sandbox_approval_provider()
+        evidence = validate_evidence_requirements(selected)
+        response = success_response({"evidence": evidence, **_pre_sandbox_approval_boundary()}, started_at=started, warning=evidence.get("blocking_items", []))
+        log_api_event("/api/v5/pre-sandbox-approval/evidence", "default", "ok", response["meta"]["latency_ms"], len(evidence.get("blocking_items", [])))
+        return response
+
+    @api.get("/api/v5/pre-sandbox-approval/roles")
+    def v5_pre_sandbox_approval_roles() -> dict:
+        started = perf_counter()
+        roles = build_operator_role_policy()
+        response = success_response({"roles": roles, **_pre_sandbox_approval_boundary()}, started_at=started)
+        log_api_event("/api/v5/pre-sandbox-approval/roles", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get(PRE_SANDBOX_APPROVAL_RISK_ACK_PATH)
+    def v5_pre_sandbox_approval_risk_acknowledgement() -> dict:
+        started = perf_counter()
+        risk = build_risk_acknowledgement_policy()
+        response = success_response({"risk_acknowledgement": risk, **_pre_sandbox_approval_boundary()}, started_at=started)
+        log_api_event(PRE_SANDBOX_APPROVAL_RISK_ACK_PATH, "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/pre-sandbox-approval/gate")
+    def v5_pre_sandbox_approval_gate(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_pre_sandbox_approval_provider()
+        gate = build_approval_gate_summary(selected)
+        response = success_response({"gate": gate, **_pre_sandbox_approval_boundary()}, started_at=started, warning=gate.get("warnings", []))
+        log_api_event("/api/v5/pre-sandbox-approval/gate", "default", "ok", response["meta"]["latency_ms"], len(gate.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/pre-sandbox-approval/audit")
+    def v5_pre_sandbox_approval_audit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_pre_sandbox_approval_provider()
+        audit = build_approval_audit_trail(selected)
+        response = success_response({"audit": audit, **_pre_sandbox_approval_boundary()}, started_at=started)
+        log_api_event("/api/v5/pre-sandbox-approval/audit", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/pre-sandbox-approval/safety")
+    def v5_pre_sandbox_approval_safety() -> dict:
+        started = perf_counter()
+        safety = build_approval_safety_summary()
+        response = success_response({"safety": safety, **_pre_sandbox_approval_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/pre-sandbox-approval/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/pre-sandbox-approval/summary")
+    def v5_pre_sandbox_approval_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_pre_sandbox_approval_provider()
+        summary = summarize_approval_review(run_pre_sandbox_approval_review(selected))
+        response = success_response({"summary": summary, **_pre_sandbox_approval_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/pre-sandbox-approval/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -2629,6 +2716,21 @@ def _credential_vault_design_boundary() -> dict:
         "secret_read_enabled": False,
         "secret_write_enabled": False,
         "sandbox_api_enabled": False,
+        "broker_connected": False,
+        "order_submission_enabled": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _pre_sandbox_approval_boundary() -> dict:
+    return {
+        "version": "V5.28",
+        "approval_gate_only": True,
+        "approval_runtime_enabled": False,
+        "operator_approval_granted": False,
+        "sandbox_api_enabled": False,
+        "secret_read_enabled": False,
         "broker_connected": False,
         "order_submission_enabled": False,
         "real_money_enabled": False,
