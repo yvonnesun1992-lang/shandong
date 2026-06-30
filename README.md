@@ -387,6 +387,13 @@
 - Mock replay only: mock replay runtime disabled, sandbox API disabled, secret read disabled, account read disabled, position read disabled, balance read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
 - Account, balance, and position payloads are local placeholders with redacted values; no provider network, raw provider payload, account lookup, balance lookup, position lookup, order, or money path is enabled
 
+## 🧪 V5.35 Sandbox Read-Only Connector Fault Injection
+
+- Adds local read-only fault payload catalog, schema fault validator, redaction failure detector, stale snapshot detector, audit failure simulator, rate limit fault simulator, order path intrusion detector, runner, safety validator, report, and CLI
+- Adds `/api/v5/read-only-fault-injection/*` endpoints, V5 Read-Only Fault Injection frontend page, navigation, documentation, and security scan hook
+- Fault injection only: runtime disabled, sandbox API disabled, secret read disabled, account read disabled, position read disabled, balance read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
+- Injected faults cover malformed payloads, stale snapshots, audit write failure, rate limit exception, account reference exposure, unredacted balance/position values, raw provider payload placeholders, and order path intrusion; all cases must be blocked or warned
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

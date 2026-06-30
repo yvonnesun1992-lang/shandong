@@ -275,6 +275,17 @@ from sandbox_read_only_mock_replay.read_only_mock_replay_safety_validator import
 from sandbox_read_only_mock_replay.read_only_replay_runner import run_read_only_replay
 from sandbox_read_only_mock_replay.read_only_schema_validator import validate_all_read_only_schemas
 from sandbox_read_only_mock_replay.redaction_replay_validator import validate_all_payload_redaction
+from config.v5_read_only_fault_injection_config import get_read_only_fault_injection_provider, get_read_only_fault_injection_status
+from sandbox_read_only_fault_injection.audit_failure_simulator import simulate_audit_write_failure, validate_audit_failure_handling
+from sandbox_read_only_fault_injection.fault_injection_orchestrator import run_read_only_fault_injection, summarize_fault_injection
+from sandbox_read_only_fault_injection.fault_injection_runner import run_fault_injection
+from sandbox_read_only_fault_injection.fault_injection_safety_validator import build_fault_injection_safety_summary
+from sandbox_read_only_fault_injection.fault_payload_catalog import FAULT_TYPES as READ_ONLY_FAULT_TYPES
+from sandbox_read_only_fault_injection.fault_schema_validator import validate_all_fault_schemas
+from sandbox_read_only_fault_injection.order_path_intrusion_detector import detect_all_order_path_intrusions
+from sandbox_read_only_fault_injection.rate_limit_fault_simulator import simulate_rate_limit_fault, validate_rate_limit_fault_handling
+from sandbox_read_only_fault_injection.redaction_failure_detector import detect_all_redaction_failures
+from sandbox_read_only_fault_injection.stale_snapshot_detector import detect_all_stale_snapshots
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -3140,6 +3151,108 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/read-only-mock-replay/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/read-only-fault-injection/status")
+    def v5_read_only_fault_injection_status() -> dict:
+        started = perf_counter()
+        status = get_read_only_fault_injection_status()
+        response = success_response({"status": status, **_read_only_fault_injection_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/read-only-fault-injection/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-fault-injection/payloads")
+    def v5_read_only_fault_injection_payloads(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_fault_injection_provider()
+        payloads = {
+            "provider": selected,
+            "fault_types": READ_ONLY_FAULT_TYPES,
+            "fault_count": len(READ_ONLY_FAULT_TYPES),
+            **_read_only_fault_injection_boundary(),
+        }
+        response = success_response({"payloads": payloads, **_read_only_fault_injection_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-fault-injection/payloads", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-fault-injection/schema")
+    def v5_read_only_fault_injection_schema(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_fault_injection_provider()
+        schema = validate_all_fault_schemas(selected)
+        response = success_response({"schema": schema, **_read_only_fault_injection_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-fault-injection/schema", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-fault-injection/redaction")
+    def v5_read_only_fault_injection_redaction(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_fault_injection_provider()
+        redaction = detect_all_redaction_failures(selected)
+        response = success_response({"redaction": redaction, **_read_only_fault_injection_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-fault-injection/redaction", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-fault-injection/stale")
+    def v5_read_only_fault_injection_stale(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_fault_injection_provider()
+        stale = detect_all_stale_snapshots(selected)
+        response = success_response({"stale": stale, **_read_only_fault_injection_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-fault-injection/stale", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-fault-injection/audit-failure")
+    def v5_read_only_fault_injection_audit_failure(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_fault_injection_provider()
+        audit = validate_audit_failure_handling(simulate_audit_write_failure(selected))
+        response = success_response({"audit_failure": audit, **_read_only_fault_injection_boundary()}, started_at=started, warning=audit.get("warnings", []))
+        log_api_event("/api/v5/read-only-fault-injection/audit-failure", "default", "ok", response["meta"]["latency_ms"], len(audit.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-fault-injection/rate-limit")
+    def v5_read_only_fault_injection_rate_limit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_fault_injection_provider()
+        rate_limit = validate_rate_limit_fault_handling(simulate_rate_limit_fault(selected))
+        response = success_response({"rate_limit": rate_limit, **_read_only_fault_injection_boundary()}, started_at=started, warning=rate_limit.get("warnings", []))
+        log_api_event("/api/v5/read-only-fault-injection/rate-limit", "default", "ok", response["meta"]["latency_ms"], len(rate_limit.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-fault-injection/order-intrusion")
+    def v5_read_only_fault_injection_order_intrusion(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_fault_injection_provider()
+        order = detect_all_order_path_intrusions(selected)
+        response = success_response({"order_intrusion": order, **_read_only_fault_injection_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-fault-injection/order-intrusion", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-fault-injection/run")
+    def v5_read_only_fault_injection_run(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_fault_injection_provider()
+        runner = run_fault_injection(selected)
+        response = success_response({"runner": runner, **_read_only_fault_injection_boundary()}, started_at=started, warning=runner.get("warnings", []))
+        log_api_event("/api/v5/read-only-fault-injection/run", "default", "ok", response["meta"]["latency_ms"], len(runner.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-fault-injection/safety")
+    def v5_read_only_fault_injection_safety() -> dict:
+        started = perf_counter()
+        safety = build_fault_injection_safety_summary()
+        response = success_response({"safety": safety, **_read_only_fault_injection_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/read-only-fault-injection/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-fault-injection/summary")
+    def v5_read_only_fault_injection_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_fault_injection_provider()
+        summary = summarize_fault_injection(run_read_only_fault_injection(selected))
+        response = success_response({"summary": summary, **_read_only_fault_injection_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/read-only-fault-injection/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -3447,6 +3560,24 @@ def _read_only_mock_replay_boundary() -> dict:
         "version": "V5.34",
         "read_only_mock_replay_only": True,
         "mock_replay_runtime_enabled": False,
+        "sandbox_api_enabled": False,
+        "secret_read_enabled": False,
+        "account_read_enabled": False,
+        "position_read_enabled": False,
+        "balance_read_enabled": False,
+        "order_preview_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _read_only_fault_injection_boundary() -> dict:
+    return {
+        "version": "V5.35",
+        "read_only_fault_injection_only": True,
+        "fault_injection_runtime_enabled": False,
         "sandbox_api_enabled": False,
         "secret_read_enabled": False,
         "account_read_enabled": False,

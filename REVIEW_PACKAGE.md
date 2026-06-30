@@ -1,3 +1,104 @@
+# V5.35: Sandbox Read-Only Connector Fault Injection
+
+This update adds a local-only read-only connector fault injection suite. It defines mock fault payloads, schema fault validation, redaction failure detection, stale snapshot detection, audit failure simulation, rate limit fault simulation, order path intrusion detection, fault runner, safety validation, API endpoints, frontend page, documentation, report, CLI, and tests without enabling runtime, sandbox API, credential read, account read, balance read, position read, order preview, order submission, broker connection, or real money paths.
+
+New files:
+
+```text
+config/v5_read_only_fault_injection_config.py
+sandbox_read_only_fault_injection/__init__.py
+sandbox_read_only_fault_injection/init.py
+sandbox_read_only_fault_injection/fault_payload_catalog.py
+sandbox_read_only_fault_injection/fault_schema_validator.py
+sandbox_read_only_fault_injection/redaction_failure_detector.py
+sandbox_read_only_fault_injection/stale_snapshot_detector.py
+sandbox_read_only_fault_injection/audit_failure_simulator.py
+sandbox_read_only_fault_injection/rate_limit_fault_simulator.py
+sandbox_read_only_fault_injection/order_path_intrusion_detector.py
+sandbox_read_only_fault_injection/fault_injection_runner.py
+sandbox_read_only_fault_injection/fault_injection_safety_validator.py
+sandbox_read_only_fault_injection/fault_injection_orchestrator.py
+sandbox_read_only_fault_injection/sandbox_read_only_fault_injection_report.py
+scripts/run_v535_read_only_fault_injection.py
+web/frontend/app/v5-read-only-fault-injection/page.tsx
+tests/test_v535_read_only_fault_injection.py
+docs/V5_READ_ONLY_FAULT_INJECTION.md
+reports/v5_35_sandbox_read_only_fault_injection_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Fault coverage:
+
+```text
+Redaction failure: covered
+Malformed account snapshot: covered
+Malformed balance snapshot: covered
+Malformed position snapshot: covered
+Stale snapshot: covered
+Rate limit error: covered
+Audit write failure: covered
+Unexpected raw provider payload placeholder: covered
+Unexpected account reference exposure: covered
+Unexpected numeric balance or position exposure: covered
+Unexpected order preview / submission path: covered
+```
+
+Safety boundaries:
+
+```text
+Fault injection runtime: no
+Sandbox API connection: no
+Credential read: no
+Account read: no
+Balance read: no
+Position read: no
+Order preview: no
+Order submission: no
+Real broker connection: no
+Broker SDK imports: no
+Provider portal access: no
+Account, balance, or position read: no
+Sandbox orders: no
+Real orders: no
+Raw real provider payload storage: no
+Real provider endpoint URL field: no
+Unredacted real balances or positions: no
+Real funds: no
+External network requests: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is sandbox read-only fault injection only: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v535_read_only_fault_injection.py: passed, WARNING verdict by design because all injected faults are blocked/warned
+run_v535_read_only_fault_injection.py --provider alpaca: passed, WARNING verdict by design
+run_v535_read_only_fault_injection.py --provider ibkr: passed, WARNING verdict by design
+run_v535_read_only_fault_injection.py --check redaction: passed, WARNING verdict by design
+run_v535_read_only_fault_injection.py --check stale: passed, WARNING verdict by design
+run_v535_read_only_fault_injection.py --check order-intrusion: passed, WARNING verdict by design
+run_v535_read_only_fault_injection.py --check safety: passed, WARNING verdict by design
+pytest tests/test_v535_read_only_fault_injection.py: 4 passed
+pytest: 855 passed
+system_doctor: OK
+frontend structure check: passed
+```
+
 # V5.34: Sandbox Read-Only Connector Mock Replay
 
 This update adds a local-only read-only connector mock replay layer. It defines redacted mock payloads, schema validation, redaction validation, replay execution, audit replay, safety validation, API endpoints, frontend page, documentation, report, CLI, and tests without enabling runtime, sandbox API, credential read, account read, balance read, position read, order preview, order submission, broker connection, or real money paths.
