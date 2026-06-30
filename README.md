@@ -366,6 +366,13 @@
 - Preflight packet only: preflight runtime disabled, packet approval disabled, sandbox API disabled, credential read disabled, account read disabled, broker connected false, order submission disabled, real money disabled, and paper trading only
 - Final decision remains `NO_GO`; simulated packet approval cannot unlock sandbox, credential, account, order, or money paths
 
+## 🧭 V5.32 Sandbox Dry-Run Controlled Enablement Blueprint
+
+- Adds controlled enablement conditions, staged unlock plan, feature flag dependency graph, secret-read conditions, sandbox API conditions, account-read conditions, order-preview conditions, order-submission blocker, emergency stop conditions, decision record, safety validator, report, and CLI
+- Adds `/api/v5/controlled-enablement/*` endpoints, V5 Controlled Enablement frontend page, navigation, documentation, and security scan hook
+- Controlled blueprint only: controlled runtime disabled, controlled GO disabled, sandbox API disabled, secret read disabled, account read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
+- Final decision remains `CONTROLLED_GO_BLOCKED`; simulated approval or environment flags cannot unlock sandbox, secret, account, order, or money paths
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

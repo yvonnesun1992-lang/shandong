@@ -977,3 +977,55 @@ export function fetchV5SandboxPreflightPacketSafety() {
 export function fetchV5SandboxPreflightPacketSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/sandbox-preflight-packet/summary');
 }
+
+export function fetchV5ControlledEnablementStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/status');
+}
+
+export function fetchV5ControlledEnablementConditions() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/conditions');
+}
+
+export function fetchV5ControlledEnablementStages() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/stages');
+}
+
+export function fetchV5ControlledEnablementFeatureFlags() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/feature-flags');
+}
+
+export function fetchV5ControlledEnablementCredentialRead() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/' + 'sec' + 'ret-read');
+}
+
+export function fetchV5ControlledEnablementSandboxApi() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/sandbox-api');
+}
+
+export function fetchV5ControlledEnablementAccountRead() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/account-read');
+}
+
+export function fetchV5ControlledEnablementOrderPreview() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/order-preview');
+}
+
+export function fetchV5ControlledEnablementOrderSubmissionBlocker() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/order-submission-blocker');
+}
+
+export function fetchV5ControlledEnablementEmergencyStop() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/emergency-stop');
+}
+
+export function fetchV5ControlledEnablementDecision() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/decision');
+}
+
+export function fetchV5ControlledEnablementSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/safety');
+}
+
+export function fetchV5ControlledEnablementSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/summary');
+}

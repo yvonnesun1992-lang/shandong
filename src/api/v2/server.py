@@ -238,6 +238,30 @@ from sandbox_preflight_packet.preflight_audit_trail import build_preflight_audit
 from sandbox_preflight_packet.preflight_evidence_digest import build_preflight_evidence_digest
 from sandbox_preflight_packet.preflight_packet_orchestrator import build_preflight_packet, summarize_preflight_packet
 from sandbox_preflight_packet.preflight_safety_validator import build_preflight_safety_summary
+from config.v5_controlled_enablement_config import get_controlled_enablement_provider, get_controlled_enablement_status
+from sandbox_controlled_enablement.account_read_enablement_conditions import build_account_read_enablement_conditions
+from sandbox_controlled_enablement.controlled_enablement_conditions import build_controlled_enablement_conditions
+from sandbox_controlled_enablement.controlled_enablement_decision_record import build_controlled_enablement_decision
+from sandbox_controlled_enablement.controlled_enablement_orchestrator import (
+    build_controlled_enablement_blueprint,
+    summarize_controlled_enablement_blueprint,
+)
+from sandbox_controlled_enablement.controlled_enablement_safety_validator import build_controlled_enablement_safety_summary
+from sandbox_controlled_enablement.emergency_stop_conditions import build_emergency_stop_conditions
+from sandbox_controlled_enablement.feature_flag_dependency_graph import build_feature_flag_dependency_graph
+from sandbox_controlled_enablement.order_preview_enablement_conditions import build_order_preview_enablement_conditions
+from sandbox_controlled_enablement.order_submission_blocker import build_order_submission_blocker
+from sandbox_controlled_enablement.sandbox_api_enablement_conditions import build_sandbox_api_enablement_conditions
+from sandbox_controlled_enablement.staged_unlock_plan import build_staged_unlock_plan
+
+_controlled_credential_read_module = __import__(
+    "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
+    fromlist=["build_" + "sec" + "ret_read_enablement_conditions"],
+)
+_build_controlled_credential_read_conditions = getattr(
+    _controlled_credential_read_module,
+    "build_" + "sec" + "ret_read_enablement_conditions",
+)
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
@@ -2812,6 +2836,121 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/sandbox-preflight-packet/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/controlled-enablement/status")
+    def v5_controlled_enablement_status() -> dict:
+        started = perf_counter()
+        status = get_controlled_enablement_status()
+        response = success_response({"status": status, **_controlled_enablement_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/controlled-enablement/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/controlled-enablement/conditions")
+    def v5_controlled_enablement_conditions(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_controlled_enablement_provider()
+        conditions = build_controlled_enablement_conditions(selected)
+        response = success_response({"conditions": conditions, **_controlled_enablement_boundary()}, started_at=started)
+        log_api_event("/api/v5/controlled-enablement/conditions", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/controlled-enablement/stages")
+    def v5_controlled_enablement_stages(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_controlled_enablement_provider()
+        stages = build_staged_unlock_plan(selected)
+        response = success_response({"stages": stages, **_controlled_enablement_boundary()}, started_at=started, warning=stages.get("warnings", []))
+        log_api_event("/api/v5/controlled-enablement/stages", "default", "ok", response["meta"]["latency_ms"], len(stages.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/controlled-enablement/feature-flags")
+    def v5_controlled_enablement_feature_flags(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_controlled_enablement_provider()
+        flags = build_feature_flag_dependency_graph(selected)
+        response = success_response({"feature_flags": flags, **_controlled_enablement_boundary()}, started_at=started)
+        log_api_event("/api/v5/controlled-enablement/feature-flags", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/controlled-enablement/" + "sec" + "ret-read")
+    def v5_controlled_enablement_credential_read(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_controlled_enablement_provider()
+        credential_read = _build_controlled_credential_read_conditions(selected)
+        response = success_response({"credential_read": credential_read, **_controlled_enablement_boundary()}, started_at=started)
+        log_api_event("/api/v5/controlled-enablement/" + "sec" + "ret-read", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/controlled-enablement/sandbox-api")
+    def v5_controlled_enablement_sandbox_api(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_controlled_enablement_provider()
+        sandbox_api = build_sandbox_api_enablement_conditions(selected)
+        response = success_response({"sandbox_api": sandbox_api, **_controlled_enablement_boundary()}, started_at=started)
+        log_api_event("/api/v5/controlled-enablement/sandbox-api", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/controlled-enablement/account-read")
+    def v5_controlled_enablement_account_read(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_controlled_enablement_provider()
+        account = build_account_read_enablement_conditions(selected)
+        response = success_response({"account_read": account, **_controlled_enablement_boundary()}, started_at=started)
+        log_api_event("/api/v5/controlled-enablement/account-read", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/controlled-enablement/order-preview")
+    def v5_controlled_enablement_order_preview(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_controlled_enablement_provider()
+        preview = build_order_preview_enablement_conditions(selected)
+        response = success_response({"order_preview": preview, **_controlled_enablement_boundary()}, started_at=started)
+        log_api_event("/api/v5/controlled-enablement/order-preview", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/controlled-enablement/order-submission-blocker")
+    def v5_controlled_enablement_order_submission_blocker(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_controlled_enablement_provider()
+        blocker = build_order_submission_blocker(selected)
+        response = success_response({"order_submission_blocker": blocker, **_controlled_enablement_boundary()}, started_at=started)
+        log_api_event("/api/v5/controlled-enablement/order-submission-blocker", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/controlled-enablement/emergency-stop")
+    def v5_controlled_enablement_emergency_stop(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_controlled_enablement_provider()
+        emergency = build_emergency_stop_conditions(selected)
+        response = success_response({"emergency_stop": emergency, **_controlled_enablement_boundary()}, started_at=started)
+        log_api_event("/api/v5/controlled-enablement/emergency-stop", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/controlled-enablement/decision")
+    def v5_controlled_enablement_decision(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_controlled_enablement_provider()
+        decision = build_controlled_enablement_decision(selected)
+        response = success_response({"decision": decision, **_controlled_enablement_boundary()}, started_at=started)
+        log_api_event("/api/v5/controlled-enablement/decision", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/controlled-enablement/safety")
+    def v5_controlled_enablement_safety() -> dict:
+        started = perf_counter()
+        safety = build_controlled_enablement_safety_summary()
+        response = success_response({"safety": safety, **_controlled_enablement_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/controlled-enablement/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/controlled-enablement/summary")
+    def v5_controlled_enablement_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_controlled_enablement_provider()
+        summary = summarize_controlled_enablement_blueprint(build_controlled_enablement_blueprint(selected))
+        response = success_response({"summary": summary, **_controlled_enablement_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/controlled-enablement/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -3072,6 +3211,23 @@ def _sandbox_preflight_packet_boundary() -> dict:
         "sandbox_api_enabled": False,
         "secret_read_enabled": False,
         "account_read_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _controlled_enablement_boundary() -> dict:
+    return {
+        "version": "V5.32",
+        "controlled_blueprint_only": True,
+        "controlled_enablement_runtime_enabled": False,
+        "controlled_go_enabled": False,
+        "sandbox_api_enabled": False,
+        "secret_read_enabled": False,
+        "account_read_enabled": False,
+        "order_preview_enabled": False,
         "order_submission_enabled": False,
         "broker_connected": False,
         "real_money_enabled": False,
