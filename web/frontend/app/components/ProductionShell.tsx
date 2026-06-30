@@ -34,6 +34,7 @@ const links = [
   ['V5 Offline Replay', '/v5-provider-offline-replay'],
   ['V5 Fault Injection', '/v5-provider-fault-injection'],
   ['V5 Offline Soak', '/v5-provider-offline-soak'],
+  ['V5 Sandbox Evidence', '/v5-sandbox-evidence'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

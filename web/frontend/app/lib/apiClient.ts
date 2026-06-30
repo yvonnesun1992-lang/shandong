@@ -753,3 +753,39 @@ export function fetchV5ProviderOfflineSoakSafety() {
 export function fetchV5ProviderOfflineSoakSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/provider-offline-soak/summary');
 }
+
+export function fetchV5SandboxEvidenceStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-evidence/status');
+}
+
+export function fetchV5SandboxEvidenceSources() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-evidence/sources');
+}
+
+export function fetchV5SandboxEvidenceReplay() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-evidence/replay');
+}
+
+export function fetchV5SandboxEvidenceFault() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-evidence/fault');
+}
+
+export function fetchV5SandboxEvidenceSoak() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-evidence/soak');
+}
+
+export function fetchV5SandboxEvidenceGaps() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-evidence/gaps');
+}
+
+export function fetchV5SandboxEvidenceGate() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-evidence/gate');
+}
+
+export function fetchV5SandboxEvidenceSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-evidence/safety');
+}
+
+export function fetchV5SandboxEvidenceSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-evidence/summary');
+}

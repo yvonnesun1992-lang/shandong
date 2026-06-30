@@ -1,3 +1,95 @@
+# V5.26: Provider Sandbox Readiness Evidence Pack
+
+This update adds a sandbox readiness evidence pack for the selected provider. It summarizes local evidence from V5.23 offline replay, V5.24 fault injection, and V5.25 offline soak while keeping the sandbox entry gate blocked by design.
+
+New files:
+
+```text
+config/v5_sandbox_readiness_evidence_config.py
+provider_sandbox_evidence/__init__.py
+provider_sandbox_evidence/init.py
+provider_sandbox_evidence/evidence_source_collector.py
+provider_sandbox_evidence/replay_evidence_summary.py
+provider_sandbox_evidence/fault_evidence_summary.py
+provider_sandbox_evidence/soak_evidence_summary.py
+provider_sandbox_evidence/readiness_gap_analyzer.py
+provider_sandbox_evidence/sandbox_entry_gate.py
+provider_sandbox_evidence/evidence_safety_validator.py
+provider_sandbox_evidence/evidence_orchestrator.py
+provider_sandbox_evidence/provider_sandbox_evidence_report.py
+scripts/run_v526_sandbox_readiness_evidence.py
+web/frontend/app/v5-sandbox-evidence/page.tsx
+tests/test_v526_sandbox_readiness_evidence.py
+docs/V5_SANDBOX_READINESS_EVIDENCE.md
+reports/v5_26_sandbox_readiness_evidence_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Evidence runtime: no
+Provider portal access: no
+Real broker connection: no
+Sandbox API connection: no
+Broker SDK imports: no
+Credential creation: no
+Credential storage: no
+OAuth: no
+Real account read: no
+Sandbox account read: no
+Real balance read: no
+Real position read: no
+Order submission: no
+Real orders: no
+Sandbox orders: no
+Raw provider payload storage: no
+Provider endpoint URL field: no
+Real funds: no
+External network requests: no
+External log upload: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is sandbox readiness evidence pack only: yes
+Sandbox entry gate remains blocked in V5.26: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v526_sandbox_readiness_evidence.py: passed, verdict WARNING because sandbox entry remains blocked by design
+run_v526_sandbox_readiness_evidence.py --provider alpaca: passed, verdict WARNING by design
+run_v526_sandbox_readiness_evidence.py --provider ibkr: passed, verdict WARNING by design
+run_v526_sandbox_readiness_evidence.py --check gate: passed, verdict WARNING by design
+run_v526_sandbox_readiness_evidence.py --check safety: passed, verdict WARNING by design
+run_v526_sandbox_readiness_evidence.py --check gaps: passed, verdict WARNING by design
+pytest tests/test_v526_sandbox_readiness_evidence.py: 5 passed
+pytest full suite: 819 passed
+system_doctor: OK
+frontend structure check: passed
+security scan: no broker SDK imports, no network calls, no sandbox endpoint, no account read, no order submission, no raw provider payload storage, no provider_endpoint_url field, no credential handling in sandbox evidence modules
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, user requested direct merge after completion
+```
+
 # V5.25: Provider Sandbox Offline Soak & Stability Gate
 
 This update adds an offline soak and stability gate for the selected provider sandbox connector path. It validates replay stability, fault recovery stability, idempotency stability, state-machine stability, audit consistency, memory growth placeholders, error budget checks, scenario coverage, safety boundary stability, and readiness gate behavior without enabling any runtime, sandbox API, provider portal, account read, or order submission path.

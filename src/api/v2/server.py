@@ -182,6 +182,15 @@ from provider_offline_soak.soak_safety_validator import build_soak_safety_summar
 from provider_offline_soak.soak_scenario_plan import build_soak_scenario_plan
 from provider_offline_soak.stability_gate import evaluate_all_stability_gates
 from provider_offline_soak.stability_metrics import compute_all_stability_metrics
+from config.v5_sandbox_readiness_evidence_config import get_evidence_provider, get_evidence_status
+from provider_sandbox_evidence.evidence_orchestrator import build_sandbox_readiness_evidence_pack, summarize_evidence_pack
+from provider_sandbox_evidence.evidence_safety_validator import build_evidence_safety_summary
+from provider_sandbox_evidence.evidence_source_collector import collect_evidence_sources
+from provider_sandbox_evidence.fault_evidence_summary import build_fault_evidence_summary
+from provider_sandbox_evidence.readiness_gap_analyzer import analyze_readiness_gaps
+from provider_sandbox_evidence.replay_evidence_summary import build_replay_evidence_summary
+from provider_sandbox_evidence.sandbox_entry_gate import evaluate_sandbox_entry_gate
+from provider_sandbox_evidence.soak_evidence_summary import build_soak_evidence_summary
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
@@ -2266,6 +2275,85 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/provider-offline-soak/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/sandbox-evidence/status")
+    def v5_sandbox_evidence_status() -> dict:
+        started = perf_counter()
+        status = get_evidence_status()
+        response = success_response({"status": status, **_sandbox_evidence_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/sandbox-evidence/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-evidence/sources")
+    def v5_sandbox_evidence_sources(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_evidence_provider()
+        sources = collect_evidence_sources(selected)
+        response = success_response({"sources": sources, **_sandbox_evidence_boundary()}, started_at=started, warning=sources.get("warnings", []))
+        log_api_event("/api/v5/sandbox-evidence/sources", "default", "ok", response["meta"]["latency_ms"], len(sources.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-evidence/replay")
+    def v5_sandbox_evidence_replay(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_evidence_provider()
+        replay = build_replay_evidence_summary(selected)
+        response = success_response({"replay": replay, **_sandbox_evidence_boundary()}, started_at=started, warning=replay.get("warnings", []))
+        log_api_event("/api/v5/sandbox-evidence/replay", "default", "ok", response["meta"]["latency_ms"], len(replay.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-evidence/fault")
+    def v5_sandbox_evidence_fault(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_evidence_provider()
+        fault = build_fault_evidence_summary(selected)
+        response = success_response({"fault": fault, **_sandbox_evidence_boundary()}, started_at=started, warning=fault.get("warnings", []))
+        log_api_event("/api/v5/sandbox-evidence/fault", "default", "ok", response["meta"]["latency_ms"], len(fault.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-evidence/soak")
+    def v5_sandbox_evidence_soak(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_evidence_provider()
+        soak = build_soak_evidence_summary(selected)
+        response = success_response({"soak": soak, **_sandbox_evidence_boundary()}, started_at=started, warning=soak.get("warnings", []))
+        log_api_event("/api/v5/sandbox-evidence/soak", "default", "ok", response["meta"]["latency_ms"], len(soak.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-evidence/gaps")
+    def v5_sandbox_evidence_gaps(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_evidence_provider()
+        gaps = analyze_readiness_gaps(selected)
+        response = success_response({"gaps": gaps, **_sandbox_evidence_boundary()}, started_at=started, warning=gaps.get("warnings", []))
+        log_api_event("/api/v5/sandbox-evidence/gaps", "default", "ok", response["meta"]["latency_ms"], len(gaps.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-evidence/gate")
+    def v5_sandbox_evidence_gate(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_evidence_provider()
+        gate = evaluate_sandbox_entry_gate(selected)
+        response = success_response({"gate": gate, **_sandbox_evidence_boundary()}, started_at=started, warning=gate.get("warnings", []))
+        log_api_event("/api/v5/sandbox-evidence/gate", "default", "ok", response["meta"]["latency_ms"], len(gate.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-evidence/safety")
+    def v5_sandbox_evidence_safety() -> dict:
+        started = perf_counter()
+        safety = build_evidence_safety_summary()
+        response = success_response({"safety": safety, **_sandbox_evidence_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/sandbox-evidence/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-evidence/summary")
+    def v5_sandbox_evidence_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_evidence_provider()
+        summary = summarize_evidence_pack(build_sandbox_readiness_evidence_pack(selected))
+        response = success_response({"summary": summary, **_sandbox_evidence_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/sandbox-evidence/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -2433,6 +2521,20 @@ def _provider_offline_soak_boundary() -> dict:
         "version": "V5.25",
         "offline_soak_only": True,
         "soak_runtime_enabled": False,
+        "sandbox_api_enabled": False,
+        "account_read_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _sandbox_evidence_boundary() -> dict:
+    return {
+        "version": "V5.26",
+        "evidence_only": True,
+        "evidence_runtime_enabled": False,
         "sandbox_api_enabled": False,
         "account_read_enabled": False,
         "order_submission_enabled": False,
