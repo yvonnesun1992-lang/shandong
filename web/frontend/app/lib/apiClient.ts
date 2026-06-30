@@ -789,3 +789,35 @@ export function fetchV5SandboxEvidenceSafety() {
 export function fetchV5SandboxEvidenceSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/sandbox-evidence/summary');
 }
+
+export function fetchV5CredentialVaultDesignStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/credential-vault-design/status');
+}
+
+export function fetchV5CredentialVaultDesignInterface() {
+  return apiGet<Record<string, unknown>>('/api/v5/credential-vault-design/interface');
+}
+
+export function fetchV5CredentialVaultDesignScopePolicy() {
+  return apiGet<Record<string, unknown>>('/api/v5/credential-vault-design/scope-policy');
+}
+
+export function fetchV5CredentialVaultDesignAccessPolicy() {
+  return apiGet<Record<string, unknown>>('/api/v5/credential-vault-design/access-policy');
+}
+
+export function fetchV5CredentialVaultDesignRotationRevocation() {
+  return apiGet<Record<string, unknown>>('/api/v5/credential-vault-design/rotation-revocation');
+}
+
+export function fetchV5CredentialVaultDesignAudit() {
+  return apiGet<Record<string, unknown>>('/api/v5/credential-vault-design/audit');
+}
+
+export function fetchV5CredentialVaultDesignSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/credential-vault-design/safety');
+}
+
+export function fetchV5CredentialVaultDesignSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/credential-vault-design/summary');
+}

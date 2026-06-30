@@ -1,3 +1,94 @@
+# V5.27: Credential Vault Interface Design
+
+This update adds a design-only credential vault interface layer for future sandbox credential handling. It defines placeholder-only references, scope and access policies, rotation/revocation runbooks, audit design, safety validation, API endpoints, frontend page, and documentation without enabling vault runtime or credential read/write paths.
+
+New files:
+
+```text
+config/v5_credential_vault_design_config.py
+credential_vault_design/__init__.py
+credential_vault_design/init.py
+credential_vault_design/vault_interface_contract.py
+credential_vault_design/secret_scope_policy.py
+credential_vault_design/secret_access_policy.py
+credential_vault_design/rotation_revocation_runbook.py
+credential_vault_design/vault_audit_design.py
+credential_vault_design/vault_safety_validator.py
+credential_vault_design/vault_design_orchestrator.py
+credential_vault_design/credential_vault_design_report.py
+scripts/run_v527_credential_vault_design.py
+web/frontend/app/v5-credential-vault-design/page.tsx
+tests/test_v527_credential_vault_design.py
+docs/V5_CREDENTIAL_VAULT_DESIGN.md
+reports/v5_27_credential_vault_design_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+src/system/health_check.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Vault runtime: no
+Credential read: no
+Credential write: no
+Real vault connection: no
+Provider portal access: no
+Real broker connection: no
+Sandbox API connection: no
+Broker SDK imports: no
+Credential creation: no
+OAuth: no
+Real account read: no
+Sandbox account read: no
+Order submission: no
+Real orders: no
+Sandbox orders: no
+Raw provider payload storage: no
+Provider endpoint URL field: no
+Real funds: no
+External network requests: no
+External log upload: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is credential vault interface design only: yes
+No credential path can be enabled in V5.27: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v527_credential_vault_design.py: passed, verdict WARNING by design because vault runtime and credential access remain blocked
+run_v527_credential_vault_design.py --provider alpaca: passed, verdict WARNING by design
+run_v527_credential_vault_design.py --provider ibkr: passed, verdict WARNING by design
+run_v527_credential_vault_design.py --check safety: passed, verdict WARNING by design
+run_v527_credential_vault_design.py --check access-policy: passed, verdict WARNING by design
+frontend structure check: passed
+pytest tests/test_v527_credential_vault_design.py: 4 passed
+pytest full suite: 823 passed
+system_doctor: OK
+security scan: no real vault, no credential read/write, no broker SDK imports, no sandbox endpoint, no account/order submission, no raw provider payload, no credential values
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, user requested direct merge after completion
+```
+
 # V5.26: Provider Sandbox Readiness Evidence Pack
 
 This update adds a sandbox readiness evidence pack for the selected provider. It summarizes local evidence from V5.23 offline replay, V5.24 fault injection, and V5.25 offline soak while keeping the sandbox entry gate blocked by design.

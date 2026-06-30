@@ -191,6 +191,14 @@ from provider_sandbox_evidence.readiness_gap_analyzer import analyze_readiness_g
 from provider_sandbox_evidence.replay_evidence_summary import build_replay_evidence_summary
 from provider_sandbox_evidence.sandbox_entry_gate import evaluate_sandbox_entry_gate
 from provider_sandbox_evidence.soak_evidence_summary import build_soak_evidence_summary
+from config.v5_credential_vault_design_config import get_vault_design_provider, get_vault_design_status
+from credential_vault_design.rotation_revocation_runbook import build_rotation_revocation_runbook
+from credential_vault_design.secret_access_policy import build_secret_access_policy
+from credential_vault_design.secret_scope_policy import build_secret_scope_policy
+from credential_vault_design.vault_audit_design import build_vault_audit_design
+from credential_vault_design.vault_design_orchestrator import build_vault_design, summarize_vault_design
+from credential_vault_design.vault_interface_contract import get_secret_reference, validate_secret_reference
+from credential_vault_design.vault_safety_validator import build_vault_safety_summary
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
@@ -2354,6 +2362,75 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/sandbox-evidence/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/credential-vault-design/status")
+    def v5_credential_vault_design_status() -> dict:
+        started = perf_counter()
+        status = get_vault_design_status()
+        response = success_response({"status": status, **_credential_vault_design_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/credential-vault-design/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/credential-vault-design/interface")
+    def v5_credential_vault_design_interface(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_vault_design_provider()
+        reference = get_secret_reference(selected, "sandbox_read_only_key")
+        interface = {"reference": reference, "validation": validate_secret_reference(reference)}
+        response = success_response({"interface": interface, **_credential_vault_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/credential-vault-design/interface", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/credential-vault-design/scope-policy")
+    def v5_credential_vault_design_scope_policy() -> dict:
+        started = perf_counter()
+        policy = build_secret_scope_policy()
+        response = success_response({"scope_policy": policy, **_credential_vault_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/credential-vault-design/scope-policy", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/credential-vault-design/access-policy")
+    def v5_credential_vault_design_access_policy() -> dict:
+        started = perf_counter()
+        policy = build_secret_access_policy()
+        response = success_response({"access_policy": policy, **_credential_vault_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/credential-vault-design/access-policy", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/credential-vault-design/rotation-revocation")
+    def v5_credential_vault_design_rotation_revocation(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_vault_design_provider()
+        runbook = build_rotation_revocation_runbook(selected)
+        response = success_response({"rotation_revocation": runbook, **_credential_vault_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/credential-vault-design/rotation-revocation", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/credential-vault-design/audit")
+    def v5_credential_vault_design_audit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_vault_design_provider()
+        audit = build_vault_audit_design(selected)
+        response = success_response({"audit": audit, **_credential_vault_design_boundary()}, started_at=started)
+        log_api_event("/api/v5/credential-vault-design/audit", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/credential-vault-design/safety")
+    def v5_credential_vault_design_safety() -> dict:
+        started = perf_counter()
+        safety = build_vault_safety_summary()
+        response = success_response({"safety": safety, **_credential_vault_design_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/credential-vault-design/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/credential-vault-design/summary")
+    def v5_credential_vault_design_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_vault_design_provider()
+        summary = summarize_vault_design(build_vault_design(selected))
+        response = success_response({"summary": summary, **_credential_vault_design_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/credential-vault-design/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -2539,6 +2616,21 @@ def _sandbox_evidence_boundary() -> dict:
         "account_read_enabled": False,
         "order_submission_enabled": False,
         "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _credential_vault_design_boundary() -> dict:
+    return {
+        "version": "V5.27",
+        "vault_design_only": True,
+        "vault_runtime_enabled": False,
+        "secret_read_enabled": False,
+        "secret_write_enabled": False,
+        "sandbox_api_enabled": False,
+        "broker_connected": False,
+        "order_submission_enabled": False,
         "real_money_enabled": False,
         "paper_trading": True,
     }
