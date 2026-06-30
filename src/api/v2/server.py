@@ -219,6 +219,16 @@ from sandbox_dry_run_launch.launch_safety_validator import build_launch_safety_s
 from sandbox_dry_run_launch.launch_sequence_plan import build_launch_sequence_plan
 from sandbox_dry_run_launch.preflight_checklist import build_preflight_checklist
 from sandbox_dry_run_launch.responsibility_matrix import build_responsibility_matrix
+from config.v5_sandbox_review_board_config import get_review_board_provider, get_review_board_status
+from sandbox_review_board.evidence_review_matrix import build_evidence_review_matrix
+from sandbox_review_board.go_no_go_decision_record import build_go_no_go_decision
+from sandbox_review_board.readiness_scoring import build_readiness_score_summary
+from sandbox_review_board.review_audit_trail import build_review_audit_trail
+from sandbox_review_board.review_board_charter import build_review_board_charter
+from sandbox_review_board.review_board_orchestrator import build_review_board_packet, summarize_review_board_packet
+from sandbox_review_board.review_board_safety_validator import build_review_board_safety_summary
+from sandbox_review_board.reviewer_role_matrix import build_reviewer_role_matrix
+from sandbox_review_board.risk_acceptance_matrix import build_risk_acceptance_matrix
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
@@ -2626,6 +2636,94 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/sandbox-dry-run-launch/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/sandbox-review-board/status")
+    def v5_sandbox_review_board_status() -> dict:
+        started = perf_counter()
+        status = get_review_board_status()
+        response = success_response({"status": status, **_sandbox_review_board_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/sandbox-review-board/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-review-board/charter")
+    def v5_sandbox_review_board_charter(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_review_board_provider()
+        charter = build_review_board_charter(selected)
+        response = success_response({"charter": charter, **_sandbox_review_board_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-review-board/charter", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-review-board/roles")
+    def v5_sandbox_review_board_roles(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_review_board_provider()
+        roles = build_reviewer_role_matrix(selected)
+        response = success_response({"roles": roles, **_sandbox_review_board_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-review-board/roles", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-review-board/evidence")
+    def v5_sandbox_review_board_evidence(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_review_board_provider()
+        evidence = build_evidence_review_matrix(selected)
+        response = success_response({"evidence": evidence, **_sandbox_review_board_boundary()}, started_at=started, warning=evidence.get("warnings", []))
+        log_api_event("/api/v5/sandbox-review-board/evidence", "default", "ok", response["meta"]["latency_ms"], len(evidence.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-review-board/risks")
+    def v5_sandbox_review_board_risks(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_review_board_provider()
+        risks = build_risk_acceptance_matrix(selected)
+        response = success_response({"risks": risks, **_sandbox_review_board_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-review-board/risks", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-review-board/score")
+    def v5_sandbox_review_board_score(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_review_board_provider()
+        score = build_readiness_score_summary(selected)
+        response = success_response({"score": score, **_sandbox_review_board_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-review-board/score", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-review-board/decision")
+    def v5_sandbox_review_board_decision(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_review_board_provider()
+        decision = build_go_no_go_decision(selected)
+        response = success_response({"decision": decision, **_sandbox_review_board_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-review-board/decision", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-review-board/audit")
+    def v5_sandbox_review_board_audit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_review_board_provider()
+        audit = build_review_audit_trail(selected)
+        response = success_response({"audit": audit, **_sandbox_review_board_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-review-board/audit", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-review-board/safety")
+    def v5_sandbox_review_board_safety() -> dict:
+        started = perf_counter()
+        safety = build_review_board_safety_summary()
+        response = success_response({"safety": safety, **_sandbox_review_board_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/sandbox-review-board/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-review-board/summary")
+    def v5_sandbox_review_board_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_review_board_provider()
+        summary = summarize_review_board_packet(build_review_board_packet(selected))
+        response = success_response({"summary": summary, **_sandbox_review_board_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/sandbox-review-board/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -2851,6 +2949,22 @@ def _sandbox_dry_run_launch_boundary() -> dict:
         "version": "V5.29",
         "launch_plan_only": True,
         "launch_runtime_enabled": False,
+        "sandbox_api_enabled": False,
+        "secret_read_enabled": False,
+        "account_read_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _sandbox_review_board_boundary() -> dict:
+    return {
+        "version": "V5.30",
+        "review_board_only": True,
+        "review_runtime_enabled": False,
+        "reviewer_approval_enabled": False,
         "sandbox_api_enabled": False,
         "secret_read_enabled": False,
         "account_read_enabled": False,
