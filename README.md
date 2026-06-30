@@ -380,6 +380,13 @@
 - Read-only blueprint only: runtime disabled, sandbox API disabled, secret read disabled, account read disabled, position read disabled, balance read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
 - Account, balance, and position schemas are placeholder-only with redacted values; no real account, balance, position, provider payload, order, or money path is enabled
 
+## 🔁 V5.34 Sandbox Read-Only Connector Mock Replay
+
+- Adds local read-only mock payload catalog, schema validation, redaction validation, replay runner, audit replay, safety validator, report, and CLI
+- Adds `/api/v5/read-only-mock-replay/*` endpoints, V5 Read-Only Mock Replay frontend page, navigation, documentation, and security scan hook
+- Mock replay only: mock replay runtime disabled, sandbox API disabled, secret read disabled, account read disabled, position read disabled, balance read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
+- Account, balance, and position payloads are local placeholders with redacted values; no provider network, raw provider payload, account lookup, balance lookup, position lookup, order, or money path is enabled
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

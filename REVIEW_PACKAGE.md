@@ -1,3 +1,84 @@
+# V5.34: Sandbox Read-Only Connector Mock Replay
+
+This update adds a local-only read-only connector mock replay layer. It defines redacted mock payloads, schema validation, redaction validation, replay execution, audit replay, safety validation, API endpoints, frontend page, documentation, report, CLI, and tests without enabling runtime, sandbox API, credential read, account read, balance read, position read, order preview, order submission, broker connection, or real money paths.
+
+New files:
+
+```text
+config/v5_read_only_mock_replay_config.py
+sandbox_read_only_mock_replay/__init__.py
+sandbox_read_only_mock_replay/init.py
+sandbox_read_only_mock_replay/mock_read_only_payloads.py
+sandbox_read_only_mock_replay/read_only_schema_validator.py
+sandbox_read_only_mock_replay/redaction_replay_validator.py
+sandbox_read_only_mock_replay/read_only_replay_runner.py
+sandbox_read_only_mock_replay/read_only_audit_replay.py
+sandbox_read_only_mock_replay/read_only_mock_replay_safety_validator.py
+sandbox_read_only_mock_replay/read_only_mock_replay_orchestrator.py
+sandbox_read_only_mock_replay/sandbox_read_only_mock_replay_report.py
+scripts/run_v534_read_only_mock_replay.py
+web/frontend/app/v5-read-only-mock-replay/page.tsx
+tests/test_v534_read_only_mock_replay.py
+docs/V5_READ_ONLY_MOCK_REPLAY.md
+reports/v5_34_sandbox_read_only_mock_replay_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Mock replay runtime: no
+Sandbox API connection: no
+Credential read: no
+Account read: no
+Balance read: no
+Position read: no
+Order preview: no
+Order submission: no
+Real broker connection: no
+Broker SDK imports: no
+Provider portal access: no
+Account, balance, or position read: no
+Sandbox orders: no
+Real orders: no
+Raw provider payload storage: no
+Provider endpoint URL field: no
+Unredacted balances or positions: no
+Real funds: no
+External network requests: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is sandbox read-only mock replay only: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v534_read_only_mock_replay.py: passed, WARNING verdict by design because read-only mock replay runtime remains disabled
+run_v534_read_only_mock_replay.py --provider alpaca: passed, WARNING verdict by design
+run_v534_read_only_mock_replay.py --provider ibkr: passed, WARNING verdict by design
+run_v534_read_only_mock_replay.py --check schema: passed
+run_v534_read_only_mock_replay.py --check redaction: passed
+run_v534_read_only_mock_replay.py --check safety: passed, WARNING verdict by design
+pytest tests/test_v534_read_only_mock_replay.py: 4 passed
+pytest: 851 passed
+system_doctor: OK
+frontend structure check: passed
+```
+
 # V5.33: Sandbox Dry-Run Read-Only Connector Blueprint
 
 This update adds a design-only sandbox read-only connector blueprint. It defines read-only scope, credential scope, account snapshot schema, balance snapshot schema, position snapshot schema, redaction policy, rate limit policy, audit policy, safety validation, API endpoints, frontend page, documentation, report, CLI, and tests without enabling runtime, sandbox API, credential read, account read, balance read, position read, order preview, order submission, broker connection, or real money paths.
