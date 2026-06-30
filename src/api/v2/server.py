@@ -267,6 +267,14 @@ from sandbox_read_only_connector.read_only_rate_limit_policy import build_read_o
 from sandbox_read_only_connector.read_only_redaction_policy import build_redaction_policy
 from sandbox_read_only_connector.read_only_safety_validator import build_read_only_safety_summary
 from sandbox_read_only_connector.read_only_scope_definition import build_read_only_scope_definition
+from config.v5_read_only_mock_replay_config import get_read_only_mock_replay_provider, get_read_only_mock_replay_status
+from sandbox_read_only_mock_replay.mock_read_only_payloads import build_all_mock_read_only_payloads
+from sandbox_read_only_mock_replay.read_only_audit_replay import build_read_only_mock_audit_trail
+from sandbox_read_only_mock_replay.read_only_mock_replay_orchestrator import run_read_only_mock_replay, summarize_read_only_mock_replay
+from sandbox_read_only_mock_replay.read_only_mock_replay_safety_validator import build_read_only_mock_replay_safety_summary
+from sandbox_read_only_mock_replay.read_only_replay_runner import run_read_only_replay
+from sandbox_read_only_mock_replay.read_only_schema_validator import validate_all_read_only_schemas
+from sandbox_read_only_mock_replay.redaction_replay_validator import validate_all_payload_redaction
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -3062,6 +3070,76 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/read-only-connector/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/read-only-mock-replay/status")
+    def v5_read_only_mock_replay_status() -> dict:
+        started = perf_counter()
+        status = get_read_only_mock_replay_status()
+        response = success_response({"status": status, **_read_only_mock_replay_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/read-only-mock-replay/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-mock-replay/payloads")
+    def v5_read_only_mock_replay_payloads(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_mock_replay_provider()
+        payloads = build_all_mock_read_only_payloads(selected)
+        response = success_response({"payloads": payloads, **_read_only_mock_replay_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-mock-replay/payloads", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-mock-replay/schema")
+    def v5_read_only_mock_replay_schema(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_mock_replay_provider()
+        schema = validate_all_read_only_schemas(selected)
+        response = success_response({"schema": schema, **_read_only_mock_replay_boundary()}, started_at=started, warning=schema.get("warnings", []))
+        log_api_event("/api/v5/read-only-mock-replay/schema", "default", "ok", response["meta"]["latency_ms"], len(schema.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-mock-replay/redaction")
+    def v5_read_only_mock_replay_redaction(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_mock_replay_provider()
+        redaction = validate_all_payload_redaction(selected)
+        response = success_response({"redaction": redaction, **_read_only_mock_replay_boundary()}, started_at=started, warning=redaction.get("warnings", []))
+        log_api_event("/api/v5/read-only-mock-replay/redaction", "default", "ok", response["meta"]["latency_ms"], len(redaction.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-mock-replay/run")
+    def v5_read_only_mock_replay_run(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_mock_replay_provider()
+        replay = run_read_only_replay(selected)
+        response = success_response({"replay": replay, **_read_only_mock_replay_boundary()}, started_at=started, warning=replay.get("warnings", []))
+        log_api_event("/api/v5/read-only-mock-replay/run", "default", "ok", response["meta"]["latency_ms"], len(replay.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-mock-replay/audit")
+    def v5_read_only_mock_replay_audit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_mock_replay_provider()
+        audit = build_read_only_mock_audit_trail(selected)
+        response = success_response({"audit": audit, **_read_only_mock_replay_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-mock-replay/audit", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-mock-replay/safety")
+    def v5_read_only_mock_replay_safety() -> dict:
+        started = perf_counter()
+        safety = build_read_only_mock_replay_safety_summary()
+        response = success_response({"safety": safety, **_read_only_mock_replay_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/read-only-mock-replay/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-mock-replay/summary")
+    def v5_read_only_mock_replay_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_mock_replay_provider()
+        summary = summarize_read_only_mock_replay(run_read_only_mock_replay(selected))
+        response = success_response({"summary": summary, **_read_only_mock_replay_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/read-only-mock-replay/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -3351,6 +3429,24 @@ def _read_only_connector_boundary() -> dict:
         "version": "V5.33",
         "read_only_blueprint_only": True,
         "read_only_runtime_enabled": False,
+        "sandbox_api_enabled": False,
+        "secret_read_enabled": False,
+        "account_read_enabled": False,
+        "position_read_enabled": False,
+        "balance_read_enabled": False,
+        "order_preview_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _read_only_mock_replay_boundary() -> dict:
+    return {
+        "version": "V5.34",
+        "read_only_mock_replay_only": True,
+        "mock_replay_runtime_enabled": False,
         "sandbox_api_enabled": False,
         "secret_read_enabled": False,
         "account_read_enabled": False,

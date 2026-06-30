@@ -1073,3 +1073,35 @@ export function fetchV5ReadOnlyConnectorSafety() {
 export function fetchV5ReadOnlyConnectorSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/read-only-connector/summary');
 }
+
+export function fetchV5ReadOnlyMockReplayStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-mock-replay/status');
+}
+
+export function fetchV5ReadOnlyMockReplayPayloads() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-mock-replay/payloads');
+}
+
+export function fetchV5ReadOnlyMockReplaySchema() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-mock-replay/schema');
+}
+
+export function fetchV5ReadOnlyMockReplayRedaction() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-mock-replay/redaction');
+}
+
+export function fetchV5ReadOnlyMockReplayRun() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-mock-replay/run');
+}
+
+export function fetchV5ReadOnlyMockReplayAudit() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-mock-replay/audit');
+}
+
+export function fetchV5ReadOnlyMockReplaySafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-mock-replay/safety');
+}
+
+export function fetchV5ReadOnlyMockReplaySummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-mock-replay/summary');
+}

@@ -42,6 +42,7 @@ const links = [
   ['V5 Preflight Packet', '/v5-sandbox-preflight-packet'],
   ['V5 Controlled Enablement', '/v5-controlled-enablement'],
   ['V5 Read-Only Connector', '/v5-read-only-connector'],
+  ['V5 Read-Only Mock Replay', '/v5-read-only-mock-replay'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],
