@@ -901,3 +901,43 @@ export function fetchV5SandboxDryRunLaunchSafety() {
 export function fetchV5SandboxDryRunLaunchSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/sandbox-dry-run-launch/summary');
 }
+
+export function fetchV5SandboxReviewBoardStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-review-board/status');
+}
+
+export function fetchV5SandboxReviewBoardCharter() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-review-board/charter');
+}
+
+export function fetchV5SandboxReviewBoardRoles() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-review-board/roles');
+}
+
+export function fetchV5SandboxReviewBoardEvidence() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-review-board/evidence');
+}
+
+export function fetchV5SandboxReviewBoardRisks() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-review-board/risks');
+}
+
+export function fetchV5SandboxReviewBoardScore() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-review-board/score');
+}
+
+export function fetchV5SandboxReviewBoardDecision() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-review-board/decision');
+}
+
+export function fetchV5SandboxReviewBoardAudit() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-review-board/audit');
+}
+
+export function fetchV5SandboxReviewBoardSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-review-board/safety');
+}
+
+export function fetchV5SandboxReviewBoardSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-review-board/summary');
+}

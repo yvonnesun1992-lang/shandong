@@ -352,6 +352,13 @@
 - Launch plan only: launch runtime disabled, sandbox API disabled, credential read disabled, account read disabled, broker connected false, order submission disabled, real money disabled, and paper trading only
 - Go / No-Go gate remains `NO_GO`; requested runtime, sandbox, secret, account, order, or real-money paths only produce warnings and cannot unlock launch
 
+## 🧑‍⚖️ V5.30 Sandbox Dry-Run Readiness Review Board
+
+- Adds sandbox readiness review board charter, reviewer role matrix, evidence review matrix, risk acceptance matrix, readiness scoring, Go / No-Go decision record, review audit trail, safety validator, report, and CLI
+- Adds `/api/v5/sandbox-review-board/*` endpoints, V5 Review Board frontend page, navigation, documentation, and security scan hook
+- Review board only: review runtime disabled, reviewer approval disabled, sandbox API disabled, credential read disabled, account read disabled, broker connected false, order submission disabled, real money disabled, and paper trading only
+- Readiness score and simulated approval cannot unlock sandbox access; review board decision remains `NO_GO`
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

@@ -1,3 +1,95 @@
+# V5.30: Sandbox Dry-Run Readiness Review Board
+
+This update adds a design-only sandbox dry-run readiness review board. It defines the review board charter, reviewer role matrix, evidence review matrix, risk acceptance matrix, readiness scoring, Go / No-Go decision record, review audit trail, safety validation, API endpoints, frontend page, and documentation without enabling review runtime, reviewer approval, sandbox API, credential read, account read, broker connection, order submission, or real money paths.
+
+New files:
+
+```text
+config/v5_sandbox_review_board_config.py
+sandbox_review_board/__init__.py
+sandbox_review_board/init.py
+sandbox_review_board/review_board_charter.py
+sandbox_review_board/reviewer_role_matrix.py
+sandbox_review_board/evidence_review_matrix.py
+sandbox_review_board/risk_acceptance_matrix.py
+sandbox_review_board/readiness_scoring.py
+sandbox_review_board/go_no_go_decision_record.py
+sandbox_review_board/review_audit_trail.py
+sandbox_review_board/review_board_safety_validator.py
+sandbox_review_board/review_board_orchestrator.py
+sandbox_review_board/sandbox_review_board_report.py
+scripts/run_v530_sandbox_review_board.py
+web/frontend/app/v5-sandbox-review-board/page.tsx
+tests/test_v530_sandbox_review_board.py
+docs/V5_SANDBOX_REVIEW_BOARD.md
+reports/v5_30_sandbox_review_board_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Review runtime: no
+Reviewer approval: no
+Sandbox API connection: no
+Credential read: no
+Account read: no
+Provider portal access: no
+Real broker connection: no
+Broker SDK imports: no
+Account creation: no
+API key creation: no
+Balance/position read: no
+Order submission: no
+Sandbox orders: no
+Real orders: no
+Raw provider payload storage: no
+Provider endpoint URL field: no
+Real funds: no
+External network requests: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is sandbox dry-run readiness review board only: yes
+Go / No-Go decision remains NO_GO: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v530_sandbox_review_board.py: passed, verdict WARNING by design because decision remains NO_GO
+run_v530_sandbox_review_board.py --provider alpaca: passed, verdict WARNING by design
+run_v530_sandbox_review_board.py --provider ibkr: passed, verdict WARNING by design
+run_v530_sandbox_review_board.py --check evidence: passed, verdict WARNING by design
+run_v530_sandbox_review_board.py --check risks: passed, verdict WARNING by design
+run_v530_sandbox_review_board.py --check decision: passed, verdict WARNING by design
+run_v530_sandbox_review_board.py --check safety: passed, verdict WARNING by design
+frontend structure check: passed by file/navigation/API-client presence checks
+pytest tests/test_v530_sandbox_review_board.py: 4 passed
+pytest full suite: 835 passed
+system_doctor: OK
+security scan: safe true, findings 0; no review runtime, reviewer approval, sandbox API, credential read, account read, broker SDK imports, account/order path, raw provider payload, endpoint URL, or real money path
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for user review unless explicitly authorized
+```
+
 # V5.29: Sandbox Dry-Run Launch Plan
 
 This update adds a design-only sandbox dry-run launch plan. It defines dry-run scope, feature flags, responsibility matrix, preflight checklist, launch sequence, rollback plan, go/no-go gate, audit trail, safety validation, API endpoints, frontend page, and documentation without enabling launch runtime, sandbox API, credential read, account read, broker connection, order submission, or real money paths.
