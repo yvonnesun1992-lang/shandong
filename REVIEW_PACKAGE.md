@@ -1,3 +1,92 @@
+# V5.28: Pre-Sandbox Operator Approval Gate
+
+This update adds a design-only pre-sandbox operator approval gate. It defines approval request placeholders, evidence requirements, role policy, risk acknowledgements, gate evaluation, audit trail, safety validation, API endpoints, frontend page, and documentation without enabling approval runtime, sandbox API, credential read, broker connection, order submission, or real money paths.
+
+New files:
+
+```text
+config/v5_pre_sandbox_approval_config.py
+pre_sandbox_approval/__init__.py
+pre_sandbox_approval/init.py
+pre_sandbox_approval/approval_request_schema.py
+pre_sandbox_approval/evidence_requirement_validator.py
+pre_sandbox_approval/operator_role_policy.py
+pre_sandbox_approval/risk_acknowledgement_policy.py
+pre_sandbox_approval/approval_gate_evaluator.py
+pre_sandbox_approval/approval_audit_trail.py
+pre_sandbox_approval/approval_safety_validator.py
+pre_sandbox_approval/pre_sandbox_approval_orchestrator.py
+pre_sandbox_approval/pre_sandbox_approval_report.py
+scripts/run_v528_pre_sandbox_approval.py
+web/frontend/app/v5-pre-sandbox-approval/page.tsx
+tests/test_v528_pre_sandbox_approval.py
+docs/V5_PRE_SANDBOX_APPROVAL.md
+reports/v5_28_pre_sandbox_approval_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Approval runtime: no
+Operator approval granted: no
+Sandbox API connection: no
+Credential read: no
+Provider portal access: no
+Real broker connection: no
+Broker SDK imports: no
+Account creation: no
+API key creation: no
+Account read: no
+Order submission: no
+Sandbox orders: no
+Real orders: no
+Raw provider payload storage: no
+Provider endpoint URL field: no
+Real funds: no
+External network requests: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is pre-sandbox approval gate design only: yes
+Simulated approval cannot unlock sandbox/credential/order paths: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v528_pre_sandbox_approval.py: passed, verdict WARNING by design because approval gate remains blocked
+run_v528_pre_sandbox_approval.py --provider alpaca: passed, verdict WARNING by design
+run_v528_pre_sandbox_approval.py --provider ibkr: passed, verdict WARNING by design
+run_v528_pre_sandbox_approval.py --check evidence: passed, verdict WARNING by design
+run_v528_pre_sandbox_approval.py --check gate: passed, verdict WARNING by design
+run_v528_pre_sandbox_approval.py --check safety: passed, verdict WARNING by design
+frontend structure check: passed by file/navigation/API-client presence checks; node is not installed in this local shell, so npm build was not run
+pytest tests/test_v528_pre_sandbox_approval.py: 4 passed
+pytest full suite: 827 passed
+system_doctor: OK
+security scan: safe true, findings 0; no approval runtime, sandbox API, credential read, broker SDK imports, account/order path, raw provider payload, endpoint URL, or real money path
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: yes, user requested direct merge after completion
+```
+
 # V5.27: Credential Vault Interface Design
 
 This update adds a design-only credential vault interface layer for future sandbox credential handling. It defines placeholder-only references, scope and access policies, rotation/revocation runbooks, audit design, safety validation, API endpoints, frontend page, and documentation without enabling vault runtime or credential read/write paths.

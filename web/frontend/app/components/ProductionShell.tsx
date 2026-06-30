@@ -36,6 +36,7 @@ const links = [
   ['V5 Offline Soak', '/v5-provider-offline-soak'],
   ['V5 Sandbox Evidence', '/v5-sandbox-evidence'],
   ['V5 Credential Vault', '/v5-credential-vault-design'],
+  ['V5 Pre-Sandbox Approval', '/v5-pre-sandbox-approval'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],
