@@ -359,6 +359,13 @@
 - Review board only: review runtime disabled, reviewer approval disabled, sandbox API disabled, credential read disabled, account read disabled, broker connected false, order submission disabled, real money disabled, and paper trading only
 - Readiness score and simulated approval cannot unlock sandbox access; review board decision remains `NO_GO`
 
+## 📦 V5.31 Sandbox Dry-Run Final Preflight Packet
+
+- Adds final preflight checklist, artifact manifest, blocking item register, evidence digest, final NO-GO record, preflight audit trail, safety validator, report, and CLI
+- Adds `/api/v5/sandbox-preflight-packet/*` endpoints, V5 Preflight Packet frontend page, navigation, documentation, and security scan hook
+- Preflight packet only: preflight runtime disabled, packet approval disabled, sandbox API disabled, credential read disabled, account read disabled, broker connected false, order submission disabled, real money disabled, and paper trading only
+- Final decision remains `NO_GO`; simulated packet approval cannot unlock sandbox, credential, account, order, or money paths
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

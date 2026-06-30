@@ -229,6 +229,15 @@ from sandbox_review_board.review_board_orchestrator import build_review_board_pa
 from sandbox_review_board.review_board_safety_validator import build_review_board_safety_summary
 from sandbox_review_board.reviewer_role_matrix import build_reviewer_role_matrix
 from sandbox_review_board.risk_acceptance_matrix import build_risk_acceptance_matrix
+from config.v5_sandbox_preflight_packet_config import get_preflight_packet_provider, get_preflight_packet_status
+from sandbox_preflight_packet.artifact_manifest import build_artifact_manifest
+from sandbox_preflight_packet.blocking_item_register import build_blocking_item_register
+from sandbox_preflight_packet.final_decision_record import build_final_preflight_decision
+from sandbox_preflight_packet.final_preflight_checklist import build_final_preflight_checklist
+from sandbox_preflight_packet.preflight_audit_trail import build_preflight_audit_trail
+from sandbox_preflight_packet.preflight_evidence_digest import build_preflight_evidence_digest
+from sandbox_preflight_packet.preflight_packet_orchestrator import build_preflight_packet, summarize_preflight_packet
+from sandbox_preflight_packet.preflight_safety_validator import build_preflight_safety_summary
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
@@ -2724,6 +2733,85 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/sandbox-review-board/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/sandbox-preflight-packet/status")
+    def v5_sandbox_preflight_packet_status() -> dict:
+        started = perf_counter()
+        status = get_preflight_packet_status()
+        response = success_response({"status": status, **_sandbox_preflight_packet_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/sandbox-preflight-packet/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-preflight-packet/checklist")
+    def v5_sandbox_preflight_packet_checklist(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_preflight_packet_provider()
+        checklist = build_final_preflight_checklist(selected)
+        response = success_response({"checklist": checklist, **_sandbox_preflight_packet_boundary()}, started_at=started, warning=checklist.get("warnings", []))
+        log_api_event("/api/v5/sandbox-preflight-packet/checklist", "default", "ok", response["meta"]["latency_ms"], len(checklist.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-preflight-packet/artifacts")
+    def v5_sandbox_preflight_packet_artifacts(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_preflight_packet_provider()
+        artifacts = build_artifact_manifest(selected)
+        response = success_response({"artifacts": artifacts, **_sandbox_preflight_packet_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-preflight-packet/artifacts", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-preflight-packet/blocking-items")
+    def v5_sandbox_preflight_packet_blocking_items(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_preflight_packet_provider()
+        blocking = build_blocking_item_register(selected)
+        response = success_response({"blocking_items": blocking, **_sandbox_preflight_packet_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-preflight-packet/blocking-items", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-preflight-packet/evidence-digest")
+    def v5_sandbox_preflight_packet_evidence_digest(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_preflight_packet_provider()
+        digest = build_preflight_evidence_digest(selected)
+        response = success_response({"evidence_digest": digest, **_sandbox_preflight_packet_boundary()}, started_at=started, warning=digest.get("warnings", []))
+        log_api_event("/api/v5/sandbox-preflight-packet/evidence-digest", "default", "ok", response["meta"]["latency_ms"], len(digest.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-preflight-packet/decision")
+    def v5_sandbox_preflight_packet_decision(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_preflight_packet_provider()
+        decision = build_final_preflight_decision(selected)
+        response = success_response({"decision": decision, **_sandbox_preflight_packet_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-preflight-packet/decision", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-preflight-packet/audit")
+    def v5_sandbox_preflight_packet_audit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_preflight_packet_provider()
+        audit = build_preflight_audit_trail(selected)
+        response = success_response({"audit": audit, **_sandbox_preflight_packet_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-preflight-packet/audit", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-preflight-packet/safety")
+    def v5_sandbox_preflight_packet_safety() -> dict:
+        started = perf_counter()
+        safety = build_preflight_safety_summary()
+        response = success_response({"safety": safety, **_sandbox_preflight_packet_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/sandbox-preflight-packet/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-preflight-packet/summary")
+    def v5_sandbox_preflight_packet_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_preflight_packet_provider()
+        summary = summarize_preflight_packet(build_preflight_packet(selected))
+        response = success_response({"summary": summary, **_sandbox_preflight_packet_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/sandbox-preflight-packet/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -2965,6 +3053,22 @@ def _sandbox_review_board_boundary() -> dict:
         "review_board_only": True,
         "review_runtime_enabled": False,
         "reviewer_approval_enabled": False,
+        "sandbox_api_enabled": False,
+        "secret_read_enabled": False,
+        "account_read_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _sandbox_preflight_packet_boundary() -> dict:
+    return {
+        "version": "V5.31",
+        "preflight_packet_only": True,
+        "preflight_runtime_enabled": False,
+        "packet_approval_enabled": False,
         "sandbox_api_enabled": False,
         "secret_read_enabled": False,
         "account_read_enabled": False,

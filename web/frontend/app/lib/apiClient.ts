@@ -941,3 +941,39 @@ export function fetchV5SandboxReviewBoardSafety() {
 export function fetchV5SandboxReviewBoardSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/sandbox-review-board/summary');
 }
+
+export function fetchV5SandboxPreflightPacketStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-preflight-packet/status');
+}
+
+export function fetchV5SandboxPreflightPacketChecklist() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-preflight-packet/checklist');
+}
+
+export function fetchV5SandboxPreflightPacketArtifacts() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-preflight-packet/artifacts');
+}
+
+export function fetchV5SandboxPreflightPacketBlockingItems() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-preflight-packet/blocking-items');
+}
+
+export function fetchV5SandboxPreflightPacketEvidenceDigest() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-preflight-packet/evidence-digest');
+}
+
+export function fetchV5SandboxPreflightPacketDecision() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-preflight-packet/decision');
+}
+
+export function fetchV5SandboxPreflightPacketAudit() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-preflight-packet/audit');
+}
+
+export function fetchV5SandboxPreflightPacketSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-preflight-packet/safety');
+}
+
+export function fetchV5SandboxPreflightPacketSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-preflight-packet/summary');
+}
