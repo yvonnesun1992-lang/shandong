@@ -33,6 +33,7 @@ const links = [
   ['V5 Mock Contract', '/v5-provider-mock-contract'],
   ['V5 Offline Replay', '/v5-provider-offline-replay'],
   ['V5 Fault Injection', '/v5-provider-fault-injection'],
+  ['V5 Offline Soak', '/v5-provider-offline-soak'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

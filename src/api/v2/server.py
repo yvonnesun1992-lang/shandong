@@ -173,6 +173,15 @@ from provider_fault_injection.fault_replay_runner import run_all_fault_scenarios
 from provider_fault_injection.fault_safety_validator import build_fault_safety_summary
 from provider_fault_injection.fault_scenario_catalog import build_fault_scenario_catalog
 from provider_fault_injection.kill_switch_simulation import simulate_kill_switch_trigger
+from config.v5_provider_offline_soak_config import get_offline_soak_provider, get_offline_soak_status
+from provider_offline_soak.offline_soak_orchestrator import run_offline_soak, summarize_offline_soak_results
+from provider_offline_soak.soak_coverage_validator import validate_soak_coverage
+from provider_offline_soak.soak_event_generator import generate_all_soak_events, generate_soak_events
+from provider_offline_soak.soak_runner import run_all_soak_scenarios, run_soak_scenario
+from provider_offline_soak.soak_safety_validator import build_soak_safety_summary
+from provider_offline_soak.soak_scenario_plan import build_soak_scenario_plan
+from provider_offline_soak.stability_gate import evaluate_all_stability_gates
+from provider_offline_soak.stability_metrics import compute_all_stability_metrics
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
@@ -2179,6 +2188,84 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/provider-fault-injection/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/provider-offline-soak/status")
+    def v5_provider_offline_soak_status() -> dict:
+        started = perf_counter()
+        status = get_offline_soak_status()
+        response = success_response({"status": status, **_provider_offline_soak_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/provider-offline-soak/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-offline-soak/plan")
+    def v5_provider_offline_soak_plan(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_soak_provider()
+        response = success_response({"plan": build_soak_scenario_plan(selected), **_provider_offline_soak_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-offline-soak/plan", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-offline-soak/generate")
+    def v5_provider_offline_soak_generate(provider: str | None = None, scenario: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_soak_provider()
+        generated = generate_soak_events(selected, scenario) if scenario else generate_all_soak_events(selected)
+        response = success_response({"generate": generated, **_provider_offline_soak_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-offline-soak/generate", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-offline-soak/run")
+    def v5_provider_offline_soak_run(provider: str | None = None, scenario: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_soak_provider()
+        result = run_soak_scenario(selected, scenario) if scenario else run_all_soak_scenarios(selected)
+        response = success_response({"run": result, **_provider_offline_soak_boundary()}, started_at=started, warning=result.get("warnings", []))
+        log_api_event("/api/v5/provider-offline-soak/run", "default", "ok", response["meta"]["latency_ms"], len(result.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-offline-soak/metrics")
+    def v5_provider_offline_soak_metrics(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_soak_provider()
+        metrics = compute_all_stability_metrics(selected)
+        response = success_response({"metrics": metrics, **_provider_offline_soak_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-offline-soak/metrics", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-offline-soak/gate")
+    def v5_provider_offline_soak_gate(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_soak_provider()
+        gate = evaluate_all_stability_gates(selected)
+        response = success_response({"gate": gate, **_provider_offline_soak_boundary()}, started_at=started)
+        log_api_event("/api/v5/provider-offline-soak/gate", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/provider-offline-soak/coverage")
+    def v5_provider_offline_soak_coverage(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_soak_provider()
+        coverage = validate_soak_coverage(selected)
+        response = success_response({"coverage": coverage, **_provider_offline_soak_boundary()}, started_at=started, warning=coverage.get("warnings", []))
+        log_api_event("/api/v5/provider-offline-soak/coverage", "default", "ok", response["meta"]["latency_ms"], len(coverage.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-offline-soak/safety")
+    def v5_provider_offline_soak_safety() -> dict:
+        started = perf_counter()
+        safety = build_soak_safety_summary()
+        response = success_response({"safety": safety, **_provider_offline_soak_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/provider-offline-soak/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/provider-offline-soak/summary")
+    def v5_provider_offline_soak_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_offline_soak_provider()
+        summary = summarize_offline_soak_results(run_offline_soak(selected))
+        response = success_response({"summary": summary, **_provider_offline_soak_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/provider-offline-soak/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -2332,6 +2419,20 @@ def _provider_fault_injection_boundary() -> dict:
         "version": "V5.24",
         "fault_injection_only": True,
         "fault_injection_runtime_enabled": False,
+        "sandbox_api_enabled": False,
+        "account_read_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _provider_offline_soak_boundary() -> dict:
+    return {
+        "version": "V5.25",
+        "offline_soak_only": True,
+        "soak_runtime_enabled": False,
         "sandbox_api_enabled": False,
         "account_read_enabled": False,
         "order_submission_enabled": False,
