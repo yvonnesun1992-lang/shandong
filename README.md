@@ -373,6 +373,13 @@
 - Controlled blueprint only: controlled runtime disabled, controlled GO disabled, sandbox API disabled, secret read disabled, account read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
 - Final decision remains `CONTROLLED_GO_BLOCKED`; simulated approval or environment flags cannot unlock sandbox, secret, account, order, or money paths
 
+## 🔎 V5.33 Sandbox Dry-Run Read-Only Connector Blueprint
+
+- Adds read-only scope definition, credential scope, account snapshot schema, balance snapshot schema, position snapshot schema, redaction policy, rate limit policy, audit policy, safety validator, report, and CLI
+- Adds `/api/v5/read-only-connector/*` endpoints, V5 Read-Only Connector frontend page, navigation, documentation, and security scan hook
+- Read-only blueprint only: runtime disabled, sandbox API disabled, secret read disabled, account read disabled, position read disabled, balance read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
+- Account, balance, and position schemas are placeholder-only with redacted values; no real account, balance, position, provider payload, order, or money path is enabled
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

@@ -253,6 +253,20 @@ from sandbox_controlled_enablement.order_preview_enablement_conditions import bu
 from sandbox_controlled_enablement.order_submission_blocker import build_order_submission_blocker
 from sandbox_controlled_enablement.sandbox_api_enablement_conditions import build_sandbox_api_enablement_conditions
 from sandbox_controlled_enablement.staged_unlock_plan import build_staged_unlock_plan
+from config.v5_read_only_connector_config import get_read_only_connector_provider, get_read_only_connector_status
+from sandbox_read_only_connector.account_snapshot_schema import build_account_snapshot_schema
+from sandbox_read_only_connector.balance_snapshot_schema import build_balance_snapshot_schema
+from sandbox_read_only_connector.position_snapshot_schema import build_position_snapshot_schema
+from sandbox_read_only_connector.read_only_audit_policy import build_read_only_audit_policy
+from sandbox_read_only_connector.read_only_connector_orchestrator import (
+    build_read_only_connector_blueprint,
+    summarize_read_only_connector_blueprint,
+)
+from sandbox_read_only_connector.read_only_credential_scope import build_read_only_credential_scope
+from sandbox_read_only_connector.read_only_rate_limit_policy import build_read_only_rate_limit_policy
+from sandbox_read_only_connector.read_only_redaction_policy import build_redaction_policy
+from sandbox_read_only_connector.read_only_safety_validator import build_read_only_safety_summary
+from sandbox_read_only_connector.read_only_scope_definition import build_read_only_scope_definition
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -2951,6 +2965,103 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/controlled-enablement/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/read-only-connector/status")
+    def v5_read_only_connector_status() -> dict:
+        started = perf_counter()
+        status = get_read_only_connector_status()
+        response = success_response({"status": status, **_read_only_connector_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/read-only-connector/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-connector/scope")
+    def v5_read_only_connector_scope(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_connector_provider()
+        scope = build_read_only_scope_definition(selected)
+        response = success_response({"scope": scope, **_read_only_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-connector/scope", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-connector/credential-scope")
+    def v5_read_only_connector_credential_scope(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_connector_provider()
+        credential = build_read_only_credential_scope(selected)
+        response = success_response({"credential_scope": credential, **_read_only_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-connector/credential-scope", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-connector/account-schema")
+    def v5_read_only_connector_account_schema(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_connector_provider()
+        schema = build_account_snapshot_schema(selected)
+        response = success_response({"account_schema": schema, **_read_only_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-connector/account-schema", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-connector/balance-schema")
+    def v5_read_only_connector_balance_schema(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_connector_provider()
+        schema = build_balance_snapshot_schema(selected)
+        response = success_response({"balance_schema": schema, **_read_only_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-connector/balance-schema", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-connector/position-schema")
+    def v5_read_only_connector_position_schema(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_connector_provider()
+        schema = build_position_snapshot_schema(selected)
+        response = success_response({"position_schema": schema, **_read_only_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-connector/position-schema", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-connector/redaction")
+    def v5_read_only_connector_redaction(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_connector_provider()
+        redaction = build_redaction_policy(selected)
+        response = success_response({"redaction": redaction, **_read_only_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-connector/redaction", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-connector/rate-limit")
+    def v5_read_only_connector_rate_limit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_connector_provider()
+        rate_limit = build_read_only_rate_limit_policy(selected)
+        response = success_response({"rate_limit": rate_limit, **_read_only_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-connector/rate-limit", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-connector/audit")
+    def v5_read_only_connector_audit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_connector_provider()
+        audit = build_read_only_audit_policy(selected)
+        response = success_response({"audit": audit, **_read_only_connector_boundary()}, started_at=started)
+        log_api_event("/api/v5/read-only-connector/audit", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/read-only-connector/safety")
+    def v5_read_only_connector_safety() -> dict:
+        started = perf_counter()
+        safety = build_read_only_safety_summary()
+        response = success_response({"safety": safety, **_read_only_connector_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/read-only-connector/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-connector/summary")
+    def v5_read_only_connector_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_connector_provider()
+        summary = summarize_read_only_connector_blueprint(build_read_only_connector_blueprint(selected))
+        response = success_response({"summary": summary, **_read_only_connector_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/read-only-connector/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -3227,6 +3338,24 @@ def _controlled_enablement_boundary() -> dict:
         "sandbox_api_enabled": False,
         "secret_read_enabled": False,
         "account_read_enabled": False,
+        "order_preview_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _read_only_connector_boundary() -> dict:
+    return {
+        "version": "V5.33",
+        "read_only_blueprint_only": True,
+        "read_only_runtime_enabled": False,
+        "sandbox_api_enabled": False,
+        "secret_read_enabled": False,
+        "account_read_enabled": False,
+        "position_read_enabled": False,
+        "balance_read_enabled": False,
         "order_preview_enabled": False,
         "order_submission_enabled": False,
         "broker_connected": False,
