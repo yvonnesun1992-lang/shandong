@@ -35,6 +35,7 @@ const links = [
   ['V5 Fault Injection', '/v5-provider-fault-injection'],
   ['V5 Offline Soak', '/v5-provider-offline-soak'],
   ['V5 Sandbox Evidence', '/v5-sandbox-evidence'],
+  ['V5 Credential Vault', '/v5-credential-vault-design'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

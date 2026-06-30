@@ -113,6 +113,14 @@ IGNORED_SECURITY_CONTEXTS = [
     "import secrets",
     "secrets.token_hex",
     "secrets.token_urlsafe",
+    "credential_vault_design",
+    "vault_design_only",
+    "secret_read_enabled",
+    "secret_write_enabled",
+    "get_secret_reference",
+    "validate_secret_reference",
+    "build_secret_scope_policy",
+    "build_secret_access_policy",
 ]
 
 

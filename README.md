@@ -331,6 +331,13 @@
 - Adds `/api/v5/sandbox-evidence/*` endpoints, V5 Sandbox Evidence frontend page, navigation, documentation, and security scan hook
 - Evidence pack only: no provider portal, no sandbox API, no broker connection, no credential creation, no account read, no order submission, no raw provider payload storage, no provider endpoint URL field, no real money, no alpha model changes, and no new strategy
 
+## 🔐 V5.27 Credential Vault Interface Design
+
+- Adds future credential vault interface contract with placeholder-only reference, validation, rotation, revocation, and audit plans
+- Adds scope policy, access policy, rotation/revocation runbook, vault audit design, safety validator, report, and CLI
+- Adds `/api/v5/credential-vault-design/*` endpoints, V5 Credential Vault frontend page, navigation, documentation, and security scan hook
+- Vault design only: no real vault, no credential read/write, no provider portal, no sandbox API, no broker connection, no account read, no order submission, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
