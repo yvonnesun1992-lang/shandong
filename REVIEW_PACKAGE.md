@@ -1,3 +1,96 @@
+# V5.33: Sandbox Dry-Run Read-Only Connector Blueprint
+
+This update adds a design-only sandbox read-only connector blueprint. It defines read-only scope, credential scope, account snapshot schema, balance snapshot schema, position snapshot schema, redaction policy, rate limit policy, audit policy, safety validation, API endpoints, frontend page, documentation, report, CLI, and tests without enabling runtime, sandbox API, credential read, account read, balance read, position read, order preview, order submission, broker connection, or real money paths.
+
+New files:
+
+```text
+config/v5_read_only_connector_config.py
+sandbox_read_only_connector/__init__.py
+sandbox_read_only_connector/init.py
+sandbox_read_only_connector/read_only_scope_definition.py
+sandbox_read_only_connector/read_only_credential_scope.py
+sandbox_read_only_connector/account_snapshot_schema.py
+sandbox_read_only_connector/balance_snapshot_schema.py
+sandbox_read_only_connector/position_snapshot_schema.py
+sandbox_read_only_connector/read_only_redaction_policy.py
+sandbox_read_only_connector/read_only_rate_limit_policy.py
+sandbox_read_only_connector/read_only_audit_policy.py
+sandbox_read_only_connector/read_only_safety_validator.py
+sandbox_read_only_connector/read_only_connector_orchestrator.py
+sandbox_read_only_connector/sandbox_read_only_connector_report.py
+scripts/run_v533_read_only_connector.py
+web/frontend/app/v5-read-only-connector/page.tsx
+tests/test_v533_read_only_connector.py
+docs/V5_READ_ONLY_CONNECTOR_BLUEPRINT.md
+reports/v5_33_sandbox_read_only_connector_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Read-only runtime: no
+Sandbox API connection: no
+Credential read: no
+Account read: no
+Balance read: no
+Position read: no
+Order preview: no
+Order submission: no
+Real broker connection: no
+Broker SDK imports: no
+Provider portal access: no
+Credential read or storage: no
+Account, balance, or position read: no
+Sandbox orders: no
+Real orders: no
+Raw provider payload storage: no
+Provider endpoint URL field: no
+Unredacted balances or positions: no
+Real funds: no
+External network requests: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is sandbox dry-run read-only connector blueprint only: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v533_read_only_connector.py: passed, WARNING verdict by design because read-only connector runtime remains disabled
+run_v533_read_only_connector.py --provider alpaca: passed, WARNING verdict by design
+run_v533_read_only_connector.py --provider ibkr: passed, WARNING verdict by design
+run_v533_read_only_connector.py --check scope: passed, WARNING verdict by design
+run_v533_read_only_connector.py --check redaction: passed, WARNING verdict by design
+run_v533_read_only_connector.py --check safety: passed, WARNING verdict by design
+frontend structure check: passed
+pytest tests/test_v533_read_only_connector.py: 4 passed
+pytest full suite: 847 passed
+system_doctor: OK
+security scan: safe true, findings 0
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for user review unless explicitly authorized
+```
+
 # V5.32: Sandbox Dry-Run Controlled Enablement Blueprint
 
 This update adds a design-only controlled enablement blueprint for a future path from V5.31 `NO_GO` toward a controlled dry-run process. It defines controlled enablement conditions, staged unlock planning, feature flag dependencies, secret-read conditions, sandbox API conditions, account-read conditions, order-preview conditions, order-submission blocking, emergency stop conditions, decision records, safety validation, API endpoints, frontend page, documentation, report, CLI, and tests without enabling runtime, controlled GO, sandbox API, credential read, account read, order preview, order submission, broker connection, or real money paths.

@@ -41,6 +41,7 @@ const links = [
   ['V5 Review Board', '/v5-sandbox-review-board'],
   ['V5 Preflight Packet', '/v5-sandbox-preflight-packet'],
   ['V5 Controlled Enablement', '/v5-controlled-enablement'],
+  ['V5 Read-Only Connector', '/v5-read-only-connector'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

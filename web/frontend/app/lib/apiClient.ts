@@ -1029,3 +1029,47 @@ export function fetchV5ControlledEnablementSafety() {
 export function fetchV5ControlledEnablementSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/controlled-enablement/summary');
 }
+
+export function fetchV5ReadOnlyConnectorStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-connector/status');
+}
+
+export function fetchV5ReadOnlyConnectorScope() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-connector/scope');
+}
+
+export function fetchV5ReadOnlyConnectorCredentialScope() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-connector/credential-scope');
+}
+
+export function fetchV5ReadOnlyConnectorAccountSchema() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-connector/account-schema');
+}
+
+export function fetchV5ReadOnlyConnectorBalanceSchema() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-connector/balance-schema');
+}
+
+export function fetchV5ReadOnlyConnectorPositionSchema() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-connector/position-schema');
+}
+
+export function fetchV5ReadOnlyConnectorRedaction() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-connector/redaction');
+}
+
+export function fetchV5ReadOnlyConnectorRateLimit() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-connector/rate-limit');
+}
+
+export function fetchV5ReadOnlyConnectorAudit() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-connector/audit');
+}
+
+export function fetchV5ReadOnlyConnectorSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-connector/safety');
+}
+
+export function fetchV5ReadOnlyConnectorSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-connector/summary');
+}
