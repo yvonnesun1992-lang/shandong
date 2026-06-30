@@ -1105,3 +1105,47 @@ export function fetchV5ReadOnlyMockReplaySafety() {
 export function fetchV5ReadOnlyMockReplaySummary() {
   return apiGet<Record<string, unknown>>('/api/v5/read-only-mock-replay/summary');
 }
+
+export function fetchV5ReadOnlyFaultInjectionStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-fault-injection/status');
+}
+
+export function fetchV5ReadOnlyFaultInjectionPayloads() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-fault-injection/payloads');
+}
+
+export function fetchV5ReadOnlyFaultInjectionSchema() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-fault-injection/schema');
+}
+
+export function fetchV5ReadOnlyFaultInjectionRedaction() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-fault-injection/redaction');
+}
+
+export function fetchV5ReadOnlyFaultInjectionStale() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-fault-injection/stale');
+}
+
+export function fetchV5ReadOnlyFaultInjectionAuditFailure() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-fault-injection/audit-failure');
+}
+
+export function fetchV5ReadOnlyFaultInjectionRateLimit() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-fault-injection/rate-limit');
+}
+
+export function fetchV5ReadOnlyFaultInjectionOrderIntrusion() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-fault-injection/order-intrusion');
+}
+
+export function fetchV5ReadOnlyFaultInjectionRun() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-fault-injection/run');
+}
+
+export function fetchV5ReadOnlyFaultInjectionSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-fault-injection/safety');
+}
+
+export function fetchV5ReadOnlyFaultInjectionSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-fault-injection/summary');
+}
