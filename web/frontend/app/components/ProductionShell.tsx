@@ -37,6 +37,7 @@ const links = [
   ['V5 Sandbox Evidence', '/v5-sandbox-evidence'],
   ['V5 Credential Vault', '/v5-credential-vault-design'],
   ['V5 Pre-Sandbox Approval', '/v5-pre-sandbox-approval'],
+  ['V5 Dry-Run Launch', '/v5-sandbox-dry-run-launch'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

@@ -345,6 +345,13 @@
 - Approval gate only: approval runtime disabled, operator approval false, sandbox API disabled, credential read disabled, broker connected false, order submission disabled, real money disabled, and paper trading only
 - Simulated operator approval and real-path enablement environment variables only produce warnings and cannot unlock sandbox, credential, broker, order, or money paths
 
+## 🚦 V5.29 Sandbox Dry-Run Launch Plan
+
+- Adds sandbox dry-run scope definition, feature flag launch plan, responsibility matrix, preflight checklist, launch sequence, rollback plan, go/no-go gate, audit trail, safety validator, report, and CLI
+- Adds `/api/v5/sandbox-dry-run-launch/*` endpoints, V5 Dry-Run Launch frontend page, navigation, documentation, and security scan hook
+- Launch plan only: launch runtime disabled, sandbox API disabled, credential read disabled, account read disabled, broker connected false, order submission disabled, real money disabled, and paper trading only
+- Go / No-Go gate remains `NO_GO`; requested runtime, sandbox, secret, account, order, or real-money paths only produce warnings and cannot unlock launch
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

@@ -857,3 +857,47 @@ export function fetchV5PreSandboxApprovalSafety() {
 export function fetchV5PreSandboxApprovalSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/pre-sandbox-approval/summary');
 }
+
+export function fetchV5SandboxDryRunLaunchStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-dry-run-launch/status');
+}
+
+export function fetchV5SandboxDryRunLaunchScope() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-dry-run-launch/scope');
+}
+
+export function fetchV5SandboxDryRunLaunchFeatureFlags() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-dry-run-launch/feature-flags');
+}
+
+export function fetchV5SandboxDryRunLaunchResponsibility() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-dry-run-launch/responsibility');
+}
+
+export function fetchV5SandboxDryRunLaunchPreflight() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-dry-run-launch/preflight');
+}
+
+export function fetchV5SandboxDryRunLaunchSequence() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-dry-run-launch/sequence');
+}
+
+export function fetchV5SandboxDryRunLaunchRollback() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-dry-run-launch/rollback');
+}
+
+export function fetchV5SandboxDryRunLaunchGate() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-dry-run-launch/gate');
+}
+
+export function fetchV5SandboxDryRunLaunchAudit() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-dry-run-launch/audit');
+}
+
+export function fetchV5SandboxDryRunLaunchSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-dry-run-launch/safety');
+}
+
+export function fetchV5SandboxDryRunLaunchSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/sandbox-dry-run-launch/summary');
+}
