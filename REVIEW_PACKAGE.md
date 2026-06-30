@@ -1,3 +1,94 @@
+# V5.29: Sandbox Dry-Run Launch Plan
+
+This update adds a design-only sandbox dry-run launch plan. It defines dry-run scope, feature flags, responsibility matrix, preflight checklist, launch sequence, rollback plan, go/no-go gate, audit trail, safety validation, API endpoints, frontend page, and documentation without enabling launch runtime, sandbox API, credential read, account read, broker connection, order submission, or real money paths.
+
+New files:
+
+```text
+config/v5_sandbox_dry_run_launch_config.py
+sandbox_dry_run_launch/__init__.py
+sandbox_dry_run_launch/init.py
+sandbox_dry_run_launch/dry_run_scope_definition.py
+sandbox_dry_run_launch/feature_flag_launch_plan.py
+sandbox_dry_run_launch/responsibility_matrix.py
+sandbox_dry_run_launch/preflight_checklist.py
+sandbox_dry_run_launch/launch_sequence_plan.py
+sandbox_dry_run_launch/dry_run_rollback_plan.py
+sandbox_dry_run_launch/go_no_go_gate.py
+sandbox_dry_run_launch/launch_audit_trail.py
+sandbox_dry_run_launch/launch_safety_validator.py
+sandbox_dry_run_launch/dry_run_launch_orchestrator.py
+sandbox_dry_run_launch/sandbox_dry_run_launch_report.py
+scripts/run_v529_sandbox_dry_run_launch.py
+web/frontend/app/v5-sandbox-dry-run-launch/page.tsx
+tests/test_v529_sandbox_dry_run_launch.py
+docs/V5_SANDBOX_DRY_RUN_LAUNCH.md
+reports/v5_29_sandbox_dry_run_launch_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Safety boundaries:
+
+```text
+Launch runtime: no
+Sandbox API connection: no
+Credential read: no
+Account read: no
+Provider portal access: no
+Real broker connection: no
+Broker SDK imports: no
+Account creation: no
+API key creation: no
+Balance/position read: no
+Order submission: no
+Sandbox orders: no
+Real orders: no
+Raw provider payload storage: no
+Provider endpoint URL field: no
+Real funds: no
+External network requests: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is sandbox dry-run launch plan only: yes
+Go / No-Go gate remains NO_GO: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v529_sandbox_dry_run_launch.py: passed, verdict WARNING by design because go/no-go remains NO_GO
+run_v529_sandbox_dry_run_launch.py --provider alpaca: passed, verdict WARNING by design
+run_v529_sandbox_dry_run_launch.py --provider ibkr: passed, verdict WARNING by design
+run_v529_sandbox_dry_run_launch.py --check preflight: passed, verdict WARNING by design
+run_v529_sandbox_dry_run_launch.py --check gate: passed, verdict WARNING by design
+run_v529_sandbox_dry_run_launch.py --check safety: passed, verdict WARNING by design
+frontend structure check: passed by file/navigation/API-client presence checks
+pytest tests/test_v529_sandbox_dry_run_launch.py: 4 passed
+pytest full suite: 831 passed
+system_doctor: OK
+security scan: safe true, findings 0; no launch runtime, sandbox API, credential read, account read, broker SDK imports, account/order path, raw provider payload, endpoint URL, or real money path
+```
+
+Review recommendation:
+
+```text
+Whether to create PR: yes
+Whether to merge now: no, wait for user review unless explicitly authorized
+```
+
 # V5.28: Pre-Sandbox Operator Approval Gate
 
 This update adds a design-only pre-sandbox operator approval gate. It defines approval request placeholders, evidence requirements, role policy, risk acknowledgements, gate evaluation, audit trail, safety validation, API endpoints, frontend page, and documentation without enabling approval runtime, sandbox API, credential read, broker connection, order submission, or real money paths.

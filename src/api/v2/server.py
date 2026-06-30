@@ -208,6 +208,17 @@ from pre_sandbox_approval.evidence_requirement_validator import validate_evidenc
 from pre_sandbox_approval.operator_role_policy import build_operator_role_policy
 from pre_sandbox_approval.pre_sandbox_approval_orchestrator import run_pre_sandbox_approval_review, summarize_approval_review
 from pre_sandbox_approval.risk_acknowledgement_policy import build_risk_acknowledgement_policy
+from config.v5_sandbox_dry_run_launch_config import get_dry_run_launch_provider, get_dry_run_launch_status
+from sandbox_dry_run_launch.dry_run_launch_orchestrator import build_dry_run_launch_plan, summarize_dry_run_launch_plan
+from sandbox_dry_run_launch.dry_run_rollback_plan import build_dry_run_rollback_plan
+from sandbox_dry_run_launch.dry_run_scope_definition import build_dry_run_scope_definition
+from sandbox_dry_run_launch.feature_flag_launch_plan import build_feature_flag_launch_plan
+from sandbox_dry_run_launch.go_no_go_gate import build_go_no_go_summary
+from sandbox_dry_run_launch.launch_audit_trail import build_launch_audit_trail
+from sandbox_dry_run_launch.launch_safety_validator import build_launch_safety_summary
+from sandbox_dry_run_launch.launch_sequence_plan import build_launch_sequence_plan
+from sandbox_dry_run_launch.preflight_checklist import build_preflight_checklist
+from sandbox_dry_run_launch.responsibility_matrix import build_responsibility_matrix
 
 
 PROVIDER_SELECTION_RISK_MATRIX_PATH = "/api/v5/provider-selection/" + "ri" + "s" + "k-matrix"
@@ -2518,6 +2529,103 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/pre-sandbox-approval/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/sandbox-dry-run-launch/status")
+    def v5_sandbox_dry_run_launch_status() -> dict:
+        started = perf_counter()
+        status = get_dry_run_launch_status()
+        response = success_response({"status": status, **_sandbox_dry_run_launch_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/sandbox-dry-run-launch/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-dry-run-launch/scope")
+    def v5_sandbox_dry_run_launch_scope(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_dry_run_launch_provider()
+        scope = build_dry_run_scope_definition(selected)
+        response = success_response({"scope": scope, **_sandbox_dry_run_launch_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-dry-run-launch/scope", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-dry-run-launch/feature-flags")
+    def v5_sandbox_dry_run_launch_feature_flags(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_dry_run_launch_provider()
+        flags = build_feature_flag_launch_plan(selected)
+        response = success_response({"feature_flags": flags, **_sandbox_dry_run_launch_boundary()}, started_at=started, warning=flags.get("validation", {}).get("warnings", []))
+        log_api_event("/api/v5/sandbox-dry-run-launch/feature-flags", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-dry-run-launch/responsibility")
+    def v5_sandbox_dry_run_launch_responsibility(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_dry_run_launch_provider()
+        responsibility = build_responsibility_matrix(selected)
+        response = success_response({"responsibility": responsibility, **_sandbox_dry_run_launch_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-dry-run-launch/responsibility", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-dry-run-launch/preflight")
+    def v5_sandbox_dry_run_launch_preflight(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_dry_run_launch_provider()
+        preflight = build_preflight_checklist(selected)
+        response = success_response({"preflight": preflight, **_sandbox_dry_run_launch_boundary()}, started_at=started, warning=preflight.get("warnings", []))
+        log_api_event("/api/v5/sandbox-dry-run-launch/preflight", "default", "ok", response["meta"]["latency_ms"], len(preflight.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-dry-run-launch/sequence")
+    def v5_sandbox_dry_run_launch_sequence(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_dry_run_launch_provider()
+        sequence = build_launch_sequence_plan(selected)
+        response = success_response({"sequence": sequence, **_sandbox_dry_run_launch_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-dry-run-launch/sequence", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-dry-run-launch/rollback")
+    def v5_sandbox_dry_run_launch_rollback(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_dry_run_launch_provider()
+        rollback = build_dry_run_rollback_plan(selected)
+        response = success_response({"rollback": rollback, **_sandbox_dry_run_launch_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-dry-run-launch/rollback", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-dry-run-launch/gate")
+    def v5_sandbox_dry_run_launch_gate(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_dry_run_launch_provider()
+        gate = build_go_no_go_summary(selected)
+        response = success_response({"gate": gate, **_sandbox_dry_run_launch_boundary()}, started_at=started, warning=gate.get("warnings", []))
+        log_api_event("/api/v5/sandbox-dry-run-launch/gate", "default", "ok", response["meta"]["latency_ms"], len(gate.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-dry-run-launch/audit")
+    def v5_sandbox_dry_run_launch_audit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_dry_run_launch_provider()
+        audit = build_launch_audit_trail(selected)
+        response = success_response({"audit": audit, **_sandbox_dry_run_launch_boundary()}, started_at=started)
+        log_api_event("/api/v5/sandbox-dry-run-launch/audit", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/sandbox-dry-run-launch/safety")
+    def v5_sandbox_dry_run_launch_safety() -> dict:
+        started = perf_counter()
+        safety = build_launch_safety_summary()
+        response = success_response({"safety": safety, **_sandbox_dry_run_launch_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/sandbox-dry-run-launch/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/sandbox-dry-run-launch/summary")
+    def v5_sandbox_dry_run_launch_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_dry_run_launch_provider()
+        summary = summarize_dry_run_launch_plan(build_dry_run_launch_plan(selected))
+        response = success_response({"summary": summary, **_sandbox_dry_run_launch_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/sandbox-dry-run-launch/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -2733,6 +2841,21 @@ def _pre_sandbox_approval_boundary() -> dict:
         "secret_read_enabled": False,
         "broker_connected": False,
         "order_submission_enabled": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _sandbox_dry_run_launch_boundary() -> dict:
+    return {
+        "version": "V5.29",
+        "launch_plan_only": True,
+        "launch_runtime_enabled": False,
+        "sandbox_api_enabled": False,
+        "secret_read_enabled": False,
+        "account_read_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
         "real_money_enabled": False,
         "paper_trading": True,
     }
