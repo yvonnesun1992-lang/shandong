@@ -324,6 +324,13 @@
 - Adds `/api/v5/provider-offline-soak/*` endpoints, V5 Offline Soak frontend page, navigation, documentation, and security scan hook
 - Offline soak only: no provider portal, no sandbox API, no broker connection, no credential creation, no account read, no order submission, no raw provider payload storage, no provider endpoint URL field, no real money, no alpha model changes, and no new strategy
 
+## 📦 V5.26 Provider Sandbox Readiness Evidence Pack
+
+- Adds local evidence source collector for V5.23 offline replay, V5.24 fault injection, and V5.25 offline soak reports
+- Adds replay, fault, and soak evidence summaries, readiness gap analyzer, sandbox entry gate, safety validator, report, and CLI
+- Adds `/api/v5/sandbox-evidence/*` endpoints, V5 Sandbox Evidence frontend page, navigation, documentation, and security scan hook
+- Evidence pack only: no provider portal, no sandbox API, no broker connection, no credential creation, no account read, no order submission, no raw provider payload storage, no provider endpoint URL field, no real money, no alpha model changes, and no new strategy
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
