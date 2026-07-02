@@ -307,6 +307,16 @@ from sandbox_read_only_evidence_pack.order_blocking_evidence_pack import build_o
 from sandbox_read_only_evidence_pack.redaction_evidence_pack import build_redaction_evidence_pack
 from sandbox_read_only_evidence_pack.safety_boundary_evidence_pack import build_safety_boundary_evidence_pack
 from sandbox_read_only_evidence_pack.schema_evidence_pack import build_schema_evidence_pack
+from config.v5_read_only_final_review_config import get_read_only_final_review_provider, get_read_only_final_review_status
+from sandbox_read_only_final_review.evidence_review_matrix import build_evidence_review_matrix as build_read_only_final_review_evidence_matrix
+from sandbox_read_only_final_review.final_review_audit_trail import build_final_review_audit_trail
+from sandbox_read_only_final_review.final_review_charter import build_final_review_charter
+from sandbox_read_only_final_review.final_review_decision import build_final_review_decision
+from sandbox_read_only_final_review.final_review_orchestrator import build_read_only_final_review, summarize_read_only_final_review
+from sandbox_read_only_final_review.final_review_safety_validator import build_final_review_safety_summary
+from sandbox_read_only_final_review.missing_requirement_register import build_missing_requirement_register
+from sandbox_read_only_final_review.reviewer_role_matrix import build_reviewer_role_matrix
+from sandbox_read_only_final_review.risk_acceptance_matrix import build_risk_acceptance_matrix as build_read_only_final_review_risk_matrix
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -3444,6 +3454,87 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/read-only-evidence-pack/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/read-only-final-review/status")
+    def v5_read_only_final_review_status() -> dict:
+        started = perf_counter()
+        status = get_read_only_final_review_status()
+        response = success_response({"status": status, **_read_only_final_review_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/read-only-final-review/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-final-review/charter")
+    def v5_read_only_final_review_charter(provider: str | None = None) -> dict:
+        started = perf_counter()
+        charter = build_final_review_charter(provider or get_read_only_final_review_provider())
+        response = success_response({"charter": charter, **_read_only_final_review_boundary()}, started_at=started, warning=charter.get("warnings", []))
+        log_api_event("/api/v5/read-only-final-review/charter", "default", "ok", response["meta"]["latency_ms"], len(charter.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-final-review/roles")
+    def v5_read_only_final_review_roles(provider: str | None = None) -> dict:
+        started = perf_counter()
+        roles = build_reviewer_role_matrix(provider or get_read_only_final_review_provider())
+        response = success_response({"roles": roles, **_read_only_final_review_boundary()}, started_at=started, warning=roles.get("warnings", []))
+        log_api_event("/api/v5/read-only-final-review/roles", "default", "ok", response["meta"]["latency_ms"], len(roles.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-final-review/evidence")
+    def v5_read_only_final_review_evidence(provider: str | None = None) -> dict:
+        started = perf_counter()
+        evidence = build_read_only_final_review_evidence_matrix(provider or get_read_only_final_review_provider())
+        response = success_response({"evidence": evidence, **_read_only_final_review_boundary()}, started_at=started, warning=evidence.get("warnings", []))
+        log_api_event("/api/v5/read-only-final-review/evidence", "default", "ok", response["meta"]["latency_ms"], len(evidence.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-final-review/risks")
+    def v5_read_only_final_review_risks(provider: str | None = None) -> dict:
+        started = perf_counter()
+        risks = build_read_only_final_review_risk_matrix(provider or get_read_only_final_review_provider())
+        response = success_response({"risks": risks, **_read_only_final_review_boundary()}, started_at=started, warning=risks.get("warnings", []))
+        log_api_event("/api/v5/read-only-final-review/risks", "default", "ok", response["meta"]["latency_ms"], len(risks.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-final-review/missing-requirements")
+    def v5_read_only_final_review_missing(provider: str | None = None) -> dict:
+        started = perf_counter()
+        missing = build_missing_requirement_register(provider or get_read_only_final_review_provider())
+        response = success_response({"missing_requirements": missing, **_read_only_final_review_boundary()}, started_at=started, warning=missing.get("warnings", []))
+        log_api_event("/api/v5/read-only-final-review/missing-requirements", "default", "ok", response["meta"]["latency_ms"], len(missing.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-final-review/decision")
+    def v5_read_only_final_review_decision(provider: str | None = None) -> dict:
+        started = perf_counter()
+        decision = build_final_review_decision(provider or get_read_only_final_review_provider())
+        response = success_response({"decision": decision, **_read_only_final_review_boundary()}, started_at=started, warning=decision.get("warnings", []))
+        log_api_event("/api/v5/read-only-final-review/decision", "default", "ok", response["meta"]["latency_ms"], len(decision.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-final-review/audit")
+    def v5_read_only_final_review_audit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        audit = build_final_review_audit_trail(provider or get_read_only_final_review_provider())
+        response = success_response({"audit": audit, **_read_only_final_review_boundary()}, started_at=started, warning=audit.get("warnings", []))
+        log_api_event("/api/v5/read-only-final-review/audit", "default", "ok", response["meta"]["latency_ms"], len(audit.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-final-review/safety")
+    def v5_read_only_final_review_safety() -> dict:
+        started = perf_counter()
+        safety = build_final_review_safety_summary()
+        response = success_response({"safety": safety, **_read_only_final_review_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/read-only-final-review/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-final-review/summary")
+    def v5_read_only_final_review_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_final_review_provider()
+        summary = summarize_read_only_final_review(build_read_only_final_review(selected))
+        response = success_response({"summary": summary, **_read_only_final_review_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/read-only-final-review/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -3807,6 +3898,26 @@ def _read_only_evidence_pack_boundary() -> dict:
         "read_only_evidence_pack_only": True,
         "evidence_pack_runtime_enabled": False,
         "evidence_pack_passed": False,
+        "read_only_connector_allowed": False,
+        "sandbox_api_enabled": False,
+        "secret_read_enabled": False,
+        "account_read_enabled": False,
+        "position_read_enabled": False,
+        "balance_read_enabled": False,
+        "order_preview_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _read_only_final_review_boundary() -> dict:
+    return {
+        "version": "V5.38",
+        "read_only_final_review_only": True,
+        "final_review_runtime_enabled": False,
+        "final_review_passed": False,
         "read_only_connector_allowed": False,
         "sandbox_api_enabled": False,
         "secret_read_enabled": False,
