@@ -1,3 +1,102 @@
+# V5.38: Sandbox Read-Only Connector Final Review Board
+
+This update adds a local-only read-only connector final review board. It reviews V5.34 mock replay evidence, V5.35 fault injection evidence, V5.36 stability gate evidence, and V5.37 evidence pack material without enabling runtime, sandbox API, credential read, account read, balance read, position read, order preview, order submission, broker connection, real money, or production trading.
+
+New files:
+
+```text
+config/v5_read_only_final_review_config.py
+sandbox_read_only_final_review/__init__.py
+sandbox_read_only_final_review/init.py
+sandbox_read_only_final_review/final_review_charter.py
+sandbox_read_only_final_review/reviewer_role_matrix.py
+sandbox_read_only_final_review/evidence_review_matrix.py
+sandbox_read_only_final_review/risk_acceptance_matrix.py
+sandbox_read_only_final_review/missing_requirement_register.py
+sandbox_read_only_final_review/final_review_decision.py
+sandbox_read_only_final_review/final_review_audit_trail.py
+sandbox_read_only_final_review/final_review_safety_validator.py
+sandbox_read_only_final_review/final_review_orchestrator.py
+sandbox_read_only_final_review/sandbox_read_only_final_review_report.py
+scripts/run_v538_read_only_final_review.py
+web/frontend/app/v5-read-only-final-review/page.tsx
+tests/test_v538_read_only_final_review.py
+docs/V5_READ_ONLY_FINAL_REVIEW.md
+reports/v5_38_sandbox_read_only_final_review_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Final review coverage:
+
+```text
+Final review charter: covered
+Reviewer role matrix: covered
+Evidence review matrix: covered
+Risk acceptance matrix: covered and not ready by design
+Missing requirement register: covered
+Final review decision: covered and review-only by design
+Final review audit trail: covered with placeholders only
+Final review safety validation: covered and warning by design
+API endpoint coverage: covered
+Frontend structure coverage: covered
+```
+
+Safety boundaries:
+
+```text
+Final review runtime: no
+Final review pass: no
+Read-only connector allowed: no
+Sandbox API connection: no
+Credential read: no
+Account read: no
+Balance read: no
+Position read: no
+Order preview: no
+Order submission: no
+Real broker connection: no
+Broker SDK imports: no
+Provider portal access: no
+Raw real provider payload storage: no
+Real provider endpoint URL field: no
+Unredacted real balances or positions: no
+Real funds: no
+External network requests: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is sandbox read-only final review board only: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v538_read_only_final_review.py: passed, WARNING verdict by design because final review remains review-only
+run_v538_read_only_final_review.py --provider alpaca: passed, WARNING verdict by design
+run_v538_read_only_final_review.py --provider ibkr: passed, WARNING verdict by design
+run_v538_read_only_final_review.py --check evidence: passed, WARNING verdict by design
+run_v538_read_only_final_review.py --check risks: passed, WARNING verdict by design
+run_v538_read_only_final_review.py --check missing: passed, WARNING verdict by design
+run_v538_read_only_final_review.py --check decision: passed, WARNING verdict by design
+run_v538_read_only_final_review.py --check safety: passed, WARNING verdict by design
+pytest tests/test_v538_read_only_final_review.py: 4 passed
+pytest: 868 passed
+system_doctor: OK
+frontend structure check: passed
+```
+
 # V5.37: Sandbox Read-Only Connector Evidence Pack
 
 This update adds a local-only read-only connector evidence pack. It consolidates V5.34 mock replay evidence, V5.35 fault injection evidence, and V5.36 stability gate evidence into a single evidence package without enabling runtime, sandbox API, credential read, account read, balance read, position read, order preview, order submission, broker connection, real money, or production trading.

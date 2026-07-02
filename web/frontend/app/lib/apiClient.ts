@@ -1233,3 +1233,43 @@ export function fetchV5ReadOnlyEvidencePackSafety() {
 export function fetchV5ReadOnlyEvidencePackSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/read-only-evidence-pack/summary');
 }
+
+export function fetchV5ReadOnlyFinalReviewStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-final-review/status');
+}
+
+export function fetchV5ReadOnlyFinalReviewCharter() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-final-review/charter');
+}
+
+export function fetchV5ReadOnlyFinalReviewRoles() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-final-review/roles');
+}
+
+export function fetchV5ReadOnlyFinalReviewEvidence() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-final-review/evidence');
+}
+
+export function fetchV5ReadOnlyFinalReviewRisks() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-final-review/risks');
+}
+
+export function fetchV5ReadOnlyFinalReviewMissingRequirements() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-final-review/missing-requirements');
+}
+
+export function fetchV5ReadOnlyFinalReviewDecision() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-final-review/decision');
+}
+
+export function fetchV5ReadOnlyFinalReviewAudit() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-final-review/audit');
+}
+
+export function fetchV5ReadOnlyFinalReviewSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-final-review/safety');
+}
+
+export function fetchV5ReadOnlyFinalReviewSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-final-review/summary');
+}

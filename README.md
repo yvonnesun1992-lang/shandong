@@ -410,6 +410,14 @@
 - Evidence pack only: runtime disabled, sandbox API disabled, secret read disabled, account read disabled, position read disabled, balance read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
 - The final decision remains `READ_ONLY_EVIDENCE_ONLY`; complete evidence cannot set `evidence_pack_passed` or `read_only_connector_allowed` to true
 
+## 🧑‍⚖️ V5.38 Sandbox Read-Only Connector Final Review Board
+
+- Adds a final review board layer that reviews V5.34 mock replay, V5.35 fault injection, V5.36 stability gate, and V5.37 evidence pack
+- Adds final review charter, reviewer role matrix, evidence review matrix, risk acceptance matrix, missing requirement register, final review decision, audit trail, safety validation, report, and CLI
+- Adds `/api/v5/read-only-final-review/*` endpoints, V5 Read-Only Final Review frontend page, navigation, documentation, and security scan hook
+- Final review only: runtime disabled, sandbox API disabled, secret read disabled, account read disabled, position read disabled, balance read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
+- The final decision remains `READ_ONLY_FINAL_REVIEW_ONLY`; evidence review, risk acceptance, or simulated approval cannot set `final_review_passed` or `read_only_connector_allowed` to true
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.
