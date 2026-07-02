@@ -10,7 +10,7 @@ def _env_bool(name: str) -> bool:
 
 
 def get_read_only_evidence_pack_mode() -> str:
-    return os.getenv("SHANDONG_V5_READ_ONLY_EVIDENCE_PACK_MODE", "read_only_evidence_pack_only")
+    return "read_only_evidence_pack_only"
 
 
 def get_read_only_evidence_pack_provider() -> str:
@@ -27,6 +27,9 @@ def get_read_only_evidence_pack_provider() -> str:
 
 def get_read_only_evidence_pack_status() -> dict:
     warnings: list[str] = []
+    requested_mode = os.getenv("SHANDONG_V5_READ_ONLY_EVIDENCE_PACK_MODE")
+    if requested_mode and requested_mode.strip() != "read_only_evidence_pack_only":
+        warnings.append("read-only evidence pack mode override requested but blocked in V5.37")
     requested_flags = {
         "SHANDONG_V5_ENABLE_READ_ONLY_EVIDENCE_PACK_RUNTIME": "evidence pack runtime requested but blocked in V5.37",
         "SHANDONG_V5_ENABLE_EVIDENCE_PACK_PASS": "evidence pack pass requested but blocked in V5.37",

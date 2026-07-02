@@ -72,6 +72,27 @@ def test_read_only_evidence_pack_config_defaults_and_blocks_env_requests(monkeyp
     assert _is_safe(blocked)
 
 
+def test_read_only_evidence_pack_mode_override_is_blocked(monkeypatch):
+    from config.v5_read_only_evidence_pack_config import (
+        get_read_only_evidence_pack_mode,
+        get_read_only_evidence_pack_status,
+    )
+
+    monkeypatch.setenv("SHANDONG_V5_READ_ONLY_EVIDENCE_PACK_MODE", "production")
+    status = get_read_only_evidence_pack_status()
+    warnings = " | ".join(status["warnings"]).lower()
+
+    assert get_read_only_evidence_pack_mode() == "read_only_evidence_pack_only"
+    assert status["read_only_evidence_pack_mode"] == "read_only_evidence_pack_only"
+    assert status["read_only_evidence_pack_only"] is True
+    assert status["evidence_pack_passed"] is False
+    assert status["read_only_connector_allowed"] is False
+    assert "read-only evidence pack mode override requested but blocked in v5.37" in warnings
+    for key in FALSE_KEYS:
+        assert status[key] is False
+    assert _is_safe(status)
+
+
 def test_evidence_pack_modules_decision_orchestration_and_safety():
     from sandbox_read_only_evidence_pack.audit_evidence_pack import build_audit_evidence_pack
     from sandbox_read_only_evidence_pack.evidence_completeness_check import check_evidence_completeness
