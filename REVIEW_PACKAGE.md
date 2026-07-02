@@ -1,3 +1,106 @@
+# V5.37: Sandbox Read-Only Connector Evidence Pack
+
+This update adds a local-only read-only connector evidence pack. It consolidates V5.34 mock replay evidence, V5.35 fault injection evidence, and V5.36 stability gate evidence into a single evidence package without enabling runtime, sandbox API, credential read, account read, balance read, position read, order preview, order submission, broker connection, real money, or production trading.
+
+New files:
+
+```text
+config/v5_read_only_evidence_pack_config.py
+sandbox_read_only_evidence_pack/__init__.py
+sandbox_read_only_evidence_pack/init.py
+sandbox_read_only_evidence_pack/evidence_source_collector.py
+sandbox_read_only_evidence_pack/evidence_completeness_check.py
+sandbox_read_only_evidence_pack/redaction_evidence_pack.py
+sandbox_read_only_evidence_pack/schema_evidence_pack.py
+sandbox_read_only_evidence_pack/audit_evidence_pack.py
+sandbox_read_only_evidence_pack/order_blocking_evidence_pack.py
+sandbox_read_only_evidence_pack/safety_boundary_evidence_pack.py
+sandbox_read_only_evidence_pack/evidence_pack_decision.py
+sandbox_read_only_evidence_pack/evidence_pack_safety_validator.py
+sandbox_read_only_evidence_pack/evidence_pack_orchestrator.py
+sandbox_read_only_evidence_pack/sandbox_read_only_evidence_pack_report.py
+scripts/run_v537_read_only_evidence_pack.py
+web/frontend/app/v5-read-only-evidence-pack/page.tsx
+tests/test_v537_read_only_evidence_pack.py
+docs/V5_READ_ONLY_EVIDENCE_PACK.md
+reports/v5_37_sandbox_read_only_evidence_pack_report.md
+```
+
+Updated files:
+
+```text
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/components/ProductionShell.tsx
+README.md
+REVIEW_PACKAGE.md
+```
+
+Evidence pack coverage:
+
+```text
+Evidence source collection: covered
+Evidence completeness check: covered
+Redaction evidence pack: covered
+Schema evidence pack: covered
+Audit evidence pack: covered
+Order blocking evidence pack: covered
+Safety boundary evidence pack: covered
+Evidence pack decision: covered and evidence-only by design
+Evidence pack safety validation: covered and warning by design
+API endpoint coverage: covered
+Frontend structure coverage: covered
+```
+
+Safety boundaries:
+
+```text
+Evidence pack runtime: no
+Evidence pack pass: no
+Read-only connector allowed: no
+Sandbox API connection: no
+Credential read: no
+Account read: no
+Balance read: no
+Position read: no
+Order preview: no
+Order submission: no
+Real broker connection: no
+Broker SDK imports: no
+Provider portal access: no
+Raw real provider payload storage: no
+Real provider endpoint URL field: no
+Unredacted real balances or positions: no
+Real funds: no
+External network requests: no
+Production trading: no
+Alpha model changed: no
+Factor logic changed: no
+New strategy added: no
+This is sandbox read-only evidence pack only: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v537_read_only_evidence_pack.py: passed, WARNING verdict by design because evidence pack remains evidence-only
+run_v537_read_only_evidence_pack.py --provider alpaca: passed, WARNING verdict by design
+run_v537_read_only_evidence_pack.py --provider ibkr: passed, WARNING verdict by design
+run_v537_read_only_evidence_pack.py --check sources: passed
+run_v537_read_only_evidence_pack.py --check completeness: passed, WARNING verdict by design
+run_v537_read_only_evidence_pack.py --check redaction: passed
+run_v537_read_only_evidence_pack.py --check schema: passed
+run_v537_read_only_evidence_pack.py --check order-blocking: passed
+run_v537_read_only_evidence_pack.py --check decision: passed, WARNING verdict by design
+run_v537_read_only_evidence_pack.py --check safety: passed, WARNING verdict by design
+pytest tests/test_v537_read_only_evidence_pack.py: 4 passed
+pytest: 863 passed
+system_doctor: OK
+frontend structure check: passed
+```
+
 # V5.36: Sandbox Read-Only Connector Stability Gate
 
 This update adds a local-only sandbox read-only connector stability gate. It aggregates V5.34 mock replay evidence and V5.35 fault injection evidence, then keeps the connector gate blocked by design. Even when replay, fault, redaction, schema, audit, and order-path evidence is acceptable, V5.36 cannot enable sandbox API access, credential reads, account reads, balance reads, position reads, order preview, order submission, broker connection, real money, or production trading.

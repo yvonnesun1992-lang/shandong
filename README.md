@@ -402,6 +402,14 @@
 - Stability gate only: runtime disabled, sandbox API disabled, secret read disabled, account read disabled, position read disabled, balance read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
 - The final decision remains `STABILITY_GATE_BLOCKED`; even passing replay and fault evidence cannot set `stability_gate_passed` or `read_only_connector_allowed` to true
 
+## 📦 V5.37 Sandbox Read-Only Connector Evidence Pack
+
+- Adds a read-only evidence pack that consolidates V5.34 mock replay, V5.35 fault injection, and V5.36 stability gate evidence
+- Adds evidence source collection, completeness check, redaction pack, schema pack, audit pack, order blocking pack, safety boundary pack, decision, safety validation, report, and CLI
+- Adds `/api/v5/read-only-evidence-pack/*` endpoints, V5 Read-Only Evidence Pack frontend page, navigation, documentation, and security scan hook
+- Evidence pack only: runtime disabled, sandbox API disabled, secret read disabled, account read disabled, position read disabled, balance read disabled, order preview disabled, order submission disabled, broker connected false, real money disabled, and paper trading only
+- The final decision remains `READ_ONLY_EVIDENCE_ONLY`; complete evidence cannot set `evidence_pack_passed` or `read_only_connector_allowed` to true
+
 A production-ready SaaS-style platform for quantitative strategy research, risk analysis, and automated reporting.
 
 Turn raw market data into structured strategy intelligence with modular analytics, risk scoring, and automated reporting pipelines.

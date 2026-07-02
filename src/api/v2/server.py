@@ -296,6 +296,17 @@ from sandbox_read_only_stability_gate.schema_stability_check import check_schema
 from sandbox_read_only_stability_gate.stability_gate_decision import build_stability_gate_decision
 from sandbox_read_only_stability_gate.stability_gate_orchestrator import run_read_only_stability_gate, summarize_stability_gate
 from sandbox_read_only_stability_gate.stability_gate_safety_validator import build_stability_gate_safety_summary
+from config.v5_read_only_evidence_pack_config import get_read_only_evidence_pack_provider, get_read_only_evidence_pack_status
+from sandbox_read_only_evidence_pack.audit_evidence_pack import build_audit_evidence_pack
+from sandbox_read_only_evidence_pack.evidence_completeness_check import check_evidence_completeness
+from sandbox_read_only_evidence_pack.evidence_pack_decision import build_evidence_pack_decision
+from sandbox_read_only_evidence_pack.evidence_pack_orchestrator import build_read_only_evidence_pack, summarize_read_only_evidence_pack
+from sandbox_read_only_evidence_pack.evidence_pack_safety_validator import build_evidence_pack_safety_summary
+from sandbox_read_only_evidence_pack.evidence_source_collector import collect_evidence_sources as collect_read_only_evidence_pack_sources
+from sandbox_read_only_evidence_pack.order_blocking_evidence_pack import build_order_blocking_evidence_pack
+from sandbox_read_only_evidence_pack.redaction_evidence_pack import build_redaction_evidence_pack
+from sandbox_read_only_evidence_pack.safety_boundary_evidence_pack import build_safety_boundary_evidence_pack
+from sandbox_read_only_evidence_pack.schema_evidence_pack import build_schema_evidence_pack
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -3344,6 +3355,95 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/read-only-stability-gate/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/read-only-evidence-pack/status")
+    def v5_read_only_evidence_pack_status() -> dict:
+        started = perf_counter()
+        status = get_read_only_evidence_pack_status()
+        response = success_response({"status": status, **_read_only_evidence_pack_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/read-only-evidence-pack/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-evidence-pack/sources")
+    def v5_read_only_evidence_pack_sources(provider: str | None = None) -> dict:
+        started = perf_counter()
+        sources = collect_read_only_evidence_pack_sources(provider or get_read_only_evidence_pack_provider())
+        response = success_response({"sources": sources, **_read_only_evidence_pack_boundary()}, started_at=started, warning=sources.get("warnings", []))
+        log_api_event("/api/v5/read-only-evidence-pack/sources", "default", "ok", response["meta"]["latency_ms"], len(sources.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-evidence-pack/completeness")
+    def v5_read_only_evidence_pack_completeness(provider: str | None = None) -> dict:
+        started = perf_counter()
+        completeness = check_evidence_completeness(provider or get_read_only_evidence_pack_provider())
+        response = success_response({"completeness": completeness, **_read_only_evidence_pack_boundary()}, started_at=started, warning=completeness.get("warnings", []))
+        log_api_event("/api/v5/read-only-evidence-pack/completeness", "default", "ok", response["meta"]["latency_ms"], len(completeness.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-evidence-pack/redaction")
+    def v5_read_only_evidence_pack_redaction(provider: str | None = None) -> dict:
+        started = perf_counter()
+        redaction = build_redaction_evidence_pack(provider or get_read_only_evidence_pack_provider())
+        response = success_response({"redaction": redaction, **_read_only_evidence_pack_boundary()}, started_at=started, warning=redaction.get("warnings", []))
+        log_api_event("/api/v5/read-only-evidence-pack/redaction", "default", "ok", response["meta"]["latency_ms"], len(redaction.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-evidence-pack/schema")
+    def v5_read_only_evidence_pack_schema(provider: str | None = None) -> dict:
+        started = perf_counter()
+        schema = build_schema_evidence_pack(provider or get_read_only_evidence_pack_provider())
+        response = success_response({"schema": schema, **_read_only_evidence_pack_boundary()}, started_at=started, warning=schema.get("warnings", []))
+        log_api_event("/api/v5/read-only-evidence-pack/schema", "default", "ok", response["meta"]["latency_ms"], len(schema.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-evidence-pack/audit")
+    def v5_read_only_evidence_pack_audit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        audit = build_audit_evidence_pack(provider or get_read_only_evidence_pack_provider())
+        response = success_response({"audit": audit, **_read_only_evidence_pack_boundary()}, started_at=started, warning=audit.get("warnings", []))
+        log_api_event("/api/v5/read-only-evidence-pack/audit", "default", "ok", response["meta"]["latency_ms"], len(audit.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-evidence-pack/order-blocking")
+    def v5_read_only_evidence_pack_order_blocking(provider: str | None = None) -> dict:
+        started = perf_counter()
+        order_blocking = build_order_blocking_evidence_pack(provider or get_read_only_evidence_pack_provider())
+        response = success_response({"order_blocking": order_blocking, **_read_only_evidence_pack_boundary()}, started_at=started, warning=order_blocking.get("warnings", []))
+        log_api_event("/api/v5/read-only-evidence-pack/order-blocking", "default", "ok", response["meta"]["latency_ms"], len(order_blocking.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-evidence-pack/safety-boundary")
+    def v5_read_only_evidence_pack_safety_boundary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        safety_boundary = build_safety_boundary_evidence_pack(provider or get_read_only_evidence_pack_provider())
+        response = success_response({"safety_boundary": safety_boundary, **_read_only_evidence_pack_boundary()}, started_at=started, warning=safety_boundary.get("warnings", []))
+        log_api_event("/api/v5/read-only-evidence-pack/safety-boundary", "default", "ok", response["meta"]["latency_ms"], len(safety_boundary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-evidence-pack/decision")
+    def v5_read_only_evidence_pack_decision(provider: str | None = None) -> dict:
+        started = perf_counter()
+        decision = build_evidence_pack_decision(provider or get_read_only_evidence_pack_provider())
+        response = success_response({"decision": decision, **_read_only_evidence_pack_boundary()}, started_at=started, warning=decision.get("warnings", []))
+        log_api_event("/api/v5/read-only-evidence-pack/decision", "default", "ok", response["meta"]["latency_ms"], len(decision.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-evidence-pack/safety")
+    def v5_read_only_evidence_pack_safety() -> dict:
+        started = perf_counter()
+        safety = build_evidence_pack_safety_summary()
+        response = success_response({"safety": safety, **_read_only_evidence_pack_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/read-only-evidence-pack/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-evidence-pack/summary")
+    def v5_read_only_evidence_pack_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_evidence_pack_provider()
+        summary = summarize_read_only_evidence_pack(build_read_only_evidence_pack(selected))
+        response = success_response({"summary": summary, **_read_only_evidence_pack_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/read-only-evidence-pack/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -3688,6 +3788,26 @@ def _read_only_stability_gate_boundary() -> dict:
         "read_only_stability_gate_only": True,
         "stability_gate_runtime_enabled": False,
         "stability_gate_passed": False,
+        "sandbox_api_enabled": False,
+        "secret_read_enabled": False,
+        "account_read_enabled": False,
+        "position_read_enabled": False,
+        "balance_read_enabled": False,
+        "order_preview_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _read_only_evidence_pack_boundary() -> dict:
+    return {
+        "version": "V5.37",
+        "read_only_evidence_pack_only": True,
+        "evidence_pack_runtime_enabled": False,
+        "evidence_pack_passed": False,
+        "read_only_connector_allowed": False,
         "sandbox_api_enabled": False,
         "secret_read_enabled": False,
         "account_read_enabled": False,
