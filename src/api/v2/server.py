@@ -286,6 +286,16 @@ from sandbox_read_only_fault_injection.order_path_intrusion_detector import dete
 from sandbox_read_only_fault_injection.rate_limit_fault_simulator import simulate_rate_limit_fault, validate_rate_limit_fault_handling
 from sandbox_read_only_fault_injection.redaction_failure_detector import detect_all_redaction_failures
 from sandbox_read_only_fault_injection.stale_snapshot_detector import detect_all_stale_snapshots
+from config.v5_read_only_stability_gate_config import get_read_only_stability_gate_provider, get_read_only_stability_gate_status
+from sandbox_read_only_stability_gate.audit_stability_check import check_audit_stability
+from sandbox_read_only_stability_gate.fault_evidence_collector import collect_fault_evidence
+from sandbox_read_only_stability_gate.order_path_stability_check import check_order_path_stability
+from sandbox_read_only_stability_gate.redaction_stability_check import check_redaction_stability
+from sandbox_read_only_stability_gate.replay_evidence_collector import collect_replay_evidence
+from sandbox_read_only_stability_gate.schema_stability_check import check_schema_stability
+from sandbox_read_only_stability_gate.stability_gate_decision import build_stability_gate_decision
+from sandbox_read_only_stability_gate.stability_gate_orchestrator import run_read_only_stability_gate, summarize_stability_gate
+from sandbox_read_only_stability_gate.stability_gate_safety_validator import build_stability_gate_safety_summary
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -3253,6 +3263,87 @@ def create_v2_api_app() -> FastAPI:
         log_api_event("/api/v5/read-only-fault-injection/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
+    @api.get("/api/v5/read-only-stability-gate/status")
+    def v5_read_only_stability_gate_status() -> dict:
+        started = perf_counter()
+        status = get_read_only_stability_gate_status()
+        response = success_response({"status": status, **_read_only_stability_gate_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/read-only-stability-gate/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-stability-gate/replay-evidence")
+    def v5_read_only_stability_gate_replay(provider: str | None = None) -> dict:
+        started = perf_counter()
+        evidence = collect_replay_evidence(provider or get_read_only_stability_gate_provider())
+        response = success_response({"replay_evidence": evidence, **_read_only_stability_gate_boundary()}, started_at=started, warning=evidence.get("warnings", []))
+        log_api_event("/api/v5/read-only-stability-gate/replay-evidence", "default", "ok", response["meta"]["latency_ms"], len(evidence.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-stability-gate/fault-evidence")
+    def v5_read_only_stability_gate_fault(provider: str | None = None) -> dict:
+        started = perf_counter()
+        evidence = collect_fault_evidence(provider or get_read_only_stability_gate_provider())
+        response = success_response({"fault_evidence": evidence, **_read_only_stability_gate_boundary()}, started_at=started, warning=evidence.get("warnings", []))
+        log_api_event("/api/v5/read-only-stability-gate/fault-evidence", "default", "ok", response["meta"]["latency_ms"], len(evidence.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-stability-gate/redaction")
+    def v5_read_only_stability_gate_redaction(provider: str | None = None) -> dict:
+        started = perf_counter()
+        redaction = check_redaction_stability(provider or get_read_only_stability_gate_provider())
+        response = success_response({"redaction": redaction, **_read_only_stability_gate_boundary()}, started_at=started, warning=redaction.get("warnings", []))
+        log_api_event("/api/v5/read-only-stability-gate/redaction", "default", "ok", response["meta"]["latency_ms"], len(redaction.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-stability-gate/schema")
+    def v5_read_only_stability_gate_schema(provider: str | None = None) -> dict:
+        started = perf_counter()
+        schema = check_schema_stability(provider or get_read_only_stability_gate_provider())
+        response = success_response({"schema": schema, **_read_only_stability_gate_boundary()}, started_at=started, warning=schema.get("warnings", []))
+        log_api_event("/api/v5/read-only-stability-gate/schema", "default", "ok", response["meta"]["latency_ms"], len(schema.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-stability-gate/audit")
+    def v5_read_only_stability_gate_audit(provider: str | None = None) -> dict:
+        started = perf_counter()
+        audit = check_audit_stability(provider or get_read_only_stability_gate_provider())
+        response = success_response({"audit": audit, **_read_only_stability_gate_boundary()}, started_at=started, warning=audit.get("warnings", []))
+        log_api_event("/api/v5/read-only-stability-gate/audit", "default", "ok", response["meta"]["latency_ms"], len(audit.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-stability-gate/order-path")
+    def v5_read_only_stability_gate_order_path(provider: str | None = None) -> dict:
+        started = perf_counter()
+        order_path = check_order_path_stability(provider or get_read_only_stability_gate_provider())
+        response = success_response({"order_path": order_path, **_read_only_stability_gate_boundary()}, started_at=started, warning=order_path.get("warnings", []))
+        log_api_event("/api/v5/read-only-stability-gate/order-path", "default", "ok", response["meta"]["latency_ms"], len(order_path.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-stability-gate/decision")
+    def v5_read_only_stability_gate_decision(provider: str | None = None) -> dict:
+        started = perf_counter()
+        decision = build_stability_gate_decision(provider or get_read_only_stability_gate_provider())
+        response = success_response({"decision": decision, **_read_only_stability_gate_boundary()}, started_at=started, warning=decision.get("warnings", []))
+        log_api_event("/api/v5/read-only-stability-gate/decision", "default", "ok", response["meta"]["latency_ms"], len(decision.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-stability-gate/safety")
+    def v5_read_only_stability_gate_safety() -> dict:
+        started = perf_counter()
+        safety = build_stability_gate_safety_summary()
+        response = success_response({"safety": safety, **_read_only_stability_gate_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/read-only-stability-gate/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/read-only-stability-gate/summary")
+    def v5_read_only_stability_gate_summary(provider: str | None = None) -> dict:
+        started = perf_counter()
+        selected = provider or get_read_only_stability_gate_provider()
+        summary = summarize_stability_gate(run_read_only_stability_gate(selected))
+        response = success_response({"summary": summary, **_read_only_stability_gate_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/read-only-stability-gate/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
     return api
 
 
@@ -3578,6 +3669,25 @@ def _read_only_fault_injection_boundary() -> dict:
         "version": "V5.35",
         "read_only_fault_injection_only": True,
         "fault_injection_runtime_enabled": False,
+        "sandbox_api_enabled": False,
+        "secret_read_enabled": False,
+        "account_read_enabled": False,
+        "position_read_enabled": False,
+        "balance_read_enabled": False,
+        "order_preview_enabled": False,
+        "order_submission_enabled": False,
+        "broker_connected": False,
+        "real_money_enabled": False,
+        "paper_trading": True,
+    }
+
+
+def _read_only_stability_gate_boundary() -> dict:
+    return {
+        "version": "V5.36",
+        "read_only_stability_gate_only": True,
+        "stability_gate_runtime_enabled": False,
+        "stability_gate_passed": False,
         "sandbox_api_enabled": False,
         "secret_read_enabled": False,
         "account_read_enabled": False,

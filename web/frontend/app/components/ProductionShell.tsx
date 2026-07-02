@@ -44,6 +44,7 @@ const links = [
   ['V5 Read-Only Connector', '/v5-read-only-connector'],
   ['V5 Read-Only Mock Replay', '/v5-read-only-mock-replay'],
   ['V5 Read-Only Fault Injection', '/v5-read-only-fault-injection'],
+  ['V5 Read-Only Stability Gate', '/v5-read-only-stability-gate'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],
