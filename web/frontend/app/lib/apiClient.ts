@@ -1189,3 +1189,47 @@ export function fetchV5ReadOnlyStabilityGateSafety() {
 export function fetchV5ReadOnlyStabilityGateSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/read-only-stability-gate/summary');
 }
+
+export function fetchV5ReadOnlyEvidencePackStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-evidence-pack/status');
+}
+
+export function fetchV5ReadOnlyEvidencePackSources() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-evidence-pack/sources');
+}
+
+export function fetchV5ReadOnlyEvidencePackCompleteness() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-evidence-pack/completeness');
+}
+
+export function fetchV5ReadOnlyEvidencePackRedaction() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-evidence-pack/redaction');
+}
+
+export function fetchV5ReadOnlyEvidencePackSchema() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-evidence-pack/schema');
+}
+
+export function fetchV5ReadOnlyEvidencePackAudit() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-evidence-pack/audit');
+}
+
+export function fetchV5ReadOnlyEvidencePackOrderBlocking() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-evidence-pack/order-blocking');
+}
+
+export function fetchV5ReadOnlyEvidencePackSafetyBoundary() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-evidence-pack/safety-boundary');
+}
+
+export function fetchV5ReadOnlyEvidencePackDecision() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-evidence-pack/decision');
+}
+
+export function fetchV5ReadOnlyEvidencePackSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-evidence-pack/safety');
+}
+
+export function fetchV5ReadOnlyEvidencePackSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/read-only-evidence-pack/summary');
+}
