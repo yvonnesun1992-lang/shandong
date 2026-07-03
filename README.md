@@ -854,7 +854,7 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ## 🧪 System Status
 
-- ✔ pytest: 884 tests passed
+- ✔ pytest: 888 tests passed
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
@@ -944,3 +944,13 @@ This project demonstrates a full SaaS-style quantitative intelligence system arc
 - Adds `/api/v5/local-run-doctor/*` endpoints and a frontend Local Run Doctor page.
 - Generates `reports/v5_42_local_run_doctor_report.md` as local diagnosis evidence.
 - Local diagnosis only: no broker connection, no sandbox API, no secret/account/balance/position reads, no order submission, no real money, no alpha/factor/strategy changes.
+
+---
+
+## 🧭 V5.43 Guided Local Setup Wizard
+
+- Guided local setup wizard for users who cannot open `http://127.0.0.1:3000`.
+- Explains missing requirements, likely blocker, Mac steps, Windows steps, copy commands, and plain-language frontend/backend concepts.
+- Adds `/api/v5/guided-setup/*` endpoints and a frontend Guided Local Setup Wizard page.
+- Generates `reports/v5_43_guided_setup_wizard_report.md` as setup guidance evidence.
+- Setup guide only: no auto install, no external network automation, no PATH modification, no admin permission request, no long-running process start, no broker/sandbox/secret/account/order/money paths.
