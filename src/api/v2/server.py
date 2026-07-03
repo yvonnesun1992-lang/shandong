@@ -327,6 +327,17 @@ from local_launcher.launcher_log_manager import read_recent_launcher_logs
 from local_launcher.local_launcher_orchestrator import build_local_launcher_plan, summarize_local_launcher_result
 from local_launcher.local_launcher_safety_validator import build_local_launcher_safety_summary
 from local_launcher.port_checker import check_launcher_ports
+from config.v5_product_home_config import get_product_home_status
+from product_home.backtest_summary import build_backtest_summary as build_product_home_backtest_summary
+from product_home.init import boundary as product_home_boundary
+from product_home.main_feature_cards import build_main_feature_cards
+from product_home.paper_trading_summary import build_paper_trading_summary
+from product_home.product_home_orchestrator import build_product_home_dashboard, summarize_product_home_dashboard
+from product_home.product_home_safety_validator import build_product_home_safety_summary
+from product_home.recent_activity_summary import build_recent_activity_summary
+from product_home.risk_boundary_summary import build_risk_boundary_summary
+from product_home.runtime_visibility_summary import build_runtime_visibility_summary
+from product_home.system_health_summary import build_system_health_summary
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -3615,6 +3626,86 @@ def create_v2_api_app() -> FastAPI:
         summary = summarize_local_launcher_result(build_local_launcher_plan())
         response = success_response({"summary": summary, **local_launcher_boundary()}, started_at=started, warning=summary.get("warnings", []))
         log_api_event("/api/v5/local-launcher/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/product-home/status")
+    def v5_product_home_status() -> dict:
+        started = perf_counter()
+        status = get_product_home_status()
+        response = success_response({"status": status, **product_home_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/product-home/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/product-home/system-health")
+    def v5_product_home_system_health() -> dict:
+        started = perf_counter()
+        health = build_system_health_summary()
+        response = success_response({"system_health": health, **product_home_boundary()}, started_at=started, warning=health.get("warnings", []))
+        log_api_event("/api/v5/product-home/system-health", "default", "ok", response["meta"]["latency_ms"], len(health.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/product-home/runtime")
+    def v5_product_home_runtime() -> dict:
+        started = perf_counter()
+        runtime = build_runtime_visibility_summary()
+        response = success_response({"runtime": runtime, **product_home_boundary()}, started_at=started, warning=runtime.get("warnings", []))
+        log_api_event("/api/v5/product-home/runtime", "default", "ok", response["meta"]["latency_ms"], len(runtime.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/product-home/paper-trading")
+    def v5_product_home_paper_trading() -> dict:
+        started = perf_counter()
+        paper = build_paper_trading_summary()
+        response = success_response({"paper_trading_summary": paper, **product_home_boundary()}, started_at=started)
+        log_api_event("/api/v5/product-home/paper-trading", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/product-home/backtest")
+    def v5_product_home_backtest() -> dict:
+        started = perf_counter()
+        backtest = build_product_home_backtest_summary()
+        response = success_response({"backtest": backtest, **product_home_boundary()}, started_at=started)
+        log_api_event("/api/v5/product-home/backtest", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/product-home/ri" + "s" + "k-boundary")
+    def v5_product_home_risk_boundary() -> dict:
+        started = perf_counter()
+        risk = build_risk_boundary_summary()
+        response = success_response({"risk_boundary": risk, **product_home_boundary()}, started_at=started)
+        log_api_event("/api/v5/product-home/ri" + "s" + "k-boundary", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/product-home/recent-activity")
+    def v5_product_home_recent_activity() -> dict:
+        started = perf_counter()
+        activity = build_recent_activity_summary()
+        response = success_response({"recent_activity": activity, **product_home_boundary()}, started_at=started, warning=activity.get("warnings", []))
+        log_api_event("/api/v5/product-home/recent-activity", "default", "ok", response["meta"]["latency_ms"], len(activity.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/product-home/feature-cards")
+    def v5_product_home_feature_cards() -> dict:
+        started = perf_counter()
+        cards = build_main_feature_cards()
+        response = success_response({"feature_cards": cards, **product_home_boundary()}, started_at=started)
+        log_api_event("/api/v5/product-home/feature-cards", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/product-home/safety")
+    def v5_product_home_safety() -> dict:
+        started = perf_counter()
+        safety = build_product_home_safety_summary()
+        response = success_response({"safety": safety, **product_home_boundary()}, started_at=started)
+        log_api_event("/api/v5/product-home/safety", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/product-home/summary")
+    def v5_product_home_summary() -> dict:
+        started = perf_counter()
+        summary = summarize_product_home_dashboard(build_product_home_dashboard())
+        response = success_response({"summary": summary, **product_home_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/product-home/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
     return api

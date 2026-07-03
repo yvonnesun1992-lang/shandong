@@ -5015,6 +5015,41 @@ V5.39 新增本地桌面启动器，用于检查本地环境、生成 backend/fr
 - frontend structure check: passed
 - local launcher dry-run verdict: WARNING only because current machine reported Node unavailable; Python checks and CLI completed successfully.
 
+## V5.40: Product Home Dashboard
+
+V5.40 新增产品化首页，让用户打开前端即可看到系统状态、Local Launcher、Paper Trading、Backtest、Risk Boundary、Recent Activity、主要功能入口和下一步建议。
+
+新增内容：
+
+- `config/v5_product_home_config.py`
+- `product_home/`
+- `scripts/run_v540_product_home_dashboard.py`
+- `docs/V5_PRODUCT_HOME_DASHBOARD.md`
+- `reports/v5_40_product_home_dashboard_report.md`
+- `tests/test_v540_product_home_dashboard.py`
+- `/api/v5/product-home/*` endpoints
+- `web/frontend/app/page.tsx` 产品化首页
+
+安全边界：
+
+- 是否接真实券商：否
+- 是否接 sandbox API：否
+- 是否读取 secret / token / password / API key：否
+- 是否读取真实账户 / 余额 / 持仓：否
+- 是否提交订单：否
+- 是否接真实资金：否
+- 是否改变 alpha model / 因子逻辑 / 策略逻辑：否
+
+验证结果：
+
+- py_compile: passed
+- CLI checks: passed
+- targeted pytest: 4 passed
+- full pytest: 876 passed
+- system_doctor: OK
+- frontend structure check: passed
+- product home summary verdict: WARNING only because current machine reported Node unavailable through V5.39 launcher checks; Product Home remains usable and reports it as a warning.
+
 ## V1.31: platform layer
 
 V1.31 目标：
