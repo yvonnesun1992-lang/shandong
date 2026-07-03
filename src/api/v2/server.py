@@ -338,6 +338,20 @@ from product_home.recent_activity_summary import build_recent_activity_summary
 from product_home.risk_boundary_summary import build_risk_boundary_summary
 from product_home.runtime_visibility_summary import build_runtime_visibility_summary
 from product_home.system_health_summary import build_system_health_summary
+from config.v5_local_e2e_config import get_local_e2e_status
+from local_e2e_verification.api_smoke_test_matrix import run_api_smoke_tests, summarize_api_smoke_tests
+from local_e2e_verification.backend_smoke_test import run_backend_smoke_test, summarize_backend_smoke_test
+from local_e2e_verification.frontend_smoke_test import summarize_frontend_smoke_test, verify_frontend_files
+from local_e2e_verification.init import boundary as local_e2e_boundary
+from local_e2e_verification.local_e2e_orchestrator import run_local_e2e_verification, summarize_local_e2e_verification
+from local_e2e_verification.local_launcher_verification import (
+    summarize_local_launcher_verification,
+    verify_local_launcher_plan,
+    verify_local_launcher_scripts,
+)
+from local_e2e_verification.log_write_verification import summarize_log_verification, verify_log_read, verify_log_write
+from local_e2e_verification.report_generation_verification import generate_local_e2e_verification_report, summarize_report_generation
+from local_e2e_verification.safety_boundary_verification import build_local_e2e_safety_summary
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -3706,6 +3720,78 @@ def create_v2_api_app() -> FastAPI:
         summary = summarize_product_home_dashboard(build_product_home_dashboard())
         response = success_response({"summary": summary, **product_home_boundary()}, started_at=started, warning=summary.get("warnings", []))
         log_api_event("/api/v5/product-home/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-e2e/status")
+    def v5_local_e2e_status() -> dict:
+        started = perf_counter()
+        status = get_local_e2e_status()
+        response = success_response({"status": status, **local_e2e_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/local-e2e/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-e2e/launcher")
+    def v5_local_e2e_launcher() -> dict:
+        started = perf_counter()
+        launcher = summarize_local_launcher_verification({"plan": verify_local_launcher_plan(), "scripts": verify_local_launcher_scripts()})
+        response = success_response({"launcher": launcher, **local_e2e_boundary()}, started_at=started, warning=launcher.get("warnings", []))
+        log_api_event("/api/v5/local-e2e/launcher", "default", "ok", response["meta"]["latency_ms"], len(launcher.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-e2e/backend")
+    def v5_local_e2e_backend() -> dict:
+        started = perf_counter()
+        backend = summarize_backend_smoke_test(run_backend_smoke_test())
+        response = success_response({"backend": backend, **local_e2e_boundary()}, started_at=started, warning=backend.get("warnings", []))
+        log_api_event("/api/v5/local-e2e/backend", "default", "ok", response["meta"]["latency_ms"], len(backend.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-e2e/frontend")
+    def v5_local_e2e_frontend() -> dict:
+        started = perf_counter()
+        frontend = summarize_frontend_smoke_test(verify_frontend_files())
+        response = success_response({"frontend": frontend, **local_e2e_boundary()}, started_at=started, warning=frontend.get("warnings", []))
+        log_api_event("/api/v5/local-e2e/frontend", "default", "ok", response["meta"]["latency_ms"], len(frontend.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-e2e/api-smoke")
+    def v5_local_e2e_api_smoke() -> dict:
+        started = perf_counter()
+        api_smoke = summarize_api_smoke_tests(run_api_smoke_tests())
+        response = success_response({"api_smoke": api_smoke, **local_e2e_boundary()}, started_at=started, warning=api_smoke.get("warnings", []))
+        log_api_event("/api/v5/local-e2e/api-smoke", "default", "ok", response["meta"]["latency_ms"], len(api_smoke.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-e2e/logs")
+    def v5_local_e2e_logs() -> dict:
+        started = perf_counter()
+        logs = summarize_log_verification({"write": verify_log_write(), "read": verify_log_read()})
+        response = success_response({"logs": logs, **local_e2e_boundary()}, started_at=started, warning=logs.get("warnings", []))
+        log_api_event("/api/v5/local-e2e/logs", "default", "ok", response["meta"]["latency_ms"], len(logs.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-e2e/report")
+    def v5_local_e2e_report() -> dict:
+        started = perf_counter()
+        report = summarize_report_generation(generate_local_e2e_verification_report())
+        response = success_response({"report": report, **local_e2e_boundary()}, started_at=started, warning=report.get("warnings", []))
+        log_api_event("/api/v5/local-e2e/report", "default", "ok", response["meta"]["latency_ms"], len(report.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-e2e/safety")
+    def v5_local_e2e_safety() -> dict:
+        started = perf_counter()
+        safety = build_local_e2e_safety_summary()
+        response = success_response({"safety": safety, **local_e2e_boundary()}, started_at=started)
+        log_api_event("/api/v5/local-e2e/safety", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/local-e2e/summary")
+    def v5_local_e2e_summary() -> dict:
+        started = perf_counter()
+        summary = summarize_local_e2e_verification(run_local_e2e_verification())
+        response = success_response({"summary": summary, **local_e2e_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/local-e2e/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
     return api

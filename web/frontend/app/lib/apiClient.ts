@@ -1349,3 +1349,39 @@ export function fetchV5ProductHomeSafety() {
 export function fetchV5ProductHomeSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/product-home/summary');
 }
+
+export function fetchV5LocalE2EStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-e2e/status');
+}
+
+export function fetchV5LocalE2ELauncher() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-e2e/launcher');
+}
+
+export function fetchV5LocalE2EBackend() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-e2e/backend');
+}
+
+export function fetchV5LocalE2EFrontend() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-e2e/frontend');
+}
+
+export function fetchV5LocalE2EApiSmoke() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-e2e/api-smoke');
+}
+
+export function fetchV5LocalE2ELogs() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-e2e/logs');
+}
+
+export function fetchV5LocalE2EReport() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-e2e/report');
+}
+
+export function fetchV5LocalE2ESafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-e2e/safety');
+}
+
+export function fetchV5LocalE2ESummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-e2e/summary');
+}

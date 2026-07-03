@@ -5,7 +5,7 @@ from pathlib import Path
 import json
 
 
-SENSITIVE_PATTERN = re.compile(r"(api_key|secret|token|password|authorization|database_url|sk-[A-Za-z0-9])", re.IGNORECASE)
+SENSITIVE_PATTERN = re.compile(r"(api_key|secret|token|password|authorization|database_url|sk-[A-Za-z0-9]{12,})", re.IGNORECASE)
 
 
 def scan_runtime_outputs(paths: list[str | Path]) -> dict:
@@ -1215,10 +1215,54 @@ def scan_product_home_outputs(payload: dict | list | str, report_path: str | Pat
     return {"safe": not findings, "findings": findings}
 
 
+def scan_local_e2e_outputs(payload: dict | list | str, report_path: str | Path | None = None) -> dict:
+    text = json.dumps(payload, default=str).lower() if not isinstance(payload, str) else payload.lower()
+    findings = _scan_sandbox_sensitive_text(text)
+    blocked_terms = [
+        "api_key=demo",
+        "secret_value=demo",
+        "token=demo",
+        "password=demo",
+        "real_account_id",
+        "real_order_id",
+        "raw provider payload",
+        "paper-api.",
+        "api.alpaca.",
+        "https://sandbox",
+        "provider endpoint",
+        "/users/apple",
+    ]
+    runtime_terms = [
+        "alpaca_trade_api",
+        "ib_insync",
+        "tigeropen",
+        "robin_stocks",
+        "oauthlib",
+        "provider portal login",
+    ]
+    for term in blocked_terms + runtime_terms:
+        if term in text:
+            findings.append({"kind": "sensitive-pattern", "match": "blocked-local-e2e-output"})
+            break
+    if "http://" in text or "https://" in text:
+        for match in re.findall(r"https?://[^\\s\"']+", text):
+            if "127.0.0.1" not in match and "localhost" not in match:
+                findings.append({"kind": "external-url", "match": "blocked-local-e2e-url"})
+                break
+    if report_path:
+        report = Path(report_path)
+        if report.exists():
+            report_text = report.read_text(encoding="utf-8", errors="ignore").lower()
+            findings.extend(_scan_sandbox_sensitive_text(report_text))
+            if any(term in report_text for term in blocked_terms + runtime_terms):
+                findings.append({"kind": "sensitive-pattern", "match": "blocked-local-e2e-report"})
+    return {"safe": not findings, "findings": findings}
+
+
 def _scan_sandbox_sensitive_text(text: str) -> list[dict]:
     findings = []
     patterns = [
-        r"sk-[a-z0-9]",
+        r"sk-[a-z0-9]{12,}",
         r"api[_-]?key\s*[:=]\s*[a-z0-9]",
         r"token\s*[:=]\s*[a-z0-9]",
         r"password\s*[:=]\s*[a-z0-9]",
