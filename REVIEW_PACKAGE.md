@@ -8059,3 +8059,57 @@ system_doctor: OK
 是否建议创建 PR：是
 
 ---
+
+# V5.42 Local Run Doctor & One-Click Fix Guide
+
+V5.42 adds a local run doctor for diagnosing why `http://127.0.0.1:3000` may not open.
+
+新增内容：
+
+- `config/v5_local_run_doctor_config.py`
+- `local_run_doctor/`
+- `scripts/run_v542_local_run_doctor.py`
+- `/api/v5/local-run-doctor/*` endpoints
+- `web/frontend/app/v5-local-run-doctor/page.tsx`
+- `docs/V5_LOCAL_RUN_DOCTOR.md`
+- `reports/v5_42_local_run_doctor_report.md`
+- `tests/test_v542_local_run_doctor.py`
+
+验证范围：
+
+- Command availability diagnosis
+- Localhost-only port diagnosis
+- Backend TestClient diagnosis
+- Frontend file/dependency diagnosis
+- Browser target diagnosis
+- Human-friendly Mac and Windows fix guide
+- Local run doctor report generation
+- Safety boundary validation
+
+安全边界：
+
+- 是否自动安装依赖：否
+- 是否启动长期进程：否
+- 是否访问外部网络：否
+- 是否连接真实券商：否
+- 是否连接 sandbox API：否
+- 是否读取 secret/token/password/API key：否
+- 是否读取真实 account/balance/position：否
+- 是否提交订单：否
+- 是否接真实资金：否
+- 是否修改 alpha/factor/strategy：否
+
+检查结果：
+
+```text
+py_compile: passed
+V5.42 targeted pytest: 4 passed
+V5.42 CLI checks: passed, full summary WARNING because Node.js is unavailable in PATH and 127.0.0.1:3000 is not running
+frontend structure check: passed via bundled Node, V3.9 frontend structure verified
+pytest: 884 passed
+system_doctor: OK
+```
+
+是否建议创建 PR：是
+
+---
