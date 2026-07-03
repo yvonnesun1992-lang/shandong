@@ -352,6 +352,17 @@ from local_e2e_verification.local_launcher_verification import (
 from local_e2e_verification.log_write_verification import summarize_log_verification, verify_log_read, verify_log_write
 from local_e2e_verification.report_generation_verification import generate_local_e2e_verification_report, summarize_report_generation
 from local_e2e_verification.safety_boundary_verification import build_local_e2e_safety_summary
+from config.v5_local_run_doctor_config import get_local_run_doctor_status
+from local_run_doctor.backend_diagnosis import summarize_backend_diagnosis as summarize_local_run_backend_diagnosis
+from local_run_doctor.browser_diagnosis import diagnose_browser_targets
+from local_run_doctor.command_availability_doctor import run_command_availability_doctor
+from local_run_doctor.frontend_diagnosis import summarize_frontend_diagnosis as summarize_local_run_frontend_diagnosis
+from local_run_doctor.human_friendly_fix_guide import build_fix_guide
+from local_run_doctor.init import boundary as local_run_doctor_boundary
+from local_run_doctor.local_run_doctor_orchestrator import run_local_run_doctor, summarize_local_run_doctor
+from local_run_doctor.local_run_doctor_report import generate_local_run_doctor_report, summarize_local_run_doctor_report
+from local_run_doctor.local_run_doctor_safety_validator import build_local_run_doctor_safety_summary
+from local_run_doctor.port_diagnosis import diagnose_default_ports
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -3792,6 +3803,78 @@ def create_v2_api_app() -> FastAPI:
         summary = summarize_local_e2e_verification(run_local_e2e_verification())
         response = success_response({"summary": summary, **local_e2e_boundary()}, started_at=started, warning=summary.get("warnings", []))
         log_api_event("/api/v5/local-e2e/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-run-doctor/status")
+    def v5_local_run_doctor_status() -> dict:
+        started = perf_counter()
+        status = get_local_run_doctor_status()
+        response = success_response({"status": status, **local_run_doctor_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/local-run-doctor/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-run-doctor/commands")
+    def v5_local_run_doctor_commands() -> dict:
+        started = perf_counter()
+        commands = run_command_availability_doctor()
+        response = success_response({"commands": commands, **local_run_doctor_boundary()}, started_at=started, warning=commands.get("warnings", []))
+        log_api_event("/api/v5/local-run-doctor/commands", "default", "ok", response["meta"]["latency_ms"], len(commands.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-run-doctor/ports")
+    def v5_local_run_doctor_ports() -> dict:
+        started = perf_counter()
+        ports = diagnose_default_ports()
+        response = success_response({"ports": ports, **local_run_doctor_boundary()}, started_at=started, warning=ports.get("suggestions", []))
+        log_api_event("/api/v5/local-run-doctor/ports", "default", "ok", response["meta"]["latency_ms"], len(ports.get("suggestions", [])))
+        return response
+
+    @api.get("/api/v5/local-run-doctor/backend")
+    def v5_local_run_doctor_backend() -> dict:
+        started = perf_counter()
+        backend = summarize_local_run_backend_diagnosis()
+        response = success_response({"backend": backend, **local_run_doctor_boundary()}, started_at=started, warning=backend.get("warnings", []))
+        log_api_event("/api/v5/local-run-doctor/backend", "default", "ok", response["meta"]["latency_ms"], len(backend.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-run-doctor/frontend")
+    def v5_local_run_doctor_frontend() -> dict:
+        started = perf_counter()
+        frontend = summarize_local_run_frontend_diagnosis()
+        response = success_response({"frontend": frontend, **local_run_doctor_boundary()}, started_at=started, warning=frontend.get("warnings", []))
+        log_api_event("/api/v5/local-run-doctor/frontend", "default", "ok", response["meta"]["latency_ms"], len(frontend.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-run-doctor/browser")
+    def v5_local_run_doctor_browser() -> dict:
+        started = perf_counter()
+        browser = diagnose_browser_targets()
+        response = success_response({"browser": browser, **local_run_doctor_boundary()}, started_at=started)
+        log_api_event("/api/v5/local-run-doctor/browser", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/local-run-doctor/fix-guide")
+    def v5_local_run_doctor_fix_guide() -> dict:
+        started = perf_counter()
+        guide = build_fix_guide(run_local_run_doctor())
+        response = success_response({"fix_guide": guide, **local_run_doctor_boundary()}, started_at=started)
+        log_api_event("/api/v5/local-run-doctor/fix-guide", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/local-run-doctor/safety")
+    def v5_local_run_doctor_safety() -> dict:
+        started = perf_counter()
+        safety = build_local_run_doctor_safety_summary()
+        response = success_response({"safety": safety, **local_run_doctor_boundary()}, started_at=started)
+        log_api_event("/api/v5/local-run-doctor/safety", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/local-run-doctor/summary")
+    def v5_local_run_doctor_summary() -> dict:
+        started = perf_counter()
+        summary = summarize_local_run_doctor(run_local_run_doctor())
+        response = success_response({"summary": summary, **local_run_doctor_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/local-run-doctor/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
     return api

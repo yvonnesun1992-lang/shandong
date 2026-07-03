@@ -1385,3 +1385,39 @@ export function fetchV5LocalE2ESafety() {
 export function fetchV5LocalE2ESummary() {
   return apiGet<Record<string, unknown>>('/api/v5/local-e2e/summary');
 }
+
+export function fetchV5LocalRunDoctorStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-run-doctor/status');
+}
+
+export function fetchV5LocalRunDoctorCommands() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-run-doctor/commands');
+}
+
+export function fetchV5LocalRunDoctorPorts() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-run-doctor/ports');
+}
+
+export function fetchV5LocalRunDoctorBackend() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-run-doctor/backend');
+}
+
+export function fetchV5LocalRunDoctorFrontend() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-run-doctor/frontend');
+}
+
+export function fetchV5LocalRunDoctorBrowser() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-run-doctor/browser');
+}
+
+export function fetchV5LocalRunDoctorFixGuide() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-run-doctor/fix-guide');
+}
+
+export function fetchV5LocalRunDoctorSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-run-doctor/safety');
+}
+
+export function fetchV5LocalRunDoctorSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-run-doctor/summary');
+}

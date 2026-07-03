@@ -854,7 +854,7 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ## 🧪 System Status
 
-- ✔ pytest: 880 tests passed
+- ✔ pytest: 884 tests passed
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
@@ -933,3 +933,14 @@ This project demonstrates a full SaaS-style quantitative intelligence system arc
 - Adds `/api/v5/local-e2e/*` status endpoints and a frontend Local E2E Verification page.
 - Generates `reports/v5_41_local_e2e_verification_report.md` as local verification evidence.
 - Local verification only: localhost-only, no broker connection, no sandbox API, no secret/account/balance/position reads, no order submission, no real money.
+
+---
+
+## 🩺 V5.42 Local Run Doctor
+
+- Local run diagnosis layer for users who cannot open `http://127.0.0.1:3000`.
+- Checks Python, Node, npm, pnpm, localhost ports, backend TestClient status, frontend files, and dependency state.
+- Adds Mac and Windows copy/paste fix guides without installing anything automatically.
+- Adds `/api/v5/local-run-doctor/*` endpoints and a frontend Local Run Doctor page.
+- Generates `reports/v5_42_local_run_doctor_report.md` as local diagnosis evidence.
+- Local diagnosis only: no broker connection, no sandbox API, no secret/account/balance/position reads, no order submission, no real money, no alpha/factor/strategy changes.
