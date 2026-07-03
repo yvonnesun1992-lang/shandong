@@ -854,7 +854,7 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ## 🧪 System Status
 
-- ✔ pytest: 539 tests passed  
+- ✔ pytest: 872 tests passed
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
@@ -903,3 +903,14 @@ This project demonstrates a full SaaS-style quantitative intelligence system arc
 - Scalable API layer  
 - Plugin-based extensibility  
 - SaaS-ready architecture foundation  
+
+---
+
+## 🖥️ V5.39 Local Desktop Launcher
+
+- Local Desktop Launcher for checking Python / Node / pnpm and local project paths.
+- Generates localhost-only backend, frontend, and browser launch targets.
+- Adds Mac and Windows starter scripts.
+- Adds local launcher logs under `reports/local_launcher/`.
+- Adds `/api/v5/local-launcher/*` status endpoints and frontend page.
+- Local launcher only: no broker connection, no sandbox API, no secret read, no account read, no order submission, no real money.

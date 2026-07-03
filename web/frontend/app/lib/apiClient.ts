@@ -1273,3 +1273,39 @@ export function fetchV5ReadOnlyFinalReviewSafety() {
 export function fetchV5ReadOnlyFinalReviewSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/read-only-final-review/summary');
 }
+
+export function fetchV5LocalLauncherStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-launcher/status');
+}
+
+export function fetchV5LocalLauncherEnvironment() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-launcher/environment');
+}
+
+export function fetchV5LocalLauncherPorts() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-launcher/ports');
+}
+
+export function fetchV5LocalLauncherBackend() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-launcher/backend');
+}
+
+export function fetchV5LocalLauncherFrontend() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-launcher/frontend');
+}
+
+export function fetchV5LocalLauncherBrowser() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-launcher/browser');
+}
+
+export function fetchV5LocalLauncherLogs() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-launcher/logs');
+}
+
+export function fetchV5LocalLauncherSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-launcher/safety');
+}
+
+export function fetchV5LocalLauncherSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/local-launcher/summary');
+}
