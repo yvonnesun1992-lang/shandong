@@ -854,7 +854,7 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ## 🧪 System Status
 
-- ✔ pytest: 876 tests passed
+- ✔ pytest: 880 tests passed
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
@@ -923,3 +923,13 @@ This project demonstrates a full SaaS-style quantitative intelligence system arc
 - Shows system health, local launcher, paper trading, backtest, risk boundary, recent activity, and next-step cards.
 - Adds `/api/v5/product-home/*` endpoints and frontend Product Home page.
 - Product home only: dashboard read-only, localhost only, no broker connection, no sandbox API, no secret/account/balance/position reads, no order submission, no real money.
+
+---
+
+## 🧪 V5.41 Local End-to-End Run Verification
+
+- Local end-to-end verification layer for launcher, backend, frontend, API smoke, log write, report generation, and safety checks.
+- Adds `scripts/run_v541_local_e2e_verification.py` with per-check modes for launcher, backend, frontend, API, logs, report, safety, and full summary.
+- Adds `/api/v5/local-e2e/*` status endpoints and a frontend Local E2E Verification page.
+- Generates `reports/v5_41_local_e2e_verification_report.md` as local verification evidence.
+- Local verification only: localhost-only, no broker connection, no sandbox API, no secret/account/balance/position reads, no order submission, no real money.

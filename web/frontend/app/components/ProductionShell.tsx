@@ -49,6 +49,7 @@ const links = [
   ['V5 Read-Only Evidence Pack', '/v5-read-only-evidence-pack'],
   ['V5 Read-Only Final Review', '/v5-read-only-final-review'],
   ['V5 Local Launcher', '/v5-local-launcher'],
+  ['V5 Local E2E', '/v5-local-e2e'],
   ['V5 Product Home', '/'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],

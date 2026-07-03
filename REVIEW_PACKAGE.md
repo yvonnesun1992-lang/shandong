@@ -8010,3 +8010,52 @@ dashboard: passed
 是否使用 AI 预测股价：否
 是否建议创建 PR：是
 ```
+# V5.41 Local End-to-End Run Verification
+
+V5.41 adds a local end-to-end verification layer for confirming the local-only product path after V5.40.
+
+新增内容：
+
+- `config/v5_local_e2e_config.py`
+- `local_e2e_verification/`
+- `scripts/run_v541_local_e2e_verification.py`
+- `/api/v5/local-e2e/*` endpoints
+- `web/frontend/app/v5-local-e2e/page.tsx`
+- `docs/V5_LOCAL_E2E_VERIFICATION.md`
+- `reports/v5_41_local_e2e_verification_report.md`
+- `tests/test_v541_local_e2e_verification.py`
+
+验证范围：
+
+- Local launcher plan verification
+- Backend smoke test
+- Frontend smoke test
+- API smoke test matrix
+- Log write/read verification
+- Local verification report generation
+- Safety boundary verification
+
+安全边界：
+
+- 是否连接真实券商：否
+- 是否连接 sandbox API：否
+- 是否读取 secret/token/password/API key：否
+- 是否读取真实 account/balance/position：否
+- 是否提交订单：否
+- 是否接真实资金：否
+- 是否修改 alpha/factor/strategy：否
+
+检查结果：
+
+```text
+py_compile: passed
+V5.41 targeted pytest: 4 passed
+V5.41 CLI checks: passed, full summary WARNING because node was unavailable in PATH during local environment probe
+frontend structure check: passed via bundled Node, V3.9 frontend structure verified
+pytest: 880 passed
+system_doctor: OK
+```
+
+是否建议创建 PR：是
+
+---
