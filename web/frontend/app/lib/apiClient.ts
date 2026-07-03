@@ -1421,3 +1421,31 @@ export function fetchV5LocalRunDoctorSafety() {
 export function fetchV5LocalRunDoctorSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/local-run-doctor/summary');
 }
+
+export function fetchV5GuidedSetupStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/guided-setup/status');
+}
+
+export function fetchV5GuidedSetupRequirements() {
+  return apiGet<Record<string, unknown>>('/api/v5/guided-setup/requirements');
+}
+
+export function fetchV5GuidedSetupSteps() {
+  return apiGet<Record<string, unknown>>('/api/v5/guided-setup/steps');
+}
+
+export function fetchV5GuidedSetupCommands() {
+  return apiGet<Record<string, unknown>>('/api/v5/guided-setup/commands');
+}
+
+export function fetchV5GuidedSetupExplain() {
+  return apiGet<Record<string, unknown>>('/api/v5/guided-setup/explain');
+}
+
+export function fetchV5GuidedSetupSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/guided-setup/safety');
+}
+
+export function fetchV5GuidedSetupSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/guided-setup/summary');
+}

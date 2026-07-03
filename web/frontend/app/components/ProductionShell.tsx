@@ -51,6 +51,7 @@ const links = [
   ['V5 Local Launcher', '/v5-local-launcher'],
   ['V5 Local E2E', '/v5-local-e2e'],
   ['V5 Local Run Doctor', '/v5-local-run-doctor'],
+  ['V5 Guided Setup', '/v5-guided-setup'],
   ['V5 Product Home', '/'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],

@@ -8060,6 +8060,62 @@ system_doctor: OK
 
 ---
 
+# V5.43 Guided Local Setup Wizard
+
+V5.43 adds a guided local setup wizard for non-programmer users who cannot open `http://127.0.0.1:3000`.
+
+新增内容：
+
+- `config/v5_guided_setup_config.py`
+- `guided_setup/`
+- `scripts/run_v543_guided_setup_wizard.py`
+- `/api/v5/guided-setup/*` endpoints
+- `web/frontend/app/v5-guided-setup/page.tsx`
+- `docs/V5_GUIDED_SETUP.md`
+- `reports/v5_43_guided_setup_wizard_report.md`
+- `tests/test_v543_guided_setup_wizard.py`
+
+验证范围：
+
+- Setup requirement detector
+- Mac / Windows setup steps
+- Copy command blocks
+- Plain language explanation
+- Guided setup wizard orchestrator
+- Safety boundary validation
+- API endpoints
+- Frontend page / navigation / API client helpers
+
+安全边界：
+
+- 是否自动安装依赖：否
+- 是否自动访问外部网络：否
+- 是否修改 PATH：否
+- 是否请求管理员权限：否
+- 是否启动长期进程：否
+- 是否连接真实券商：否
+- 是否连接 sandbox API：否
+- 是否读取 secret/token/password/API key：否
+- 是否读取真实 account/balance/position：否
+- 是否提交订单：否
+- 是否接真实资金：否
+- 是否修改 alpha/factor/strategy：否
+
+检查结果：
+
+```text
+py_compile: passed
+V5.43 targeted pytest: 4 passed
+V5.43 CLI checks: passed, full summary WARNING because Node.js is unavailable in PATH
+frontend structure check: passed via bundled Node, V3.9 frontend structure verified
+pytest: 888 passed
+system_doctor: OK
+```
+
+是否建议创建 PR：是
+
+---
+
 # V5.42 Local Run Doctor & One-Click Fix Guide
 
 V5.42 adds a local run doctor for diagnosing why `http://127.0.0.1:3000` may not open.

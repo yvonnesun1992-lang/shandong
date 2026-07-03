@@ -363,6 +363,14 @@ from local_run_doctor.local_run_doctor_orchestrator import run_local_run_doctor,
 from local_run_doctor.local_run_doctor_report import generate_local_run_doctor_report, summarize_local_run_doctor_report
 from local_run_doctor.local_run_doctor_safety_validator import build_local_run_doctor_safety_summary
 from local_run_doctor.port_diagnosis import diagnose_default_ports
+from config.v5_guided_setup_config import get_guided_setup_status
+from guided_setup.command_copy_blocks import build_command_copy_blocks
+from guided_setup.guided_setup_orchestrator import build_guided_setup_wizard, summarize_guided_setup_wizard
+from guided_setup.guided_setup_safety_validator import build_guided_setup_safety_summary
+from guided_setup.init import boundary as guided_setup_boundary
+from guided_setup.plain_language_explanation import build_plain_language_summary
+from guided_setup.setup_requirement_detector import detect_setup_requirements, summarize_setup_requirements
+from guided_setup.setup_step_model import mark_setup_steps_status
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -3875,6 +3883,62 @@ def create_v2_api_app() -> FastAPI:
         summary = summarize_local_run_doctor(run_local_run_doctor())
         response = success_response({"summary": summary, **local_run_doctor_boundary()}, started_at=started, warning=summary.get("warnings", []))
         log_api_event("/api/v5/local-run-doctor/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/guided-setup/status")
+    def v5_guided_setup_status() -> dict:
+        started = perf_counter()
+        status = get_guided_setup_status()
+        response = success_response({"status": status, **guided_setup_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/guided-setup/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/guided-setup/requirements")
+    def v5_guided_setup_requirements() -> dict:
+        started = perf_counter()
+        requirements = detect_setup_requirements()
+        response = success_response({"requirements": requirements, "summary": summarize_setup_requirements(requirements), **guided_setup_boundary()}, started_at=started)
+        log_api_event("/api/v5/guided-setup/requirements", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/guided-setup/steps")
+    def v5_guided_setup_steps() -> dict:
+        started = perf_counter()
+        steps = mark_setup_steps_status(detect_setup_requirements())
+        response = success_response({"steps": steps, **guided_setup_boundary()}, started_at=started)
+        log_api_event("/api/v5/guided-setup/steps", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/guided-setup/commands")
+    def v5_guided_setup_commands() -> dict:
+        started = perf_counter()
+        commands = build_command_copy_blocks()
+        response = success_response({"commands": commands, **guided_setup_boundary()}, started_at=started)
+        log_api_event("/api/v5/guided-setup/commands", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/guided-setup/explain")
+    def v5_guided_setup_explain() -> dict:
+        started = perf_counter()
+        explain = build_plain_language_summary(detect_setup_requirements())
+        response = success_response({"explain": explain, **guided_setup_boundary()}, started_at=started)
+        log_api_event("/api/v5/guided-setup/explain", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/guided-setup/safety")
+    def v5_guided_setup_safety() -> dict:
+        started = perf_counter()
+        safety = build_guided_setup_safety_summary()
+        response = success_response({"safety": safety, **guided_setup_boundary()}, started_at=started)
+        log_api_event("/api/v5/guided-setup/safety", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/guided-setup/summary")
+    def v5_guided_setup_summary() -> dict:
+        started = perf_counter()
+        summary = summarize_guided_setup_wizard(build_guided_setup_wizard())
+        response = success_response({"summary": summary, **guided_setup_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/guided-setup/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
     return api

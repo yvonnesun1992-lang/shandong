@@ -1,0 +1,70 @@
+from __future__ import annotations
+
+import json
+import re
+
+from config.v5_guided_setup_config import get_guided_setup_status
+from guided_setup.init import boundary
+
+
+FALSE_KEYS = [
+    "auto_install_enabled",
+    "external_network_enabled",
+    "system_path_modify_enabled",
+    "admin_permission_required",
+    "long_running_process_start_enabled",
+    "sandbox_api_enabled",
+    "secret_read_enabled",
+    "account_read_enabled",
+    "balance_read_enabled",
+    "position_read_enabled",
+    "order_preview_enabled",
+    "order_submission_enabled",
+    "broker_connected",
+    "real_money_enabled",
+]
+
+
+def validate_guided_setup_safety(payload: object) -> dict:
+    text = json.dumps(payload, default=str).lower() if not isinstance(payload, str) else payload.lower()
+    findings = []
+    if isinstance(payload, dict):
+        if payload.get("guided_setup_only") is False:
+            findings.append({"kind": "boundary", "match": "guided_setup_only_false"})
+        if payload.get("localhost_only") is False:
+            findings.append({"kind": "boundary", "match": "localhost_only_false"})
+        for key in FALSE_KEYS:
+            if payload.get(key) is True:
+                findings.append({"kind": "boundary", "match": key})
+    blocked_terms = [
+        "raw provider payload",
+        "real_account_id",
+        "real_order_id",
+        "paper-api.",
+        "api.alpaca.",
+        "https://sandbox",
+        "provider endpoint",
+        "alpaca_trade_api",
+        "ib_insync",
+        "tigeropen",
+        "robin_stocks",
+    ]
+    for term in blocked_terms:
+        if term in text:
+            findings.append({"kind": "blocked-term", "match": term})
+    for pattern in [r"sk-[a-z0-9]{12,}", r"api[_-]?key\s*[:=]\s*[a-z0-9]", r"secret\s*[:=]\s*[a-z0-9]", r"token\s*[:=]\s*[a-z0-9]", r"password\s*[:=]\s*[a-z0-9]", r"authorization\s*[:=]\s*[a-z0-9]"]:
+        if re.search(pattern, text, re.IGNORECASE):
+            findings.append({"kind": "sensitive-pattern", "match": "credential-like-value"})
+            break
+    if "http://" in text or "https://" in text:
+        for match in re.findall(r"https?://[^\\s\"']+", text):
+            if "127.0.0.1" not in match and "localhost" not in match:
+                findings.append({"kind": "external-url", "match": "non-local-url"})
+                break
+    return {"safe": not findings, "findings": findings, **boundary()}
+
+
+def build_guided_setup_safety_summary() -> dict:
+    status = get_guided_setup_status()
+    safety = validate_guided_setup_safety(status)
+    return {"safe": safety["safe"], "findings": safety["findings"], "status": status, **boundary()}
