@@ -4979,6 +4979,42 @@ UI 是否保持简约、美观、大方、实用：是
 是否建议创建 PR：是
 ```
 
+## V5.39: Local Desktop Launcher
+
+V5.39 新增本地桌面启动器，用于检查本地环境、生成 backend/frontend/browser 启动计划、输出本地启动日志，并提供 Mac / Windows 启动脚本。
+
+新增内容：
+
+- `config/v5_local_launcher_config.py`
+- `local_launcher/`
+- `scripts/run_v539_local_launcher.py`
+- `scripts/start_shandong_mac.command`
+- `scripts/start_shandong_windows.bat`
+- `docs/V5_LOCAL_DESKTOP_LAUNCHER.md`
+- `web/frontend/app/v5-local-launcher/page.tsx`
+- `/api/v5/local-launcher/*` endpoints
+- `tests/test_v539_local_launcher.py`
+
+安全边界：
+
+- 是否接真实券商：否
+- 是否接 sandbox API：否
+- 是否读取 secret / token / password / API key：否
+- 是否读取账户 / 余额 / 持仓：否
+- 是否提交订单：否
+- 是否接真实资金：否
+- 是否改变 alpha model / 因子逻辑 / 策略逻辑：否
+
+验证结果：
+
+- py_compile: passed
+- CLI dry-run / check matrix: passed
+- targeted pytest: 4 passed
+- full pytest: 872 passed
+- system_doctor: OK
+- frontend structure check: passed
+- local launcher dry-run verdict: WARNING only because current machine reported Node unavailable; Python checks and CLI completed successfully.
+
 ## V1.31: platform layer
 
 V1.31 目标：

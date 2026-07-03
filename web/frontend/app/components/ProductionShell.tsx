@@ -47,6 +47,7 @@ const links = [
   ['V5 Read-Only Stability Gate', '/v5-read-only-stability-gate'],
   ['V5 Read-Only Evidence Pack', '/v5-read-only-evidence-pack'],
   ['V5 Read-Only Final Review', '/v5-read-only-final-review'],
+  ['V5 Local Launcher', '/v5-local-launcher'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],

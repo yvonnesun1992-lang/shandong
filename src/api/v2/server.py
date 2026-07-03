@@ -317,6 +317,16 @@ from sandbox_read_only_final_review.final_review_safety_validator import build_f
 from sandbox_read_only_final_review.missing_requirement_register import build_missing_requirement_register
 from sandbox_read_only_final_review.reviewer_role_matrix import build_reviewer_role_matrix
 from sandbox_read_only_final_review.risk_acceptance_matrix import build_risk_acceptance_matrix as build_read_only_final_review_risk_matrix
+from config.v5_local_launcher_config import get_local_launcher_status
+from local_launcher.backend_launcher import check_backend_health_placeholder, launch_backend
+from local_launcher.browser_opener import open_browser
+from local_launcher.environment_checker import run_environment_check
+from local_launcher.frontend_launcher import check_frontend_health_placeholder, launch_frontend
+from local_launcher.init import boundary as local_launcher_boundary
+from local_launcher.launcher_log_manager import read_recent_launcher_logs
+from local_launcher.local_launcher_orchestrator import build_local_launcher_plan, summarize_local_launcher_result
+from local_launcher.local_launcher_safety_validator import build_local_launcher_safety_summary
+from local_launcher.port_checker import check_launcher_ports
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -3533,6 +3543,78 @@ def create_v2_api_app() -> FastAPI:
         summary = summarize_read_only_final_review(build_read_only_final_review(selected))
         response = success_response({"summary": summary, **_read_only_final_review_boundary()}, started_at=started, warning=summary.get("warnings", []))
         log_api_event("/api/v5/read-only-final-review/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-launcher/status")
+    def v5_local_launcher_status() -> dict:
+        started = perf_counter()
+        status = get_local_launcher_status()
+        response = success_response({"status": status, **local_launcher_boundary()}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/local-launcher/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-launcher/environment")
+    def v5_local_launcher_environment() -> dict:
+        started = perf_counter()
+        environment = run_environment_check()
+        response = success_response({"environment": environment, **local_launcher_boundary()}, started_at=started, warning=environment.get("warnings", []))
+        log_api_event("/api/v5/local-launcher/environment", "default", "ok", response["meta"]["latency_ms"], len(environment.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-launcher/ports")
+    def v5_local_launcher_ports() -> dict:
+        started = perf_counter()
+        ports = check_launcher_ports()
+        response = success_response({"ports": ports, **local_launcher_boundary()}, started_at=started, warning=ports.get("warnings", []))
+        log_api_event("/api/v5/local-launcher/ports", "default", "ok", response["meta"]["latency_ms"], len(ports.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-launcher/backend")
+    def v5_local_launcher_backend() -> dict:
+        started = perf_counter()
+        backend = {**check_backend_health_placeholder(), **launch_backend(dry_run=True)}
+        response = success_response({"backend": backend, **local_launcher_boundary()}, started_at=started)
+        log_api_event("/api/v5/local-launcher/backend", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/local-launcher/frontend")
+    def v5_local_launcher_frontend() -> dict:
+        started = perf_counter()
+        frontend = {**check_frontend_health_placeholder(), **launch_frontend(dry_run=True)}
+        response = success_response({"frontend": frontend, **local_launcher_boundary()}, started_at=started)
+        log_api_event("/api/v5/local-launcher/frontend", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/local-launcher/browser")
+    def v5_local_launcher_browser() -> dict:
+        started = perf_counter()
+        browser = open_browser(dry_run=True)
+        response = success_response({"browser": browser, **local_launcher_boundary()}, started_at=started)
+        log_api_event("/api/v5/local-launcher/browser", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/local-launcher/logs")
+    def v5_local_launcher_logs() -> dict:
+        started = perf_counter()
+        logs = read_recent_launcher_logs()
+        response = success_response({"logs": logs, **local_launcher_boundary()}, started_at=started)
+        log_api_event("/api/v5/local-launcher/logs", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/local-launcher/safety")
+    def v5_local_launcher_safety() -> dict:
+        started = perf_counter()
+        safety = build_local_launcher_safety_summary()
+        response = success_response({"safety": safety, **local_launcher_boundary()}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/local-launcher/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/local-launcher/summary")
+    def v5_local_launcher_summary() -> dict:
+        started = perf_counter()
+        summary = summarize_local_launcher_result(build_local_launcher_plan())
+        response = success_response({"summary": summary, **local_launcher_boundary()}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/local-launcher/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
     return api
