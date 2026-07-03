@@ -1309,3 +1309,43 @@ export function fetchV5LocalLauncherSafety() {
 export function fetchV5LocalLauncherSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/local-launcher/summary');
 }
+
+export function fetchV5ProductHomeStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/product-home/status');
+}
+
+export function fetchV5ProductHomeSystemHealth() {
+  return apiGet<Record<string, unknown>>('/api/v5/product-home/system-health');
+}
+
+export function fetchV5ProductHomeRuntime() {
+  return apiGet<Record<string, unknown>>('/api/v5/product-home/runtime');
+}
+
+export function fetchV5ProductHomePaperTrading() {
+  return apiGet<Record<string, unknown>>('/api/v5/product-home/paper-trading');
+}
+
+export function fetchV5ProductHomeBacktest() {
+  return apiGet<Record<string, unknown>>('/api/v5/product-home/backtest');
+}
+
+export function fetchV5ProductHomeRiskBoundary() {
+  return apiGet<Record<string, unknown>>('/api/v5/product-home/risk-boundary');
+}
+
+export function fetchV5ProductHomeRecentActivity() {
+  return apiGet<Record<string, unknown>>('/api/v5/product-home/recent-activity');
+}
+
+export function fetchV5ProductHomeFeatureCards() {
+  return apiGet<Record<string, unknown>>('/api/v5/product-home/feature-cards');
+}
+
+export function fetchV5ProductHomeSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/product-home/safety');
+}
+
+export function fetchV5ProductHomeSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/product-home/summary');
+}

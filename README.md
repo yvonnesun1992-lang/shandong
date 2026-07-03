@@ -854,7 +854,7 @@ Turn raw market data into structured strategy intelligence with modular analytic
 
 ## 🧪 System Status
 
-- ✔ pytest: 872 tests passed
+- ✔ pytest: 876 tests passed
 - ✔ system doctor: OK  
 - ✔ API health: OK  
 - ✔ frontend build: OK  
@@ -914,3 +914,12 @@ This project demonstrates a full SaaS-style quantitative intelligence system arc
 - Adds local launcher logs under `reports/local_launcher/`.
 - Adds `/api/v5/local-launcher/*` status endpoints and frontend page.
 - Local launcher only: no broker connection, no sandbox API, no secret read, no account read, no order submission, no real money.
+
+---
+
+## 🏠 V5.40 Product Home Dashboard
+
+- Productized home dashboard for first-run system understanding.
+- Shows system health, local launcher, paper trading, backtest, risk boundary, recent activity, and next-step cards.
+- Adds `/api/v5/product-home/*` endpoints and frontend Product Home page.
+- Product home only: dashboard read-only, localhost only, no broker connection, no sandbox API, no secret/account/balance/position reads, no order submission, no real money.

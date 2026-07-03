@@ -5,6 +5,7 @@ import { MetricCard } from './MetricCard';
 import { PageHeader } from './PageHeader';
 
 const links = [
+  ['Home', '/'],
   ['Onboarding', '/onboarding'],
   ['Dashboard', '/dashboard'],
   ['Workspace Demo', '/workspace-demo'],
@@ -48,6 +49,7 @@ const links = [
   ['V5 Read-Only Evidence Pack', '/v5-read-only-evidence-pack'],
   ['V5 Read-Only Final Review', '/v5-read-only-final-review'],
   ['V5 Local Launcher', '/v5-local-launcher'],
+  ['V5 Product Home', '/'],
   ['Login', '/login'],
   ['Admin Console', '/admin'],
   ['Settings', '/settings'],
