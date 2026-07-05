@@ -1,3 +1,80 @@
+# V5.47 Backtest Result Dashboard
+
+This update adds a user-friendly backtest result dashboard. It is a UI / UX / information architecture layer only.
+
+New files:
+
+```text
+config/v5_backtest_dashboard_config.py
+backtest_dashboard/
+scripts/run_v547_backtest_dashboard.py
+web/frontend/app/backtest/[strategyId]/page.tsx
+reports/v5_47_backtest_dashboard_report.md
+tests/test_v547_backtest_dashboard.py
+```
+
+Updated files:
+
+```text
+README.md
+REVIEW_PACKAGE.md
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/components/ProductionShell.tsx
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/page.tsx
+web/frontend/app/strategies/page.tsx
+web/frontend/app/strategies/[strategyId]/page.tsx
+web/frontend/app/styles.css
+```
+
+Product changes:
+
+```text
+Backtest result page: added
+Backtest result model: added
+Conclusion engine: added
+Metric explanation copy: added
+Chart data models: added
+Risk analysis: added
+Action panel: added
+Core / advanced metric cards: added
+API endpoints: /api/v5/backtest-dashboard/*
+Strategy Center one-click backtest route: /backtest/{strategyId}
+Advanced metrics: collapsed by default
+```
+
+Safety boundaries:
+
+```text
+No broker connection
+No sandbox API
+No secret read
+No account read
+No balance read
+No position read
+No order preview
+No order submission
+No real money
+No auto trading
+No alpha model change
+No factor logic change
+No strategy logic change
+This is UI / UX / information architecture only
+```
+
+Validation:
+
+```text
+py_compile: passed
+V5.47 CLI safety/report checks: passed
+pytest tests/test_v547_backtest_dashboard.py: 5 passed
+related V5.46 / V5.47 tests: 10 passed
+pytest: 906 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+```
+
 # V5.46 Strategy Center
 
 This update adds a user-friendly strategy library for ordinary investors. It is a product UI / information architecture layer only.

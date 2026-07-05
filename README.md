@@ -14,6 +14,15 @@ Safety boundary:
 - No order submission
 - No secret, account, balance, or position reads
 
+## V5.47 Backtest Result Dashboard
+
+- Adds a user-friendly backtest result dashboard for ordinary investors.
+- Explains strategy information, backtest settings, system conclusion, risk level, core metrics, charts, actions, and advanced metrics.
+- Adds `/api/v5/backtest-dashboard/*` endpoints and frontend API client helpers.
+- Adds `/backtest/{strategyId}` product route and connects Strategy Center one-click backtest links to the new dashboard.
+- Keeps advanced metrics collapsed by default and keeps real trading hidden/disabled.
+- Keeps all broker, sandbox API, secret, account, balance, position, order, real-money, alpha, factor, and strategy paths unchanged and disabled.
+
 ## V5.46 Strategy Center
 
 - Adds a user-friendly strategy library for ordinary investors.

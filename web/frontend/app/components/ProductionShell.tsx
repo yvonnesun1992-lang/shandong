@@ -61,7 +61,7 @@ const legacyNavigationLabels = [
 const primaryLinks = [
   ['首页', '/'],
   ['策略中心', '/strategies'],
-  ['回测', '/reports'],
+  ['回测', '/backtest/small_cap_momentum'],
   ['模拟交易', '/v5-live-paper'],
   ['风险', '/risk'],
   ['数据', '/dashboard'],

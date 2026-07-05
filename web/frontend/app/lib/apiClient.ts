@@ -1504,3 +1504,43 @@ export function fetchV5StrategyCenterSafety() {
 export function fetchV5StrategyCenterSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/strategy-center/summary');
 }
+
+export function fetchV5BacktestDashboardStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/backtest-dashboard/status');
+}
+
+export function fetchV5BacktestDashboardResult(strategyId: string) {
+  return apiGet<Record<string, unknown>>(`/api/v5/backtest-dashboard/result/${strategyId}`);
+}
+
+export function fetchV5BacktestDashboardConclusion(strategyId: string) {
+  return apiGet<Record<string, unknown>>(`/api/v5/backtest-dashboard/conclusion/${strategyId}`);
+}
+
+export function fetchV5BacktestDashboardMetrics(strategyId: string) {
+  return apiGet<Record<string, unknown>>(`/api/v5/backtest-dashboard/metrics/${strategyId}`);
+}
+
+export function fetchV5BacktestDashboardRisk(strategyId: string) {
+  return apiGet<Record<string, unknown>>(`/api/v5/backtest-dashboard/risk/${strategyId}`);
+}
+
+export function fetchV5BacktestDashboardCharts(strategyId: string) {
+  return apiGet<Record<string, unknown>>(`/api/v5/backtest-dashboard/charts/${strategyId}`);
+}
+
+export function fetchV5BacktestDashboardActions(strategyId: string) {
+  return apiGet<Record<string, unknown>>(`/api/v5/backtest-dashboard/actions/${strategyId}`);
+}
+
+export function fetchV5BacktestDashboardExplanations() {
+  return apiGet<Record<string, unknown>>('/api/v5/backtest-dashboard/explanations');
+}
+
+export function fetchV5BacktestDashboardSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/backtest-dashboard/safety');
+}
+
+export function fetchV5BacktestDashboardSummary(strategyId: string) {
+  return apiGet<Record<string, unknown>>(`/api/v5/backtest-dashboard/summary/${strategyId}`);
+}

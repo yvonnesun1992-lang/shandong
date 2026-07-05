@@ -52,7 +52,7 @@ export default function StrategiesPage() {
       description="找到适合你的量化投资策略，不需要写代码。"
       activePath="/strategies"
       actionLabel="一键回测推荐策略"
-      actionHref="/strategies/small_cap_momentum"
+      actionHref="/backtest/small_cap_momentum"
     >
       <section className="panel strategySearchPanel">
         <div className="panelHeader">
@@ -83,7 +83,7 @@ export default function StrategiesPage() {
           </div>
           <p className="muted">适合震荡偏多市场，风险等级中。建议先运行回测，再加入模拟交易观察。</p>
           <div className="ctaRow">
-            <a className="button" href="/strategies/small_cap_momentum">一键回测</a>
+            <a className="button" href="/backtest/small_cap_momentum">一键回测</a>
             <a className="button button-secondary" href="/strategies/small_cap_momentum">加入模拟交易</a>
           </div>
         </article>
@@ -121,7 +121,7 @@ export default function StrategiesPage() {
               <span>{strategy.fit}</span>
             </div>
             <div className="ctaRow">
-              <a className="button" href={`/strategies/${strategy.id}`}>一键回测</a>
+              <a className="button" href={`/backtest/${strategy.id}`}>一键回测</a>
               <a className="button button-secondary" href={`/strategies/${strategy.id}`}>加入模拟交易</a>
             </div>
           </article>
