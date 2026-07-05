@@ -1,3 +1,83 @@
+# V5.44: Shandong Quant Brand System
+
+This update adds an institutional brand system for Shandong Quantitative System / 山洞量化系统.
+
+New files:
+
+```text
+config/v5_brand_system_config.py
+brand_system/BRAND_GUIDE.md
+brand_system/__init__.py
+brand_system/design_system.py
+brand_system/brand_safety_validator.py
+brand_system/brand_orchestrator.py
+brand_system/assets/shandong-quant-logo.png
+runtime/brand_consistency_check.py
+scripts/run_v544_brand_system.py
+web/frontend/app/components/BrandLogo.tsx
+web/frontend/public/brand/shandong-quant-logo.png
+docs/V5_BRAND_SYSTEM.md
+tests/test_v544_brand_system.py
+```
+
+Updated files:
+
+```text
+README.md
+REVIEW_PACKAGE.md
+scripts/start_shandong_mac.command
+scripts/start_shandong_windows.bat
+src/api/v2/server.py
+web/frontend/app/components/LoadingState.tsx
+web/frontend/app/components/ProductionShell.tsx
+web/frontend/app/layout.tsx
+web/frontend/app/page.tsx
+web/frontend/app/styles.css
+```
+
+Branding:
+
+```text
+Brand name: Shandong Quantitative System
+Chinese name: 山洞量化系统
+Logo: deep navy + gold mountain candlestick style
+Theme: institutional_quant
+Frontend style: institutional dark navy + gold accent
+CLI banner: added
+README branding: added
+```
+
+Safety boundaries:
+
+```text
+Broker connection: no
+Sandbox API connection: no
+Secret read: no
+Account read: no
+Balance read: no
+Position read: no
+Order preview: no
+Order submission: no
+Real money: no
+Alpha model changed: no
+Factor logic changed: no
+Strategy logic changed: no
+This is brand system only: yes
+```
+
+Validation:
+
+```text
+py_compile: passed
+run_v544_brand_system.py: passed, verdict PASS
+pytest tests/test_v544_brand_system.py: 4 passed
+pytest tests/test_v540_product_home_dashboard.py tests/test_v544_brand_system.py: 8 passed
+related V5 navigation compatibility tests: 269 passed
+pytest: 892 passed
+system_doctor: OK
+frontend structure check: passed
+```
+
 # V5.38: Sandbox Read-Only Connector Final Review Board
 
 This update adds a local-only read-only connector final review board. It reviews V5.34 mock replay evidence, V5.35 fault injection evidence, V5.36 stability gate evidence, and V5.37 evidence pack material without enabling runtime, sandbox API, credential read, account read, balance read, position read, order preview, order submission, broker connection, real money, or production trading.

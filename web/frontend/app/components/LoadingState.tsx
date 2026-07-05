@@ -1,8 +1,12 @@
-export function LoadingState({ label = 'Loading platform status' }: { label?: string }) {
+export function LoadingState({ label = 'Initializing Quant Engine...' }: { label?: string }) {
   return (
     <section className="stateBox stateBox-loading">
       <span className="loadingDot" />
-      <p>{label}</p>
+      <div>
+        <strong>Shandong Quantitative System</strong>
+        <p>{label}</p>
+        <span>Paper Trading Mode</span>
+      </div>
     </section>
   );
 }

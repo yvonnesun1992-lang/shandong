@@ -371,6 +371,11 @@ from guided_setup.init import boundary as guided_setup_boundary
 from guided_setup.plain_language_explanation import build_plain_language_summary
 from guided_setup.setup_requirement_detector import detect_setup_requirements, summarize_setup_requirements
 from guided_setup.setup_step_model import mark_setup_steps_status
+from brand_system.brand_orchestrator import build_brand_system_status
+from brand_system.brand_safety_validator import build_brand_safety_summary
+from brand_system.design_system import get_design_system
+from config.v5_brand_system_config import get_brand_assets, get_brand_status
+from runtime.brand_consistency_check import run_brand_consistency_check
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -3939,6 +3944,46 @@ def create_v2_api_app() -> FastAPI:
         summary = summarize_guided_setup_wizard(build_guided_setup_wizard())
         response = success_response({"summary": summary, **guided_setup_boundary()}, started_at=started, warning=summary.get("warnings", []))
         log_api_event("/api/v5/guided-setup/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/brand-system/status")
+    def v5_brand_system_status() -> dict:
+        started = perf_counter()
+        status = get_brand_status()
+        response = success_response({"status": status}, started_at=started, warning=status.get("warnings", []))
+        log_api_event("/api/v5/brand-system/status", "default", "ok", response["meta"]["latency_ms"], len(status.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/brand-system/design")
+    def v5_brand_system_design() -> dict:
+        started = perf_counter()
+        design = get_design_system()
+        response = success_response({"design_system": design, "brand_system_only": True}, started_at=started)
+        log_api_event("/api/v5/brand-system/design", "default", "ok", response["meta"]["latency_ms"])
+        return response
+
+    @api.get("/api/v5/brand-system/consistency")
+    def v5_brand_system_consistency() -> dict:
+        started = perf_counter()
+        consistency = run_brand_consistency_check()
+        response = success_response({"consistency": consistency, "brand_system_only": True}, started_at=started, warning=consistency.get("warnings", []))
+        log_api_event("/api/v5/brand-system/consistency", "default", "ok", response["meta"]["latency_ms"], len(consistency.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/brand-system/safety")
+    def v5_brand_system_safety() -> dict:
+        started = perf_counter()
+        safety = build_brand_safety_summary()
+        response = success_response({"safety": safety, "assets": get_brand_assets(), "brand_system_only": True}, started_at=started, warning=safety.get("warnings", []))
+        log_api_event("/api/v5/brand-system/safety", "default", "ok", response["meta"]["latency_ms"], len(safety.get("warnings", [])))
+        return response
+
+    @api.get("/api/v5/brand-system/summary")
+    def v5_brand_system_summary() -> dict:
+        started = perf_counter()
+        summary = build_brand_system_status()
+        response = success_response({"summary": summary, "brand_system_only": True}, started_at=started, warning=summary.get("warnings", []))
+        log_api_event("/api/v5/brand-system/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
 
     return api
