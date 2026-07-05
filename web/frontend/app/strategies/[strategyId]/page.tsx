@@ -23,7 +23,7 @@ export default function StrategyDetailPage({ params }: StrategyDetailPageProps) 
       description="用普通投资者能理解的方式查看策略定位、风险、回测表现和模拟交易预览。"
       activePath="/strategies"
       actionLabel="一键回测"
-      actionHref="#backtest"
+      actionHref={`/backtest/${params.strategyId}`}
     >
       <section className="detailLayout">
         <article className="panel sectionStack">
@@ -56,7 +56,7 @@ export default function StrategyDetailPage({ params }: StrategyDetailPageProps) 
             </div>
             <StatusBadge status="Warning" />
           </div>
-          <a className="button" href="#backtest">一键回测</a>
+          <a className="button" href={`/backtest/${params.strategyId}`}>一键回测</a>
           <a className="button button-secondary" href="#paper-preview">加入模拟交易</a>
           <p className="meta">不会连接券商，不会读取账户，不会提交订单。</p>
         </aside>

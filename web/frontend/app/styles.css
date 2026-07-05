@@ -609,6 +609,50 @@ h2 {
   margin-top: 0;
 }
 
+.backtestMetricGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.conclusionCard {
+  border-color: rgba(200, 162, 74, 0.42);
+}
+
+.barChart {
+  align-items: end;
+  background: rgba(6, 21, 37, 0.42);
+  border: 1px solid rgba(185, 194, 208, 0.12);
+  border-radius: 8px;
+  display: flex;
+  gap: 14px;
+  height: 210px;
+  justify-content: center;
+  padding: 18px;
+}
+
+.positiveBar,
+.negativeBar {
+  border-radius: 6px 6px 0 0;
+  display: block;
+  min-height: 20px;
+  width: 22px;
+}
+
+.positiveBar {
+  background: linear-gradient(180deg, #79d8ad, var(--good));
+}
+
+.negativeBar {
+  background: linear-gradient(180deg, #df8a7f, var(--danger));
+}
+
+.advancedMetricPanel summary {
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 850;
+  margin-bottom: 14px;
+}
+
 .loadingDot {
   animation: pulse 1.5s infinite ease-in-out;
   background: var(--accent);
@@ -860,7 +904,8 @@ h2 {
   .recommendationGrid,
   .strategyCardGrid,
   .detailLayout,
-  .infoGrid {
+  .infoGrid,
+  .backtestMetricGrid {
     grid-template-columns: 1fr;
   }
 

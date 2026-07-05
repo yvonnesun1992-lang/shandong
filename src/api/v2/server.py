@@ -374,6 +374,16 @@ from guided_setup.setup_step_model import mark_setup_steps_status
 from brand_system.brand_orchestrator import build_brand_system_status
 from brand_system.brand_safety_validator import build_brand_safety_summary
 from brand_system.design_system import get_design_system
+from backtest_dashboard.backtest_action_panel import build_backtest_action_panel
+from backtest_dashboard.backtest_chart_model import build_backtest_charts
+from backtest_dashboard.backtest_conclusion_engine import build_backtest_conclusion
+from backtest_dashboard.backtest_dashboard_orchestrator import build_backtest_dashboard, summarize_backtest_dashboard
+from backtest_dashboard.backtest_dashboard_safety_validator import build_backtest_dashboard_safety_summary
+from backtest_dashboard.backtest_result_model import build_backtest_advanced_metrics, build_backtest_core_metrics, build_backtest_result
+from backtest_dashboard.backtest_risk_analysis import build_risk_analysis
+from backtest_dashboard.backtest_summary_cards import build_advanced_metric_cards, build_core_metric_cards
+from backtest_dashboard.metric_explanation_copy import build_metric_explanations
+from config.v5_backtest_dashboard_config import get_backtest_dashboard_status
 from config.v5_brand_system_config import get_brand_assets, get_brand_status
 from config.v5_strategy_center_config import get_strategy_center_status
 from runtime.brand_consistency_check import run_brand_consistency_check
@@ -4085,6 +4095,80 @@ def create_v2_api_app() -> FastAPI:
         dashboard = build_strategy_center_dashboard()
         summary = summarize_strategy_center(dashboard)
         return _strategy_center_response("/api/v5/strategy-center/summary", {"summary": summary, "dashboard": dashboard}, started)
+
+    def _backtest_dashboard_response(endpoint: str, payload: dict, started: float) -> dict:
+        status = get_backtest_dashboard_status()
+        warnings = list(status.get("warnings", [])) + list(payload.get("warnings", []))
+        response = success_response({**status, **payload}, started_at=started, warning=warnings)
+        log_api_event(endpoint, "default", "ok", response["meta"]["latency_ms"], len(warnings))
+        return response
+
+    @api.get("/api/v5/backtest-dashboard/status")
+    def v5_backtest_dashboard_status() -> dict:
+        started = perf_counter()
+        return _backtest_dashboard_response("/api/v5/backtest-dashboard/status", {"status": get_backtest_dashboard_status()}, started)
+
+    @api.get("/api/v5/backtest-dashboard/result/{strategy_id}")
+    def v5_backtest_dashboard_result(strategy_id: str) -> dict:
+        started = perf_counter()
+        return _backtest_dashboard_response("/api/v5/backtest-dashboard/result/{strategy_id}", {"result": build_backtest_result(strategy_id)}, started)
+
+    @api.get("/api/v5/backtest-dashboard/conclusion/{strategy_id}")
+    def v5_backtest_dashboard_conclusion(strategy_id: str) -> dict:
+        started = perf_counter()
+        metrics = build_backtest_core_metrics(strategy_id)
+        return _backtest_dashboard_response("/api/v5/backtest-dashboard/conclusion/{strategy_id}", {"conclusion": build_backtest_conclusion(metrics)}, started)
+
+    @api.get("/api/v5/backtest-dashboard/metrics/{strategy_id}")
+    def v5_backtest_dashboard_metrics(strategy_id: str) -> dict:
+        started = perf_counter()
+        core = build_backtest_core_metrics(strategy_id)
+        advanced = build_backtest_advanced_metrics(strategy_id)
+        payload = {
+            "core_metrics": core,
+            "advanced_metrics": advanced,
+            "core_metric_cards": build_core_metric_cards(core),
+            "advanced_metric_cards": build_advanced_metric_cards(advanced),
+        }
+        return _backtest_dashboard_response("/api/v5/backtest-dashboard/metrics/{strategy_id}", payload, started)
+
+    @api.get("/api/v5/backtest-dashboard/risk/{strategy_id}")
+    def v5_backtest_dashboard_risk(strategy_id: str) -> dict:
+        started = perf_counter()
+        return _backtest_dashboard_response("/api/v5/backtest-dashboard/risk/{strategy_id}", {"risk": build_risk_analysis(build_backtest_core_metrics(strategy_id))}, started)
+
+    @api.get("/api/v5/backtest-dashboard/charts/{strategy_id}")
+    def v5_backtest_dashboard_charts(strategy_id: str) -> dict:
+        started = perf_counter()
+        return _backtest_dashboard_response("/api/v5/backtest-dashboard/charts/{strategy_id}", {"charts": build_backtest_charts(strategy_id)}, started)
+
+    @api.get("/api/v5/backtest-dashboard/actions/{strategy_id}")
+    def v5_backtest_dashboard_actions(strategy_id: str) -> dict:
+        started = perf_counter()
+        metrics = build_backtest_core_metrics(strategy_id)
+        conclusion = build_backtest_conclusion(metrics)
+        return _backtest_dashboard_response("/api/v5/backtest-dashboard/actions/{strategy_id}", {"actions": build_backtest_action_panel(strategy_id, conclusion)}, started)
+
+    @api.get("/api/v5/backtest-dashboard/explanations")
+    def v5_backtest_dashboard_explanations() -> dict:
+        started = perf_counter()
+        return _backtest_dashboard_response("/api/v5/backtest-dashboard/explanations", {"explanations": build_metric_explanations()}, started)
+
+    @api.get("/api/v5/backtest-dashboard/safety")
+    def v5_backtest_dashboard_safety() -> dict:
+        started = perf_counter()
+        safety = build_backtest_dashboard_safety_summary()
+        return _backtest_dashboard_response("/api/v5/backtest-dashboard/safety", {"safety": safety}, started)
+
+    @api.get("/api/v5/backtest-dashboard/summary/{strategy_id}")
+    def v5_backtest_dashboard_summary(strategy_id: str) -> dict:
+        started = perf_counter()
+        dashboard = build_backtest_dashboard(strategy_id)
+        return _backtest_dashboard_response(
+            "/api/v5/backtest-dashboard/summary/{strategy_id}",
+            {"summary": summarize_backtest_dashboard(dashboard), "dashboard": dashboard},
+            started,
+        )
 
     return api
 

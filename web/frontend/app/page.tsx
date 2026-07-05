@@ -38,7 +38,7 @@ export default function HomePage() {
       description="面向普通用户的一键量化投资产品原型。Local-first quant investing experience for research and paper trading."
       activePath="/"
       actionLabel="🚀 一键开始投资"
-      actionHref="#one-click-investment"
+      actionHref="/backtest/small_cap_momentum"
     >
       <section className="productHero">
         <div className="productHeroCopy">
@@ -60,7 +60,7 @@ export default function HomePage() {
             <a className="button button-secondary" href="/strategies">
               📈 查看策略表现
             </a>
-            <a className="button button-secondary" href="/reports">
+            <a className="button button-secondary" href="/backtest/small_cap_momentum">
               🔬 运行回测
             </a>
           </div>
