@@ -1,3 +1,69 @@
+# V5.45 Product UI Prototype
+
+This update reframes the V5 frontend from an engineering-oriented dashboard into a user-friendly quant investment product prototype.
+
+New files:
+
+```text
+product_ui/__init__.py
+product_ui/init.py
+product_ui/one_click_investment.py
+product_ui/ui_design_system.py
+tests/test_v545_product_ui_prototype.py
+```
+
+Updated files:
+
+```text
+README.md
+REVIEW_PACKAGE.md
+web/frontend/app/components/ProductionShell.tsx
+web/frontend/app/page.tsx
+web/frontend/app/styles.css
+```
+
+Product UI changes:
+
+```text
+Home page: investor-facing product dashboard
+Core CTA: one-click investment prototype
+Visible navigation: Home / Strategy / Backtest / Paper Trading / Risk / Data / Help
+Engineering tools: moved under Advanced Settings
+Recommended strategy module: added
+Simplified return chart: added
+Recent run records: added
+Safety notices: added
+```
+
+Safety boundaries:
+
+```text
+No broker connection
+No sandbox API
+No secret read
+No account read
+No balance read
+No position read
+No order submission
+No real money
+No alpha model change
+No factor logic change
+No strategy logic change
+This is UI / UX / information architecture only
+```
+
+Validation:
+
+```text
+py_compile product_ui modules: passed
+pytest tests/test_v545_product_ui_prototype.py: 4 passed
+related UI / product / brand tests: 18 passed
+pytest: 896 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+pnpm run build: blocked by local pnpm sharp build-approval policy, not by frontend source errors
+```
+
 # V5.44: Shandong Quant Brand System
 
 This update adds an institutional brand system for Shandong Quantitative System / 山洞量化系统.
