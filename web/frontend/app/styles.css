@@ -498,6 +498,117 @@ h2 {
   border-color: rgba(200, 162, 74, 0.55);
 }
 
+.strategySearchPanel,
+.recommendationPanel {
+  margin-bottom: 16px;
+}
+
+.searchInput {
+  background: rgba(6, 21, 37, 0.72);
+  border: 1px solid rgba(200, 162, 74, 0.3);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 15px;
+  min-height: 48px;
+  outline: none;
+  padding: 0 14px;
+  width: 100%;
+}
+
+.searchInput::placeholder {
+  color: #8fa3bb;
+}
+
+.filterGrid,
+.pillRow,
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filterGrid {
+  margin-top: 14px;
+}
+
+.filterPill,
+.softPill {
+  background: rgba(19, 47, 82, 0.9);
+  border: 1px solid rgba(200, 162, 74, 0.25);
+  border-radius: 999px;
+  color: #dbe4f0;
+  font-size: 13px;
+  font-weight: 750;
+  padding: 9px 12px;
+}
+
+.filterPill {
+  cursor: pointer;
+}
+
+.filterPill:hover {
+  border-color: rgba(200, 162, 74, 0.55);
+  color: #ffffff;
+}
+
+.strategyCardGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.strategyCard {
+  background: linear-gradient(180deg, rgba(14, 39, 70, 0.96), rgba(7, 22, 39, 0.96));
+  border: 1px solid rgba(200, 162, 74, 0.2);
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+  min-height: 260px;
+  padding: 18px;
+}
+
+.strategyFacts,
+.infoGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.strategyFacts span,
+.infoGrid span {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.detailLayout {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.7fr) minmax(260px, 0.8fr);
+  margin-bottom: 16px;
+}
+
+.sectionStack {
+  display: grid;
+  gap: 14px;
+}
+
+.infoGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.infoGrid div {
+  background: rgba(19, 47, 82, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+.warningPanel {
+  margin-top: 0;
+}
+
 .loadingDot {
   animation: pulse 1.5s infinite ease-in-out;
   background: var(--accent);
@@ -746,7 +857,10 @@ h2 {
   .summaryStrip,
   .miniGrid,
   .productHero,
-  .recommendationGrid {
+  .recommendationGrid,
+  .strategyCardGrid,
+  .detailLayout,
+  .infoGrid {
     grid-template-columns: 1fr;
   }
 

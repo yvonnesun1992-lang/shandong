@@ -14,6 +14,16 @@ Safety boundary:
 - No order submission
 - No secret, account, balance, or position reads
 
+## V5.46 Strategy Center
+
+- Adds a user-friendly strategy library for ordinary investors.
+- Introduces strategy categories, search, filters, recommendations, cards, and detail pages.
+- Adds backtest preview and paper-trading preview entry points without enabling any real trading path.
+- Adds `/api/v5/strategy-center/*` endpoints and frontend API client helpers.
+- Updates navigation to show `策略中心` as a main product entry while keeping engineering tools under Advanced Settings.
+- Adds strategy-center safety validation, CLI report generation, and tests.
+- Keeps all broker, sandbox API, secret, account, balance, position, order, real-money, alpha, factor, and strategy paths unchanged and disabled.
+
 ## V5.45 Product UI Prototype
 
 - Reframes the home screen as a user-friendly quant investment product instead of an engineering dashboard

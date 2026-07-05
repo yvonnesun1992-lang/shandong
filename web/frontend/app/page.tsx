@@ -57,7 +57,7 @@ export default function HomePage() {
             <a className="button button-large" href="#recommended-strategy">
               🚀 一键开始投资
             </a>
-            <a className="button button-secondary" href="/strategy">
+            <a className="button button-secondary" href="/strategies">
               📈 查看策略表现
             </a>
             <a className="button button-secondary" href="/reports">

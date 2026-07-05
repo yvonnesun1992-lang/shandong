@@ -1,3 +1,74 @@
+# V5.46 Strategy Center
+
+This update adds a user-friendly strategy library for ordinary investors. It is a product UI / information architecture layer only.
+
+New files:
+
+```text
+config/v5_strategy_center_config.py
+strategy_center/
+scripts/run_v546_strategy_center.py
+web/frontend/app/strategies/page.tsx
+web/frontend/app/strategies/[strategyId]/page.tsx
+reports/v5_46_strategy_center_report.md
+tests/test_v546_strategy_center.py
+```
+
+Updated files:
+
+```text
+README.md
+REVIEW_PACKAGE.md
+runtime/security_scan.py
+src/api/v2/server.py
+web/frontend/app/components/ProductionShell.tsx
+web/frontend/app/lib/apiClient.ts
+web/frontend/app/page.tsx
+web/frontend/app/styles.css
+```
+
+Product changes:
+
+```text
+Strategy Center page: added
+Strategy detail page: added
+Strategy catalog/search/filter/recommendation/card/detail models: added
+Backtest preview and paper-trading preview: added as local preview only
+API endpoints: /api/v5/strategy-center/*
+Navigation: strategy entry renamed to 策略中心
+Advanced tools remain under Advanced Settings
+```
+
+Safety boundaries:
+
+```text
+No broker connection
+No sandbox API
+No secret read
+No account read
+No balance read
+No position read
+No order preview
+No order submission
+No real money
+No alpha model change
+No factor logic change
+No strategy logic change
+This is UI / UX / information architecture only
+```
+
+Validation:
+
+```text
+py_compile: passed
+V5.46 CLI safety/report checks: passed
+pytest tests/test_v546_strategy_center.py: 5 passed
+related UI / product tests: 9 passed
+pytest: 901 passed
+system_doctor: OK
+frontend structure check: passed via node scripts/verify-build.mjs
+```
+
 # V5.45 Product UI Prototype
 
 This update reframes the V5 frontend from an engineering-oriented dashboard into a user-friendly quant investment product prototype.
