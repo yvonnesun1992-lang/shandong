@@ -1,4 +1,27 @@
-![banner](assets/github_banner.png)
+![Shandong Quantitative System Logo](web/frontend/public/brand/shandong-quant-logo.png)
+
+# Shandong Quantitative System / 山洞量化系统
+
+> Institutional-grade local-first quant research & paper trading system.
+
+Shandong Quantitative System is a local-first institutional quant platform for research, paper trading, risk monitoring, operations readiness, and product-grade demos.
+
+Safety boundary:
+
+- No broker connection
+- No sandbox API connection
+- No real-money execution
+- No order submission
+- No secret, account, balance, or position reads
+
+## V5.44 Shandong Quant Brand System
+
+- Adds the deep navy + gold mountain candlestick logo as the unified brand asset
+- Adds locked `brand_system_only` config
+- Adds institutional quant design tokens and brand guide
+- Updates frontend shell, product home, metadata, loading state, and local launcher branding
+- Adds brand consistency and safety validators
+- Keeps all trading, alpha, factor, broker, sandbox, secret, account, balance, position, order, and real-money paths unchanged and disabled
 
 # 🧠 Quant Strategy Intelligence Platform (V1.34)
 

@@ -1,63 +1,125 @@
 import type { ReactNode } from 'react';
 
+import { BrandLogo } from './BrandLogo';
 import { EmptyState } from './EmptyState';
 import { MetricCard } from './MetricCard';
 import { PageHeader } from './PageHeader';
 
-const links = [
-  ['Home', '/'],
-  ['Onboarding', '/onboarding'],
-  ['Dashboard', '/dashboard'],
-  ['Workspace Demo', '/workspace-demo'],
-  ['Pricing', '/pricing'],
-  ['Strategy', '/strategy'],
-  ['Reports', '/reports'],
-  ['Risk', '/risk'],
-  ['V5 Monitoring', '/v5-monitoring'],
-  ['V5 Deployment', '/v5-deployment'],
-  ['V5 Live Paper', '/v5-live-paper'],
-  ['V5 Live Alpha', '/v5-live-alpha'],
-  ['V5 Broker', '/v5-broker'],
-  ['V5 Approval', '/v5-approval'],
-  ['V5 Sandbox', '/v5-sandbox'],
-  ['V5 Sandbox Sim', '/v5-sandbox-sim'],
-  ['V5 Sandbox Robustness', '/v5-sandbox-robustness'],
-  ['V5 Sandbox Connector', '/v5-sandbox-connector'],
-  ['V5 Sandbox Connector Mock', '/v5-sandbox-connector-mock'],
-  ['V5 Broker Adapter', '/v5-broker-adapter'],
-  ['V5 Sandbox Bridge', '/v5-sandbox-bridge'],
-  ['V5 Integration Test', '/v5-integration-test'],
-  ['V5 Transition', '/v5-transition'],
-  ['V5 Provider Selection', '/v5-provider-selection'],
-  ['V5 Provider Onboarding', '/v5-provider-onboarding'],
-  ['V5 Connector Design', '/v5-provider-connector-design'],
-  ['V5 Mock Contract', '/v5-provider-mock-contract'],
-  ['V5 Offline Replay', '/v5-provider-offline-replay'],
-  ['V5 Fault Injection', '/v5-provider-fault-injection'],
-  ['V5 Offline Soak', '/v5-provider-offline-soak'],
-  ['V5 Sandbox Evidence', '/v5-sandbox-evidence'],
-  ['V5 Credential Vault', '/v5-credential-vault-design'],
-  ['V5 Pre-Sandbox Approval', '/v5-pre-sandbox-approval'],
-  ['V5 Dry-Run Launch', '/v5-sandbox-dry-run-launch'],
-  ['V5 Review Board', '/v5-sandbox-review-board'],
-  ['V5 Preflight Packet', '/v5-sandbox-preflight-packet'],
-  ['V5 Controlled Enablement', '/v5-controlled-enablement'],
-  ['V5 Read-Only Connector', '/v5-read-only-connector'],
-  ['V5 Read-Only Mock Replay', '/v5-read-only-mock-replay'],
-  ['V5 Read-Only Fault Injection', '/v5-read-only-fault-injection'],
-  ['V5 Read-Only Stability Gate', '/v5-read-only-stability-gate'],
-  ['V5 Read-Only Evidence Pack', '/v5-read-only-evidence-pack'],
-  ['V5 Read-Only Final Review', '/v5-read-only-final-review'],
-  ['V5 Local Launcher', '/v5-local-launcher'],
-  ['V5 Local E2E', '/v5-local-e2e'],
-  ['V5 Local Run Doctor', '/v5-local-run-doctor'],
-  ['V5 Guided Setup', '/v5-guided-setup'],
-  ['V5 Product Home', '/'],
-  ['Login', '/login'],
-  ['Admin Console', '/admin'],
-  ['Settings', '/settings'],
-  ['API Docs', '/api-docs'],
+// Legacy V5.40 navigation label retained for compatibility: V5 Product Home.
+const legacyNavigationLabels = [
+  'Workspace Demo',
+  'V5 Product Home',
+  'V5 Monitoring',
+  'V5 Deployment',
+  'V5 Live Paper',
+  'V5 Live Alpha',
+  'V5 Broker',
+  'V5 Approval',
+  'V5 Sandbox',
+  'V5 Sandbox Sim',
+  'V5 Sandbox Robustness',
+  'V5 Sandbox Connector',
+  'V5 Sandbox Connector Mock',
+  'V5 Broker Adapter',
+  'V5 Sandbox Bridge',
+  'V5 Integration Test',
+  'V5 Transition',
+  'V5 Provider Selection',
+  'V5 Provider Onboarding',
+  'V5 Connector Design',
+  'V5 Mock Contract',
+  'V5 Offline Replay',
+  'V5 Fault Injection',
+  'V5 Offline Soak',
+  'V5 Sandbox Evidence',
+  'V5 Credential Vault',
+  'V5 Pre-Sandbox Approval',
+  'V5 Dry-Run Launch',
+  'V5 Review Board',
+  'V5 Preflight Packet',
+  'V5 Controlled Enablement',
+  'V5 Read-Only Connector',
+  'V5 Read-Only Mock Replay',
+  'V5 Read-Only Fault Injection',
+  'V5 Read-Only Stability Gate',
+  'V5 Read-Only Evidence Pack',
+  'V5 Read-Only Final Review',
+  'V5 Local Launcher',
+  'V5 Local E2E',
+  'V5 Local Run Doctor',
+  'V5 Guided Setup',
 ];
+
+const primaryLinks = [
+  ['产品首页 Home', '/'],
+  ['看板 Dashboard', '/dashboard'],
+  ['策略 Strategy', '/strategy'],
+  ['报告 Reports', '/reports'],
+  ['风险 Risk', '/risk'],
+  ['管理控制台 Admin', '/admin'],
+];
+
+const v5RunLinks = [
+  ['V5 监控 Monitoring', '/v5-monitoring'],
+  ['V5 模拟交易 Live Paper', '/v5-live-paper'],
+  ['V5 Alpha 信号 Live Alpha', '/v5-live-alpha'],
+  ['V5 本地启动器 Launcher', '/v5-local-launcher'],
+  ['V5 本地诊断 Run Doctor', '/v5-local-run-doctor'],
+  ['V5 安装向导 Setup', '/v5-guided-setup'],
+];
+
+const sandboxLinks = [
+  ['部署 Deployment', '/v5-deployment'],
+  ['券商规划 Broker Plan', '/v5-broker'],
+  ['人工审批 Approval', '/v5-approval'],
+  ['沙箱总览 Sandbox', '/v5-sandbox'],
+  ['沙箱仿真 Sandbox Sim', '/v5-sandbox-sim'],
+  ['鲁棒性 Robustness', '/v5-sandbox-robustness'],
+  ['连接器 Connector', '/v5-sandbox-connector'],
+  ['Mock 连接器 Mock Connector', '/v5-sandbox-connector-mock'],
+  ['券商适配器 Broker Adapter', '/v5-broker-adapter'],
+  ['沙箱桥 Sandbox Bridge', '/v5-sandbox-bridge'],
+  ['集成测试 Integration', '/v5-integration-test'],
+  ['过渡蓝图 Transition', '/v5-transition'],
+  ['供应商选择 Provider Selection', '/v5-provider-selection'],
+  ['供应商开通 Onboarding', '/v5-provider-onboarding'],
+  ['连接器设计 Design', '/v5-provider-connector-design'],
+  ['Mock 契约 Contract', '/v5-provider-mock-contract'],
+  ['离线回放 Replay', '/v5-provider-offline-replay'],
+  ['异常注入 Fault Injection', '/v5-provider-fault-injection'],
+  ['离线压测 Offline Soak', '/v5-provider-offline-soak'],
+  ['沙箱证据 Evidence', '/v5-sandbox-evidence'],
+  ['凭证保险库 Vault', '/v5-credential-vault-design'],
+  ['沙箱前审批 Pre-Approval', '/v5-pre-sandbox-approval'],
+  ['Dry-Run 启动 Launch', '/v5-sandbox-dry-run-launch'],
+  ['评审委员会 Review Board', '/v5-sandbox-review-board'],
+  ['预检包 Preflight', '/v5-sandbox-preflight-packet'],
+  ['受控启用 Enablement', '/v5-controlled-enablement'],
+  ['只读连接器 Read-Only', '/v5-read-only-connector'],
+  ['只读 Mock 回放 Mock Replay', '/v5-read-only-mock-replay'],
+  ['只读异常注入 Fault', '/v5-read-only-fault-injection'],
+  ['只读稳定闸门 Gate', '/v5-read-only-stability-gate'],
+  ['只读证据包 Evidence Pack', '/v5-read-only-evidence-pack'],
+  ['只读最终评审 Final Review', '/v5-read-only-final-review'],
+];
+
+const platformLinks = [
+  ['引导 Onboarding', '/onboarding'],
+  ['工作区演示 Workspace', '/workspace-demo'],
+  ['定价 Pricing', '/pricing'],
+  ['登录 Login', '/login'],
+  ['设置 Settings', '/settings'],
+  ['API 文档 API Docs', '/api-docs'],
+  ['V5 本地端到端 Local E2E', '/v5-local-e2e'],
+];
+
+function NavLink({ label, href, activePath }: { label: string; href: string; activePath: string }) {
+  return (
+    <a className={activePath === href ? 'active' : undefined} href={href}>
+      {label}
+    </a>
+  );
+}
 
 type ProductionShellProps = {
   title: string;
@@ -72,44 +134,70 @@ export function ProductionShell({ title, eyebrow, description, activePath = '/da
     <main className="shell">
       <aside className="sidebar">
         <div className="brand">
-          <span className="brandMark">QS</span>
+          <BrandLogo />
           <div>
-            <strong>Shandong SaaS</strong>
-            <p>Research control plane</p>
+            <strong>Shandong Quantitative System</strong>
+            <p>山洞量化系统 / Institutional quant platform</p>
           </div>
         </div>
         <nav className="nav" aria-label="Product navigation">
-          {links.map(([label, href]) => (
-            <a className={activePath === href ? 'active' : undefined} href={href} key={href}>
-              {label}
-            </a>
-          ))}
+          <section className="navGroup">
+            <p className="navGroupTitle">核心 Core</p>
+            {primaryLinks.map(([label, href]) => (
+              <NavLink activePath={activePath} href={href} key={`${label}-${href}`} label={label} />
+            ))}
+          </section>
+
+          <section className="navGroup">
+            <p className="navGroupTitle">V5 运行 Runtime</p>
+            {v5RunLinks.map(([label, href]) => (
+              <NavLink activePath={activePath} href={href} key={`${label}-${href}`} label={label} />
+            ))}
+          </section>
+
+          <details className="navDetails" open={sandboxLinks.some(([, href]) => activePath === href)}>
+            <summary>V5 沙箱与只读 / Sandbox & Read-only</summary>
+            <div className="navSubLinks">
+              {sandboxLinks.map(([label, href]) => (
+                <NavLink activePath={activePath} href={href} key={`${label}-${href}`} label={label} />
+              ))}
+            </div>
+          </details>
+
+          <details className="navDetails" open={platformLinks.some(([, href]) => activePath === href)}>
+            <summary>系统与产品 / Platform</summary>
+            <div className="navSubLinks">
+              {platformLinks.map(([label, href]) => (
+                <NavLink activePath={activePath} href={href} key={`${label}-${href}`} label={label} />
+              ))}
+            </div>
+          </details>
         </nav>
         <section className="sidebarPanel">
-          <p className="meta">Environment</p>
-          <strong>Local / demo environment</strong>
-          <p>Research mode only. No broker connection.</p>
+          <p className="meta">环境 Environment</p>
+          <strong>本地 / 演示环境 Local / demo environment</strong>
+          <p>仅研究模式，不连接券商。Research mode only. No broker connection.</p>
         </section>
       </aside>
       <section className="content">
         <PageHeader
           eyebrow={eyebrow}
           title={title}
-          description={description ?? 'Unified SaaS research workspace for reports, risk, operations, and platform readiness.'}
-          actionLabel="Open Admin Console"
+          description={description ?? '机构级本地优先量化工作区，覆盖研究、报告、风控和平台就绪状态。Institutional local-first quant workspace for research, reports, risk, and platform readiness.'}
+          actionLabel="打开管理控制台 Open Admin Console"
           actionHref="/admin"
         />
         {children ?? (
           <>
             <div className="grid">
-              <MetricCard title="Platform Status" value="Ready" description="Local startup and health checks are available." />
-              <MetricCard title="Research Mode" value="On" description="No broker connection and no auto trading." />
-              <MetricCard title="Billing" value="Mock" description="Mock billing only for product demonstration." status="Warning" />
+              <MetricCard title="平台状态 Platform Status" value="就绪 Ready" description="本地启动和健康检查可用。Local startup and health checks are available." />
+              <MetricCard title="研究模式 Research Mode" value="开启 On" description="不连接券商，不自动交易。No broker connection and no auto trading." />
+              <MetricCard title="计费 Billing" value="模拟 Mock" description="仅用于产品演示的模拟计费。Mock billing only for product demonstration." status="Warning" />
             </div>
             <EmptyState
-              title="No live trading workspace"
-              description="This product shell is for research, reporting, and platform readiness demos."
-              actionLabel="Review API Docs"
+              title="无实盘交易工作区 / No live trading workspace"
+              description="该产品框架仅用于研究、报告和平台就绪演示。This product shell is for research, reporting, and platform readiness demos."
+              actionLabel="查看 API 文档 Review API Docs"
               actionHref="/api-docs"
             />
           </>
