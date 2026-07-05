@@ -14,6 +14,16 @@ Safety boundary:
 - No order submission
 - No secret, account, balance, or position reads
 
+## V5.45 Product UI Prototype
+
+- Reframes the home screen as a user-friendly quant investment product instead of an engineering dashboard
+- Adds product UI mode locked to `product_ui_only`
+- Adds a local-only one-click investment prototype: recommended strategy → backtest summary → paper trading summary
+- Shows investor-facing metrics: today return, weekly return, monthly return, max drawdown, current exposure, and market regime
+- Simplifies visible navigation to Home, Strategy, Backtest, Paper Trading, Risk, Data, and Help
+- Moves API, CLI, launcher, doctor, logs, evidence, and debug-oriented tools under Advanced Settings
+- Keeps all broker, sandbox API, secret, account, balance, position, order, real-money, alpha, factor, and strategy paths unchanged and disabled
+
 ## V5.44 Shandong Quant Brand System
 
 - Adds the deep navy + gold mountain candlestick logo as the unified brand asset

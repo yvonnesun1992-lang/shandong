@@ -1,4 +1,3 @@
-import { EmptyState } from './components/EmptyState';
 import { BrandLogo } from './components/BrandLogo';
 import { MetricCard } from './components/MetricCard';
 import { ProductionShell } from './components/ProductionShell';
@@ -6,123 +5,163 @@ import { StatusBadge } from './components/StatusBadge';
 
 // Legacy V5.40 product-home labels retained for compatibility:
 // Shandong Quant System; Local-first paper trading and research dashboard.
-const featureCards = [
-  ['研究 Research', '/strategy', '生成并查看本地量化研究报告。Generate and review local quant research reports.'],
-  ['回测 Backtest', '/reports', '查看回测与绩效报告流程。Open backtest and performance report workflows.'],
-  ['模拟交易 Paper Trading', '/v5-live-paper', '查看仅模拟交易的运行与监控状态。Review paper-only runtime and monitoring status.'],
-  ['风险监控 Risk Monitor', '/risk', '检查风控与禁用的真实交易路径。Inspect risk controls and disabled real-trading paths.'],
-  ['日志 Logs', '/admin', '查看本地运维与系统汇总。Review local operations and system summaries.'],
-  ['本地启动器 Local Launcher', '/v5-local-launcher', '从 V5.39 localhost-only 启动器开始。Start with the V5.39 localhost-only launcher.'],
+
+const productMetrics = [
+  ['今日收益', '+0.86%', '模拟组合今日表现。Paper portfolio daily return.', 'OK'],
+  ['本周收益', '+2.41%', '近 5 个交易日累计表现。Five-session simulated return.', 'OK'],
+  ['月度收益', '+6.80%', '本月策略收益估算。Month-to-date strategy return.', 'OK'],
+  ['最大回撤', '-3.20%', '当前模拟组合最大回撤。Current simulated max drawdown.', 'Warning'],
+  ['当前仓位', '68%', '模拟组合风险暴露。Paper exposure only.', 'Warning'],
+  ['市场状态', '震荡偏多', 'Regime: sideways with positive momentum.', 'OK'],
+] as const;
+
+const activityRows = [
+  ['策略回测成功', '小市值动量策略完成最近样本回测。'],
+  ['模拟交易运行中', 'Paper Trading Mode 持续记录本地模拟组合。'],
+  ['风险检查通过', 'Risk Control Enabled，最大回撤和仓位限制正常。'],
 ];
 
-const recentActivity = [
-  ['最新本地报告 Latest local report', '打开报告查看已生成的 V5 摘要和验证材料。Open reports for generated V5 summaries and validation artifacts.'],
-  ['启动器日志 Launcher logs', '使用桌面启动脚本后查看 reports/local_launcher。Review reports/local_launcher after using the desktop starter scripts.'],
-  ['工作流记录 Workflow runs', '如有本地工作流记录，可在这里检查。Inspect local workflow run records when available.'],
-];
-
-const nextSteps = [
-  ['运行本地启动器 Run Local Launcher', '/v5-local-launcher'],
-  ['检查系统健康 Check System Health', '/admin'],
-  ['打开模拟交易 Open Paper Trading', '/v5-live-paper'],
-  ['查看回测 Review Backtest', '/reports'],
-];
+const curvePoints = [
+  [16, 24],
+  [28, 34],
+  [42, 38],
+  [56, 52],
+  [70, 63],
+  [84, 78],
+] as const;
 
 export default function HomePage() {
   return (
     <ProductionShell
       title="Shandong Quantitative System"
-      eyebrow="山洞量化系统 / Institutional Quant Platform"
-      description="机构级本地优先量化平台。Institutional-grade local-first quant platform."
+      eyebrow="📊 Institutional Quant Investing Platform"
+      description="面向普通用户的一键量化投资产品原型。Local-first quant investing experience for research and paper trading."
       activePath="/"
+      actionLabel="🚀 一键开始投资"
+      actionHref="#one-click-investment"
     >
-      <section className="brandShowcase">
-        <BrandLogo size="large" />
-        <div>
-          <p className="eyebrow">Brand System V5.44</p>
-          <h2>山洞量化系统 / Shandong Quantitative System</h2>
-          <p className="muted">深蓝 + 金色山峰 K 线品牌体系，面向本地研究、模拟交易、风控和运行诊断。</p>
-        </div>
-      </section>
-
-      <section className="grid">
-        <MetricCard title="系统健康 System Health" value="就绪 Ready" description="这里汇总本地后端、前端、启动器和报告状态。Local backend, frontend, launcher, and reports are summarized here." />
-        <MetricCard title="本地启动器 Local Launcher" value="可用 Available" description="用于 localhost 启动检查的 V5.39 启动器已可用。Use the V5.39 launcher for localhost startup checks." />
-        <MetricCard title="模拟交易 Paper Trading" value="仅模拟 Paper only" description="仅支持研究和模拟交易流程；不进行实盘交易。Research and paper workflows only; no live trading." status="Warning" />
-        <MetricCard title="安全边界 Safety Boundary" value="已锁定 Locked" description="不连接券商、不启用 sandbox API、不读取账户、不提交订单。No broker, no sandbox API, no account reads, no order submission." />
-      </section>
-
-      <section className="panel">
-        <div className="panelHeader">
-          <div>
-            <p className="meta">当前状态 Current status</p>
-            <h2>本地优先产品总览 / Local-first product overview</h2>
+      <section className="productHero">
+        <div className="productHeroCopy">
+          <div className="productStatusRow">
+            <StatusBadge status="OK" />
+            <span>Paper Trading Mode</span>
+            <span>Risk Control Enabled</span>
+            <span>Local System Running</span>
           </div>
-          <StatusBadge status="ok">仅本地 Localhost only</StatusBadge>
+          <h2>普通人可用的量化投资驾驶舱</h2>
+          <p>
+            系统自动推荐策略、执行回测、进入模拟交易，并用简单的收益和风险指标展示结果。
+            No real broker connected. No real money. No order submission.
+          </p>
+          <div className="ctaRow" id="one-click-investment">
+            <a className="button button-large" href="#recommended-strategy">
+              🚀 一键开始投资
+            </a>
+            <a className="button button-secondary" href="/strategy">
+              📈 查看策略表现
+            </a>
+            <a className="button button-secondary" href="/reports">
+              🔬 运行回测
+            </a>
+          </div>
         </div>
-        <div className="grid two">
-          <article className="card">
-            <h3>当前模式 / Current mode</h3>
-            <p>当前系统保持仅模拟交易。Current system remains Paper Trading only.</p>
-            <p className="muted">券商未连接，Sandbox API 禁用，订单提交禁用，真实资金禁用。Broker disconnected. Sandbox API disabled. Order submission disabled. Real money disabled.</p>
-          </article>
-          <article className="card">
-            <h3>安全边界 / Safety boundary</h3>
-            <p>不连接真实券商，不使用真实资金，不提交订单。No real broker connected. No real money. No order submission.</p>
-            <p className="muted">看板不会读取密钥、账户、余额、持仓或原始供应商数据。The dashboard does not read secrets, accounts, balances, positions, or provider payloads.</p>
-          </article>
+        <div className="heroLogoPanel">
+          <BrandLogo size="large" />
+          <strong>山洞量化系统</strong>
+          <span>Institutional-grade local-first quant platform</span>
         </div>
+      </section>
+
+      <section className="grid productMetrics">
+        {productMetrics.map(([title, value, description, status]) => (
+          <MetricCard title={title} value={value} description={description} status={status} key={title} />
+        ))}
       </section>
 
       <section className="grid two">
-        {featureCards.map(([title, href, description]) => (
-          <a className="card linkCard" href={href} key={href}>
-            <div className="rowBetween">
-              <h3>{title}</h3>
-              <StatusBadge status="warning">Local</StatusBadge>
+        <article className="panel" id="recommended-strategy">
+          <div className="panelHeader">
+            <div>
+              <p className="meta">📌 推荐策略（系统自动生成）</p>
+              <h2>小市值动量策略</h2>
             </div>
-            <p>{description}</p>
-          </a>
-        ))}
+            <StatusBadge status="OK" />
+          </div>
+          <div className="recommendationGrid">
+            <div>
+              <span>适配市场</span>
+              <strong>震荡偏多</strong>
+            </div>
+            <div>
+              <span>风险等级</span>
+              <strong>中</strong>
+            </div>
+            <div>
+              <span>推荐操作</span>
+              <strong>✔ 可直接运行</strong>
+            </div>
+          </div>
+          <p className="muted">
+            一键流程会先运行回测，再进入模拟交易展示，不会提交真实订单，也不会读取真实账户。
+          </p>
+        </article>
+
+        <article className="panel">
+          <div className="panelHeader">
+            <div>
+              <p className="meta">收益曲线</p>
+              <h2>策略收益线 vs 基准收益线</h2>
+            </div>
+            <StatusBadge status="Warning" />
+          </div>
+          <div className="performanceChart" aria-label="策略收益线和基准收益线">
+            {curvePoints.map(([strategy, benchmark], index) => (
+              <div className="curveColumn" key={index}>
+                <span className="strategyBar" style={{ height: `${strategy}%` }} />
+                <span className="benchmarkBar" style={{ height: `${benchmark}%` }} />
+              </div>
+            ))}
+          </div>
+          <div className="legendRow">
+            <span><i className="legendGold" />策略收益线</span>
+            <span><i className="legendBlue" />基准收益线</span>
+          </div>
+        </article>
       </section>
 
       <section className="grid two">
         <article className="panel">
           <div className="panelHeader">
             <div>
-              <p className="meta">最近活动 Recent activity</p>
-              <h2>本地记录 / Local records</h2>
+              <p className="meta">最近运行记录</p>
+              <h2>无需理解量化，也能看懂运行结果</h2>
             </div>
-            <StatusBadge status="warning">摘要 Summary</StatusBadge>
+            <StatusBadge status="OK" />
           </div>
-          {recentActivity.map(([title, description]) => (
+          {activityRows.map(([title, description]) => (
             <div className="listRow" key={title}>
               <strong>{title}</strong>
               <span>{description}</span>
             </div>
           ))}
         </article>
-        <article className="panel">
+
+        <article className="panel safetyPanel">
           <div className="panelHeader">
             <div>
-              <p className="meta">下一步 Next steps</p>
-              <h2>推荐操作 / Recommended actions</h2>
+              <p className="meta">安全提示</p>
+              <h2>⚠ 当前为模拟交易环境</h2>
             </div>
-            <StatusBadge status="ok">已引导 Guided</StatusBadge>
+            <StatusBadge status="Warning" />
           </div>
-          {nextSteps.map(([title, href]) => (
-            <a className="listRow" href={href} key={href}>
-              <strong>{title}</strong>
-              <span>打开 Open</span>
-            </a>
-          ))}
+          <ul className="safetyList">
+            <li>❌ 无真实资金</li>
+            <li>❌ 无真实交易</li>
+            <li>❌ 不连接券商</li>
+            <li>✔ 仅用于研究、回测和模拟交易展示</li>
+          </ul>
         </article>
       </section>
-
-      <EmptyState
-        title="无实盘券商工作区 / No live broker workspace"
-        description="本产品首页刻意保持只读和本地优先：不连接券商、Sandbox API、账户、余额、持仓、订单或真实资金。This Product Home Dashboard is intentionally read-only and local-first. It does not connect to brokers, sandbox APIs, accounts, balances, positions, orders, or real funds."
-      />
     </ProductionShell>
   );
 }

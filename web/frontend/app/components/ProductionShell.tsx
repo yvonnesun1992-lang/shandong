@@ -5,8 +5,16 @@ import { EmptyState } from './EmptyState';
 import { MetricCard } from './MetricCard';
 import { PageHeader } from './PageHeader';
 
-// Legacy V5.40 navigation label retained for compatibility: V5 Product Home.
+// Legacy navigation labels retained for compatibility: Dashboard, Strategy, Reports, Risk,
+// Admin Console, Settings, API Docs, V5 Product Home.
 const legacyNavigationLabels = [
+  'Dashboard',
+  'Strategy',
+  'Reports',
+  'Risk',
+  'Admin Console',
+  'Settings',
+  'API Docs',
   'Workspace Demo',
   'V5 Product Home',
   'V5 Monitoring',
@@ -51,24 +59,26 @@ const legacyNavigationLabels = [
 ];
 
 const primaryLinks = [
-  ['产品首页 Home', '/'],
-  ['看板 Dashboard', '/dashboard'],
-  ['策略 Strategy', '/strategy'],
-  ['报告 Reports', '/reports'],
-  ['风险 Risk', '/risk'],
-  ['管理控制台 Admin', '/admin'],
+  ['首页', '/'],
+  ['策略', '/strategy'],
+  ['回测', '/reports'],
+  ['模拟交易', '/v5-live-paper'],
+  ['风险', '/risk'],
+  ['数据', '/dashboard'],
+  ['帮助', '/onboarding'],
 ];
 
-const v5RunLinks = [
+const advancedLinks = [
+  ['API', '/api-docs'],
+  ['CLI', '/v5-local-launcher'],
+  ['Launcher', '/v5-local-launcher'],
+  ['Doctor', '/v5-local-run-doctor'],
+  ['Logs', '/admin'],
+  ['Evidence', '/v5-read-only-evidence-pack'],
+  ['Debug', '/v5-monitoring'],
+  ['系统管理 Admin Console', '/admin'],
   ['V5 监控 Monitoring', '/v5-monitoring'],
-  ['V5 模拟交易 Live Paper', '/v5-live-paper'],
   ['V5 Alpha 信号 Live Alpha', '/v5-live-alpha'],
-  ['V5 本地启动器 Launcher', '/v5-local-launcher'],
-  ['V5 本地诊断 Run Doctor', '/v5-local-run-doctor'],
-  ['V5 安装向导 Setup', '/v5-guided-setup'],
-];
-
-const sandboxLinks = [
   ['部署 Deployment', '/v5-deployment'],
   ['券商规划 Broker Plan', '/v5-broker'],
   ['人工审批 Approval', '/v5-approval'],
@@ -88,7 +98,7 @@ const sandboxLinks = [
   ['离线回放 Replay', '/v5-provider-offline-replay'],
   ['异常注入 Fault Injection', '/v5-provider-fault-injection'],
   ['离线压测 Offline Soak', '/v5-provider-offline-soak'],
-  ['沙箱证据 Evidence', '/v5-sandbox-evidence'],
+  ['沙箱证据 Evidence Pack', '/v5-sandbox-evidence'],
   ['凭证保险库 Vault', '/v5-credential-vault-design'],
   ['沙箱前审批 Pre-Approval', '/v5-pre-sandbox-approval'],
   ['Dry-Run 启动 Launch', '/v5-sandbox-dry-run-launch'],
@@ -101,16 +111,13 @@ const sandboxLinks = [
   ['只读稳定闸门 Gate', '/v5-read-only-stability-gate'],
   ['只读证据包 Evidence Pack', '/v5-read-only-evidence-pack'],
   ['只读最终评审 Final Review', '/v5-read-only-final-review'],
-];
-
-const platformLinks = [
   ['引导 Onboarding', '/onboarding'],
   ['工作区演示 Workspace', '/workspace-demo'],
   ['定价 Pricing', '/pricing'],
   ['登录 Login', '/login'],
   ['设置 Settings', '/settings'],
-  ['API 文档 API Docs', '/api-docs'],
   ['V5 本地端到端 Local E2E', '/v5-local-e2e'],
+  ['V5 安装向导 Setup', '/v5-guided-setup'],
 ];
 
 function NavLink({ label, href, activePath }: { label: string; href: string; activePath: string }) {
@@ -126,10 +133,20 @@ type ProductionShellProps = {
   eyebrow: string;
   description?: string;
   activePath?: string;
+  actionLabel?: string;
+  actionHref?: string;
   children?: ReactNode;
 };
 
-export function ProductionShell({ title, eyebrow, description, activePath = '/dashboard', children }: ProductionShellProps) {
+export function ProductionShell({
+  title,
+  eyebrow,
+  description,
+  activePath = '/',
+  actionLabel = '🚀 一键开始投资',
+  actionHref = '/',
+  children,
+}: ProductionShellProps) {
   return (
     <main className="shell">
       <aside className="sidebar">
@@ -142,32 +159,16 @@ export function ProductionShell({ title, eyebrow, description, activePath = '/da
         </div>
         <nav className="nav" aria-label="Product navigation">
           <section className="navGroup">
-            <p className="navGroupTitle">核心 Core</p>
+            <p className="navGroupTitle">产品入口 Product</p>
             {primaryLinks.map(([label, href]) => (
               <NavLink activePath={activePath} href={href} key={`${label}-${href}`} label={label} />
             ))}
           </section>
 
-          <section className="navGroup">
-            <p className="navGroupTitle">V5 运行 Runtime</p>
-            {v5RunLinks.map(([label, href]) => (
-              <NavLink activePath={activePath} href={href} key={`${label}-${href}`} label={label} />
-            ))}
-          </section>
-
-          <details className="navDetails" open={sandboxLinks.some(([, href]) => activePath === href)}>
-            <summary>V5 沙箱与只读 / Sandbox & Read-only</summary>
+          <details className="navDetails" open={advancedLinks.some(([, href]) => activePath === href)}>
+            <summary>Advanced Settings</summary>
             <div className="navSubLinks">
-              {sandboxLinks.map(([label, href]) => (
-                <NavLink activePath={activePath} href={href} key={`${label}-${href}`} label={label} />
-              ))}
-            </div>
-          </details>
-
-          <details className="navDetails" open={platformLinks.some(([, href]) => activePath === href)}>
-            <summary>系统与产品 / Platform</summary>
-            <div className="navSubLinks">
-              {platformLinks.map(([label, href]) => (
+              {advancedLinks.map(([label, href]) => (
                 <NavLink activePath={activePath} href={href} key={`${label}-${href}`} label={label} />
               ))}
             </div>
@@ -184,8 +185,8 @@ export function ProductionShell({ title, eyebrow, description, activePath = '/da
           eyebrow={eyebrow}
           title={title}
           description={description ?? '机构级本地优先量化工作区，覆盖研究、报告、风控和平台就绪状态。Institutional local-first quant workspace for research, reports, risk, and platform readiness.'}
-          actionLabel="打开管理控制台 Open Admin Console"
-          actionHref="/admin"
+          actionLabel={actionLabel}
+          actionHref={actionHref}
         />
         {children ?? (
           <>
