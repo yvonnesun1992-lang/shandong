@@ -1347,6 +1347,44 @@ def scan_guided_setup_outputs(payload: dict | list | str, report_path: str | Pat
     return {"safe": not findings, "findings": findings}
 
 
+def scan_strategy_center_outputs(payload: dict | list | str, report_path: str | Path | None = None) -> dict:
+    text = json.dumps(payload, default=str).lower() if not isinstance(payload, str) else payload.lower()
+    findings = _scan_sandbox_sensitive_text(text)
+    blocked_terms = [
+        "api_key=demo",
+        "secret_value=demo",
+        "token=demo",
+        "password=demo",
+        "real_account_id",
+        "real_order_id",
+        "raw provider payload",
+        "paper-api.",
+        "api.alpaca.",
+        "alpaca_trade_api",
+        "ib_insync",
+        "tigeropen",
+        "robin_stocks",
+        "/users/apple",
+    ]
+    for term in blocked_terms:
+        if term in text:
+            findings.append({"kind": "sensitive-pattern", "match": "blocked-strategy-center-output"})
+            break
+    if "http://" in text or "https://" in text:
+        for match in re.findall(r"https?://[^\\s\"']+", text):
+            if "127.0.0.1" not in match and "localhost" not in match:
+                findings.append({"kind": "external-url", "match": "blocked-strategy-center-url"})
+                break
+    if report_path:
+        report = Path(report_path)
+        if report.exists():
+            report_text = report.read_text(encoding="utf-8", errors="ignore").lower()
+            findings.extend(_scan_sandbox_sensitive_text(report_text))
+            if any(term in report_text for term in blocked_terms):
+                findings.append({"kind": "sensitive-pattern", "match": "blocked-strategy-center-report"})
+    return {"safe": not findings, "findings": findings}
+
+
 def _scan_sandbox_sensitive_text(text: str) -> list[dict]:
     findings = []
     patterns = [

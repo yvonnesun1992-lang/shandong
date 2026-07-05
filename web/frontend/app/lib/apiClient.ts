@@ -1449,3 +1449,58 @@ export function fetchV5GuidedSetupSafety() {
 export function fetchV5GuidedSetupSummary() {
   return apiGet<Record<string, unknown>>('/api/v5/guided-setup/summary');
 }
+
+export function fetchV5StrategyCenterStatus() {
+  return apiGet<Record<string, unknown>>('/api/v5/strategy-center/status');
+}
+
+export function fetchV5StrategyCenterCatalog() {
+  return apiGet<Record<string, unknown>>('/api/v5/strategy-center/catalog');
+}
+
+export function fetchV5StrategyCenterCategories() {
+  return apiGet<Record<string, unknown>>('/api/v5/strategy-center/categories');
+}
+
+export function fetchV5StrategyCenterRecommendations() {
+  return apiGet<Record<string, unknown>>('/api/v5/strategy-center/recommendations');
+}
+
+export function fetchV5StrategyCenterSearch(params?: Record<string, string | boolean | number | undefined>) {
+  const searchParams = new URLSearchParams();
+  Object.entries(params ?? {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') {
+      searchParams.set(key, String(value));
+    }
+  });
+  const suffix = searchParams.toString() ? `?${searchParams.toString()}` : '';
+  return apiGet<Record<string, unknown>>(`/api/v5/strategy-center/search${suffix}`);
+}
+
+export function fetchV5StrategyCenterCards() {
+  return apiGet<Record<string, unknown>>('/api/v5/strategy-center/cards');
+}
+
+export function fetchV5StrategyCenterDetail(strategyId: string) {
+  return apiGet<Record<string, unknown>>(`/api/v5/strategy-center/detail/${strategyId}`);
+}
+
+export function fetchV5StrategyCenterBacktestPreview(strategyId: string) {
+  return apiGet<Record<string, unknown>>(`/api/v5/strategy-center/backtest-preview/${strategyId}`);
+}
+
+export function fetchV5StrategyCenterPaperPreview(strategyId: string) {
+  return apiGet<Record<string, unknown>>(`/api/v5/strategy-center/paper-preview/${strategyId}`);
+}
+
+export function fetchV5StrategyCenterEducation() {
+  return apiGet<Record<string, unknown>>('/api/v5/strategy-center/education');
+}
+
+export function fetchV5StrategyCenterSafety() {
+  return apiGet<Record<string, unknown>>('/api/v5/strategy-center/safety');
+}
+
+export function fetchV5StrategyCenterSummary() {
+  return apiGet<Record<string, unknown>>('/api/v5/strategy-center/summary');
+}

@@ -375,7 +375,18 @@ from brand_system.brand_orchestrator import build_brand_system_status
 from brand_system.brand_safety_validator import build_brand_safety_summary
 from brand_system.design_system import get_design_system
 from config.v5_brand_system_config import get_brand_assets, get_brand_status
+from config.v5_strategy_center_config import get_strategy_center_status
 from runtime.brand_consistency_check import run_brand_consistency_check
+from strategy_center.strategy_backtest_preview import build_backtest_preview
+from strategy_center.strategy_card_model import build_strategy_cards
+from strategy_center.strategy_catalog import build_strategy_catalog, list_strategy_categories
+from strategy_center.strategy_center_orchestrator import build_strategy_center_dashboard, summarize_strategy_center
+from strategy_center.strategy_center_safety_validator import build_strategy_center_safety_summary
+from strategy_center.strategy_detail_model import build_strategy_detail
+from strategy_center.strategy_education_copy import build_education_copy
+from strategy_center.strategy_paper_trading_preview import build_paper_trading_preview
+from strategy_center.strategy_recommendation import build_strategy_recommendation_panel
+from strategy_center.strategy_search import build_strategy_search_result
 
 _controlled_credential_read_module = __import__(
     "sandbox_controlled_enablement." + "sec" + "ret_read_enablement_conditions",
@@ -3985,6 +3996,95 @@ def create_v2_api_app() -> FastAPI:
         response = success_response({"summary": summary, "brand_system_only": True}, started_at=started, warning=summary.get("warnings", []))
         log_api_event("/api/v5/brand-system/summary", "default", "ok", response["meta"]["latency_ms"], len(summary.get("warnings", [])))
         return response
+
+    def _strategy_center_response(endpoint: str, payload: dict, started: float) -> dict:
+        status = get_strategy_center_status()
+        warnings = list(status.get("warnings", [])) + list(payload.get("warnings", []))
+        response = success_response({**status, **payload}, started_at=started, warning=warnings)
+        log_api_event(endpoint, "default", "ok", response["meta"]["latency_ms"], len(warnings))
+        return response
+
+    @api.get("/api/v5/strategy-center/status")
+    def v5_strategy_center_status() -> dict:
+        started = perf_counter()
+        return _strategy_center_response("/api/v5/strategy-center/status", {"status": get_strategy_center_status()}, started)
+
+    @api.get("/api/v5/strategy-center/catalog")
+    def v5_strategy_center_catalog() -> dict:
+        started = perf_counter()
+        return _strategy_center_response("/api/v5/strategy-center/catalog", {"catalog": build_strategy_catalog()}, started)
+
+    @api.get("/api/v5/strategy-center/categories")
+    def v5_strategy_center_categories() -> dict:
+        started = perf_counter()
+        return _strategy_center_response("/api/v5/strategy-center/categories", {"categories": list_strategy_categories()}, started)
+
+    @api.get("/api/v5/strategy-center/recommendations")
+    def v5_strategy_center_recommendations() -> dict:
+        started = perf_counter()
+        return _strategy_center_response("/api/v5/strategy-center/recommendations", {"recommendations": build_strategy_recommendation_panel()}, started)
+
+    @api.get("/api/v5/strategy-center/search")
+    def v5_strategy_center_search(
+        query: str = "",
+        risk_level: str | None = None,
+        suitable_market: str | None = None,
+        strategy_type: str | None = None,
+        suitable_user: str | None = None,
+        category: str | None = None,
+        backtest_available: bool | None = None,
+        paper_trading_available: bool | None = None,
+    ) -> dict:
+        started = perf_counter()
+        filters = {
+            "risk_level": risk_level,
+            "suitable_market": suitable_market,
+            "strategy_type": strategy_type,
+            "suitable_user": suitable_user,
+            "category": category,
+            "backtest_available": backtest_available,
+            "paper_trading_available": paper_trading_available,
+        }
+        search = build_strategy_search_result(query, filters)
+        return _strategy_center_response("/api/v5/strategy-center/search", {"search": search}, started)
+
+    @api.get("/api/v5/strategy-center/cards")
+    def v5_strategy_center_cards() -> dict:
+        started = perf_counter()
+        return _strategy_center_response("/api/v5/strategy-center/cards", {"cards": build_strategy_cards(build_strategy_catalog())}, started)
+
+    @api.get("/api/v5/strategy-center/detail/{strategy_id}")
+    def v5_strategy_center_detail(strategy_id: str) -> dict:
+        started = perf_counter()
+        return _strategy_center_response("/api/v5/strategy-center/detail/{strategy_id}", {"detail": build_strategy_detail(strategy_id)}, started)
+
+    @api.get("/api/v5/strategy-center/backtest-preview/{strategy_id}")
+    def v5_strategy_center_backtest_preview(strategy_id: str) -> dict:
+        started = perf_counter()
+        return _strategy_center_response("/api/v5/strategy-center/backtest-preview/{strategy_id}", {"backtest_preview": build_backtest_preview(strategy_id)}, started)
+
+    @api.get("/api/v5/strategy-center/paper-preview/{strategy_id}")
+    def v5_strategy_center_paper_preview(strategy_id: str) -> dict:
+        started = perf_counter()
+        return _strategy_center_response("/api/v5/strategy-center/paper-preview/{strategy_id}", {"paper_preview": build_paper_trading_preview(strategy_id)}, started)
+
+    @api.get("/api/v5/strategy-center/education")
+    def v5_strategy_center_education() -> dict:
+        started = perf_counter()
+        return _strategy_center_response("/api/v5/strategy-center/education", {"education": build_education_copy()}, started)
+
+    @api.get("/api/v5/strategy-center/safety")
+    def v5_strategy_center_safety() -> dict:
+        started = perf_counter()
+        safety = build_strategy_center_safety_summary()
+        return _strategy_center_response("/api/v5/strategy-center/safety", {"safety": safety}, started)
+
+    @api.get("/api/v5/strategy-center/summary")
+    def v5_strategy_center_summary() -> dict:
+        started = perf_counter()
+        dashboard = build_strategy_center_dashboard()
+        summary = summarize_strategy_center(dashboard)
+        return _strategy_center_response("/api/v5/strategy-center/summary", {"summary": summary, "dashboard": dashboard}, started)
 
     return api
 

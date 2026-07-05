@@ -60,7 +60,7 @@ const legacyNavigationLabels = [
 
 const primaryLinks = [
   ['首页', '/'],
-  ['策略', '/strategy'],
+  ['策略中心', '/strategies'],
   ['回测', '/reports'],
   ['模拟交易', '/v5-live-paper'],
   ['风险', '/risk'],
@@ -166,7 +166,7 @@ export function ProductionShell({
           </section>
 
           <details className="navDetails" open={advancedLinks.some(([, href]) => activePath === href)}>
-            <summary>Advanced Settings</summary>
+            <summary>高级设置 / Advanced Settings</summary>
             <div className="navSubLinks">
               {advancedLinks.map(([label, href]) => (
                 <NavLink activePath={activePath} href={href} key={`${label}-${href}`} label={label} />
